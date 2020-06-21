@@ -1,0 +1,27 @@
+[package]
+name = "rsmixer"
+version = "0.1.0"
+authors = ["Jan Wojcicki <janwojcicki45@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libpulse-binding = "2.16.0"
+simple-logging = "2.0.2"
+env_logger = "0.7.1"
+log = "0.4.8"
+crossbeam-channel = "0.4.2"
+lazy_static = "1.4.0"
+unicode-width = "0.1.7"
+crossterm = { version = "0.17.5", features = ["event-stream"] }
+num-traits = "0.2.11"
+num-derive = "0.3.0"
+async-std = { version = "1.6.0", features = ["unstable"] }
+anyhow = "1.0.31"
+thiserror = "1.0.19"
+state = { version = "0.4.1", features = ["tls", "const_fn"] }
+toml = "0.5.6"
+
+[profile.release]
+debug = true

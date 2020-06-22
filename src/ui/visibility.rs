@@ -48,7 +48,7 @@ pub fn is_entry_visible(index: usize, scroll: usize) -> Option<Rect> {
 pub enum EntrySpaceLvl {
     Empty,
     Parent,
-    ParentWithoutChild,
+    ParentNoChildren,
     MidChild,
     LastChild,
 }
@@ -63,7 +63,7 @@ pub fn check_lvl(
     }
     if page_entries[index].entry_type == parent_type {
         if index + 1 >= page_entries.len() || page_entries[index + 1].entry_type == parent_type {
-            return EntrySpaceLvl::ParentWithoutChild;
+            return EntrySpaceLvl::ParentNoChildren;
         } else {
             return EntrySpaceLvl::Parent;
         }

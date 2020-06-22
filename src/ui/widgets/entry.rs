@@ -1,3 +1,4 @@
+use crate::draw_at;
 use super::{volume::VolumeWidgetBorder, VolumeWidget};
 
 use crate::{
@@ -47,6 +48,7 @@ impl<'a> EntryWidget<'a> {
     pub fn calc_area(position: EntrySpaceLvl, mut area: Rect) -> Rect {
         let amount = match position {
             EntrySpaceLvl::Parent => 2,
+            EntrySpaceLvl::ParentNoChildren => 2,
             _ => 5,
         };
 
@@ -81,6 +83,9 @@ impl<'a, W: Write> Widget<W> for EntryWidget<'a> {
             area2 = Rect::new(area_a.x + 30, area_a.y, area_a.width - 30, 1);
         }
 
+        area2.width -= 2;
+        area2.x += 1;
+
         let main_vol = (self.entry.volume.avg().0 as f32) / (volume::VOLUME_NORM.0 as f32 * 1.5);
         self.volume_bar = self
             .volume_bar
@@ -103,7 +108,15 @@ impl<'a, W: Write> Widget<W> for EntryWidget<'a> {
         write!(buf, "{}", style.clone().apply(short_name))?;
 
         execute!(buf, MoveTo(area1.x + area1.width - 5, area1.y + 1))?;
-        write!(buf, "{}", style.apply(vol_perc))?;
+        write!(buf, "{}", style.clone().apply(vol_perc))?;
+
+
+        let c = if self.bold { "-" } else { " " };
+
+        draw_at!(buf, c, area2.x+area2.width, area2.y, style.clone());
+        draw_at!(buf, c, area2.x-1, area2.y, style.clone());
+        draw_at!(buf, c, area2.x+area2.width, area2.y + 1, style.clone());
+        draw_at!(buf, c, area2.x-1, area2.y + 1, style.clone());
 
         self.volume_bar.render(area2, buf)?;
         area2.y += 1;

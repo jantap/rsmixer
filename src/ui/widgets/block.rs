@@ -44,25 +44,25 @@ impl<W: Write> Widget<W> for BlockWidget {
             repeat_string!("─", area.width - 2 - self.title.len() as u16)
         ));
         let bot = get_style("normal").apply(format!("└{}┘", repeat_string!("─", area.width - 2)));
-        execute!(buf, MoveTo(0, 0))?;
+        execute!(buf, MoveTo(area.x, area.y))?;
         write!(buf, "{}", top)?;
-        execute!(buf, MoveTo(0, area.height - 1))?;
+        execute!(buf, MoveTo(area.x, area.y + area.height - 1))?;
         write!(buf, "{}", bot)?;
 
         if self.clean_inside {
             let sides =
                 get_style("normal").apply(format!("│{}│", repeat_string!(" ", area.width - 2)));
             for i in 0..area.height - 2 {
-                execute!(buf, MoveTo(0, i + 1 + area.y))?;
+                execute!(buf, MoveTo(area.x, i + 1 + area.y))?;
                 write!(buf, "{}", sides.clone())?;
             }
         } else {
-            draw_range!(buf, "│", 0..1, 1..area.height - 1, get_style("normal"));
+            draw_range!(buf, "│", area.x..area.x+1, area.y..area.y + area.height - 1, get_style("normal"));
             draw_range!(
                 buf,
                 "│",
-                area.width - 1..area.width,
-                1..area.height - 1,
+                area.y + area.width - 1..area.y + area.width,
+                area.y..area.y + area.height - 1,
                 get_style("normal")
             );
         }

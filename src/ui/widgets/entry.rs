@@ -1,5 +1,5 @@
-use crate::draw_at;
 use super::{volume::VolumeWidgetBorder, VolumeWidget};
+use crate::draw_at;
 
 use crate::{
     ui::{
@@ -110,13 +110,12 @@ impl<'a, W: Write> Widget<W> for EntryWidget<'a> {
         execute!(buf, MoveTo(area1.x + area1.width - 5, area1.y + 1))?;
         write!(buf, "{}", style.clone().apply(vol_perc))?;
 
-
         let c = if self.bold { "-" } else { " " };
 
-        draw_at!(buf, c, area2.x+area2.width, area2.y, style.clone());
-        draw_at!(buf, c, area2.x-1, area2.y, style.clone());
-        draw_at!(buf, c, area2.x+area2.width, area2.y + 1, style.clone());
-        draw_at!(buf, c, area2.x-1, area2.y + 1, style.clone());
+        draw_at!(buf, c, area2.x + area2.width, area2.y, style.clone());
+        draw_at!(buf, c, area2.x - 1, area2.y, style.clone());
+        draw_at!(buf, c, area2.x + area2.width, area2.y + 1, style.clone());
+        draw_at!(buf, c, area2.x - 1, area2.y + 1, style.clone());
 
         self.volume_bar.render(area2, buf)?;
         area2.y += 1;

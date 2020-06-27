@@ -41,6 +41,7 @@ lazy_static! {
 }
 static STYLES: Storage<Styles> = Storage::new();
 static BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
+static CONTEXT_MENUS: Storage<HashMap<EntryType, Vec<(&'static str, Letter)>>> = Storage::new();
 
 pub type Styles = HashMap<&'static str, ContentStyle>;
 
@@ -65,6 +66,7 @@ async fn run() -> Result<()> {
     bindings.insert(Char('L'), Letter::RequstChangeVolume(15));
     bindings.insert(Char('1'), Letter::ChangePage(PageType::Output));
     bindings.insert(Char('2'), Letter::ChangePage(PageType::Input));
+    bindings.insert(crossterm::event::KeyCode::Enter, Letter::OpenContextMenu);
     BINDINGS.set(bindings);
 
     let mut styles: Styles = HashMap::new();
@@ -73,6 +75,12 @@ async fn run() -> Result<()> {
         ContentStyle::new()
             .background(Color::Black)
             .foreground(Color::White),
+    );
+    styles.insert(
+        "inverted",
+        ContentStyle::new()
+            .background(Color::White)
+            .foreground(Color::Black),
     );
     styles.insert(
         "muted",

@@ -19,6 +19,7 @@ bishopify!(Letter,
     MoveDown(u16) => UI_MESSAGE,
     ChangePage(PageType) => UI_MESSAGE,
     RequestMute => UI_MESSAGE,
+    OpenContextMenu => UI_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     SetVolume(EntryIdentifier, ChannelVolumes) => PA_MESSAGE,

@@ -224,7 +224,6 @@ pub async fn start() -> Result<()> {
                     }
                 }
                 RedrawType::Entries => {
-                    log::error!("OKURWA");
                     draw_entities(
                         &mut stdout,
                         &entries,
@@ -263,7 +262,7 @@ pub async fn draw_entities<W: Write>(
     let (parent_type, _) = parent_child_types(*current_page);
 
     let mut bg = entry_size.clone();
-    bg.y = h - *Y_PADDING;
+    bg.height = h - *Y_PADDING;
 
     draw_rect!(stdout, " ", bg, get_style("normal"));
 

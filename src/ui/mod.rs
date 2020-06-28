@@ -4,9 +4,11 @@ mod page_entries;
 mod util;
 mod visibility;
 mod widgets;
+mod context_menus;
 
 use entries::Entries;
 use page_entries::PageEntries;
+use context_menus::{ ContextMenuOption, ContextMenuEffect };
 
 use crate::{comms, EntryIdentifier, EntryType, Letter, Result, DISPATCH, SENDERS};
 use crate::{draw_rect, input};
@@ -79,7 +81,8 @@ pub async fn start() -> Result<()> {
         let mut entries = Entries::new();
         let mut page_entries = PageEntries::new();
         let mut selected = 0;
-        let mut selectedContext = 0;
+        let mut selected_context = 0;
+        let mut context_options = Vec::new();
         let mut scroll = 0;
         let mut redraw = RedrawType::None;
         let mut ui_state = UIState::Normal;
@@ -139,7 +142,7 @@ pub async fn start() -> Result<()> {
                         selected = max(selected as i32 - how_much as i32, 0) as usize;
                         redraw = RedrawType::Entries;
                     } else {
-                        selectedContext = max(selectedContext as i32 - how_much as i32, 0) as usize;
+                        selected_context = max(selected_context as i32 - how_much as i32, 0) as usize;
                         redraw = RedrawType::ContextMenu;
                     }
                 }
@@ -148,7 +151,7 @@ pub async fn start() -> Result<()> {
                         selected = min(selected + how_much as usize, page_entries.len());
                         redraw = RedrawType::Entries;
                     } else {
-                        selectedContext = min(selectedContext + how_much as usize, page_entries.len());
+                        selected_context = min(selected_context + how_much as usize, page_entries.len());
                         redraw = RedrawType::ContextMenu;
                     }
                 }
@@ -196,8 +199,31 @@ pub async fn start() -> Result<()> {
                     }
                 }
                 Letter::OpenContextMenu => {
-                    ui_state = UIState::ContextMenu;
-                    redraw = RedrawType::ContextMenu;
+                    if ui_state != UIState::ContextMenu {
+                        ui_state = UIState::ContextMenu;
+                        redraw = RedrawType::ContextMenu;
+                        context_options = context_menus::context_menu(page_entries.get(selected).entry_type);
+                    } else {
+                        let ans = context_menus::resolve(page_entries.get(selected), context_options[selected_context].clone());
+
+                        match ans {
+                            ContextMenuEffect::None => {
+                                ui_state = UIState::Normal;
+                                redraw = RedrawType::Full;
+                            }
+                            ContextMenuEffect::PresentParents => {
+                                let p_type = if page_entries.get(selected).entry_type == EntryType::SinkInput {
+                                    EntryType::Sink
+                                } else {
+                                    EntryType::Source
+                                };
+
+                                context_options = entries.iter_type(p_type).map(|(ident, entry)| ContextMenuOption::Entry(*ident, entry.name.clone())).collect();
+                                redraw = RedrawType::ContextMenu;
+                            }
+                            _ => {},
+                        };
+                    }
                 }
                 _ => {}
             };
@@ -266,8 +292,8 @@ pub async fn start() -> Result<()> {
             } else if ui_state == UIState::ContextMenu {
                 if redraw == RedrawType::ContextMenu {
                     let (w, h) = crossterm::terminal::size().unwrap();
-                    let b = ContextMenuWidget::new(page_entries.get(selected)).selected(selectedContext);
-                    log::error!("{}xx", w);
+                    let b = ContextMenuWidget::new(page_entries.get(selected)).selected(selected_context).options(context_options.clone());
+
                     let a = Rect::new(2, 2, w - 4, h - 4);
                     b.render(a, &mut stdout).unwrap();
                 }

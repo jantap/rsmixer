@@ -7,7 +7,7 @@ use crate::{
     },
     Result,
 };
-use super::super::EntryIdentifier;
+use super::super::{ ContextMenuOption, EntryIdentifier };
 use super::BlockWidget;
 
 use std::io::Write;
@@ -17,7 +17,7 @@ use crossterm::{cursor::MoveTo, execute};
 #[derive(Clone)]
 pub struct ContextMenuWidget {
     identifier: EntryIdentifier,
-    options: Vec<&'static str>,
+    options: Vec<ContextMenuOption>,
     scrolling: bool,
     selected: usize,
 }
@@ -26,7 +26,7 @@ impl ContextMenuWidget {
     pub fn new(identifier: EntryIdentifier) -> Self {
         Self {
             identifier,
-            options: vec!["Move", "Kill"],
+            options: Vec::new(),
             scrolling: false,
             selected: 0,
         }
@@ -34,6 +34,11 @@ impl ContextMenuWidget {
 
     pub fn selected(mut self, selected: usize) -> Self {
         self.selected = selected;
+        self
+    }
+
+    pub fn options(mut self, options: Vec<ContextMenuOption>) -> Self {
+        self.options = options;
         self
     }
 }
@@ -59,8 +64,9 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
         let mut starty = area.y + 3;
 
         for (i, o) in self.options.iter().enumerate() {
-            let startx = area.x + area.width / 2 - o.len() as u16 / 2;
-            draw_at!(buf, o, startx, starty,
+            let s: String = o.clone().into();
+            let startx = area.x + area.width / 2 - s.len() as u16 / 2;
+            draw_at!(buf, s, startx, starty,
                     if self.selected == i { get_style("inverted") }else {get_style("normal") });
 
             starty += 1;

@@ -1,17 +1,6 @@
-use crate::{EntryIdentifier, EntryType};
+use super::Entry;
+use super::{EntryIdentifier, EntryType};
 use std::collections::BTreeMap;
-
-#[derive(PartialEq, Clone)]
-pub struct Entry {
-    pub entry_type: EntryType,
-    pub index: u32,
-    pub name: String,
-    pub peak: f32,
-    pub mute: bool,
-    pub volume: pulse::volume::ChannelVolumes,
-    pub parent: Option<u32>,
-}
-impl Eq for Entry {}
 
 pub struct Entries(BTreeMap<EntryIdentifier, Entry>);
 

@@ -1,53 +1,51 @@
 #![feature(const_fn)]
+#![feature(new_uninit)]
+#![feature(get_mut_unchecked)]
+#![feature(async_closure)]
 
+extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
 mod bishop;
 mod comms;
+mod config;
+mod entry;
+mod errors;
 mod input;
-mod pa_data_interface;
-mod pa_interface;
 mod ui;
-
-use pa_data_interface::*;
+mod pa;
 
 use bishop::{BishopMessage, Dispatch, Senders};
+pub use errors::RSError;
 use std::collections::HashMap;
 use std::env;
-use ui::Entry;
-use ui::PageType;
+use std::io::Write;
 
-use async_std::task;
 use log::LevelFilter;
 
-use async_std::prelude::*;
+use tokio::runtime;
+use tokio::sync::broadcast::channel;
+use tokio::task;
 
-use async_std::sync::channel;
-
-use comms::Letter;
+pub use comms::Letter;
 use lazy_static::lazy_static;
 
 use crossterm::event::KeyCode;
-use crossterm::event::KeyCode::Char;
-use crossterm::style::Attribute;
-use crossterm::style::Color;
 use crossterm::style::ContentStyle;
 
+use config::RsMixerConfig;
 use state::Storage;
 
 lazy_static! {
-    static ref DISPATCH: Dispatch<Letter> = Dispatch::new();
-    static ref SENDERS: Senders<Letter> = Senders::new();
+    pub static ref DISPATCH: Dispatch<Letter> = Dispatch::new();
+    pub static ref SENDERS: Senders<Letter> = Senders::new();
 }
 static STYLES: Storage<Styles> = Storage::new();
 static BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
-static CONTEXT_MENUS: Storage<HashMap<EntryType, Vec<(&'static str, Letter)>>> = Storage::new();
 
-pub type Styles = HashMap<&'static str, ContentStyle>;
+pub type Styles = HashMap<String, ContentStyle>;
 
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
-
-async fn run() -> Result<()> {
+async fn run() -> Result<(), RSError> {
     let stdout = env::var("RUST_LOG").is_err();
     if stdout {
         simple_logging::log_to_file("log", LevelFilter::Debug).unwrap();
@@ -55,113 +53,65 @@ async fn run() -> Result<()> {
         env_logger::init();
     }
 
-    let mut bindings = HashMap::new();
-    bindings.insert(Char('q'), Letter::ExitSignal);
-    bindings.insert(Char('j'), Letter::MoveDown(1));
-    bindings.insert(Char('k'), Letter::MoveUp(1));
-    bindings.insert(Char('m'), Letter::RequestMute);
-    bindings.insert(Char('h'), Letter::RequstChangeVolume(-5));
-    bindings.insert(Char('l'), Letter::RequstChangeVolume(5));
-    bindings.insert(Char('H'), Letter::RequstChangeVolume(-15));
-    bindings.insert(Char('L'), Letter::RequstChangeVolume(15));
-    bindings.insert(Char('1'), Letter::ChangePage(PageType::Output));
-    bindings.insert(Char('2'), Letter::ChangePage(PageType::Input));
-    bindings.insert(crossterm::event::KeyCode::Enter, Letter::OpenContextMenu);
-    BINDINGS.set(bindings);
+    let config: RsMixerConfig = confy::load("rsmixer").unwrap();
 
-    let mut styles: Styles = HashMap::new();
-    styles.insert(
-        "normal",
-        ContentStyle::new()
-            .background(Color::Black)
-            .foreground(Color::White),
-    );
-    styles.insert(
-        "inverted",
-        ContentStyle::new()
-            .background(Color::White)
-            .foreground(Color::Black),
-    );
-    styles.insert(
-        "muted",
-        ContentStyle::new()
-            .background(Color::Black)
-            .foreground(Color::Grey),
-    );
-    styles.insert(
-        "bold",
-        ContentStyle::new()
-            .background(Color::Black)
-            .foreground(Color::White)
-            .attribute(Attribute::Bold),
-    );
-    styles.insert(
-        "red",
-        ContentStyle::new()
-            .background(Color::Black)
-            .foreground(Color::Red),
-    );
-    styles.insert(
-        "orange",
-        ContentStyle::new()
-            .background(Color::Black)
-            .foreground(Color::Yellow),
-    );
-    styles.insert(
-        "green",
-        ContentStyle::new()
-            .background(Color::Black)
-            .foreground(Color::Green),
-    );
-    styles.insert(
-        "test",
-        ContentStyle::new()
-            .background(Color::DarkBlue)
-            .foreground(Color::Red),
-    );
+    let (styles, bindings) = config.load();
 
     STYLES.set(styles);
+    BINDINGS.set(bindings);
 
     let (event_sx, event_rx) = channel(32);
-    DISPATCH.register(event_sx).await;
+    let (r, s) = cb_channel::unbounded();
+    let event2 = event_sx.clone();
+    DISPATCH.register(event_sx, r.clone()).await;
 
-    let events = task::spawn(async move {
-        bishop::start(event_rx, SENDERS.clone()).await;
-    });
+    task::spawn(async move { bishop::start(event2, event_rx, s, r, SENDERS.clone()).await });
 
-    let ui = task::spawn(async move {
-        ui::start().await.unwrap();
-    });
+    let ui = async move {
+        match task::spawn(async move { ui::start().await }).await {
+            Ok(r) => r,
+            Err(e) => Err(RSError::TaskHandleError(e)),
+        }
+    };
 
-    // let pa_future = task::spawn(async move {
-    //     pa_interface::start().await.unwrap();
+    let (pa_sx, pa_rx) = cb_channel::unbounded();
 
-    //     // task::block_on(pa_interface.connect_and_start_mainloop()).unwrap();
-    // });
+    let pa = async move {
+        match task::spawn_blocking(move || pa::start(pa_rx)).await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(RSError::TaskHandleError(e)),
+        }
+    };
 
-    let x = pa_interface::start().join(ui).join(events);
-    log::error!("start program");
-    x.await;
-    log::error!("quit program");
+    let pa_async = async move {
+        match task::spawn(async move { pa::start_async(pa_sx).await }).await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(RSError::TaskHandleError(e)),
+        }
+    };
+
+    match tokio::try_join!(ui, pa, pa_async) {
+        _ => {
+            DISPATCH.event(Letter::ExitSignal).await;
+
+            let mut stdout = std::io::stdout();
+            crossterm::execute!(
+                stdout,
+                crossterm::cursor::Show,
+                crossterm::terminal::LeaveAlternateScreen
+            )
+            .unwrap();
+            crossterm::terminal::disable_raw_mode().unwrap();
+        }
+    }
+
     Ok(())
-
-    // let chan_for_ui = (send_data_to_input.clone(), ui_recv_orders.clone());
-    // let ui_thread = thread::spawn(move || {
-    //     let stdout = io::stdout();
-    //     let stdout = stdout.lock();
-    //     let mut stdout = termion::cursor::HideCursor::from(stdout.into_raw_mode().unwrap());
-
-    //     let mut ui = UI::new(stdout, chan_for_ui);
-    //     ui.start_ui();
-    // });
-
-    // let input = Input::new((send_orders_to_ui, recv_data_in_input), send_orders_to_pa);
-    // input.start_input(stdin);
-
-    // ui_thread.join().unwrap();
-    // pa_interface_thread.join().unwrap();
 }
 
-fn main() -> Result<()> {
-    task::block_on(run())
+fn main() -> Result<(), RSError> {
+    let mut threaded_rt = runtime::Builder::new()
+        .threaded_scheduler()
+        .enable_time()
+        .build()?;
+    threaded_rt.block_on(async { run().await })
 }

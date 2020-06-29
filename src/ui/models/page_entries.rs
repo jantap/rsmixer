@@ -1,4 +1,8 @@
-use super::{entry_height, EntryIdentifier, EntrySpaceLvl, EntryType, Rect, Y_PADDING};
+use crate::ui::util::{entry_height, Rect, Y_PADDING};
+use crate::{
+    entry::{EntryIdentifier, EntrySpaceLvl, EntryType},
+    RSError,
+};
 
 pub struct PageEntries {
     entries: Vec<EntryIdentifier>,
@@ -25,12 +29,16 @@ impl PageEntries {
         self.entries.len()
     }
 
-    pub fn get(&self, i: usize) -> EntryIdentifier {
-        self.entries[i]
+    pub fn get(&self, i: usize) -> Option<EntryIdentifier> {
+        if i < self.len() {
+            Some(self.entries[i])
+        } else {
+            None
+        }
     }
 
-    pub fn reflow_scroll(&mut self, force: bool) {
-        let (_, h) = crossterm::terminal::size().unwrap();
+    pub fn reflow_scroll(&mut self, force: bool) -> Result<(), RSError> {
+        let (_, h) = crossterm::terminal::size()?;
 
         if force || h != self.last_term_h {
             self.last_term_h = h;
@@ -41,18 +49,26 @@ impl PageEntries {
             let mut scroll_needed = 0;
             let mut curh = 0;
             for l in &self.lvls {
-                if entry_height(*l) + curh > h {
+                curh += entry_height(*l);
+
+                if curh > h {
                     scroll_needed += 1;
-                    curh = entry_height(*l);
+                    curh = 0;
                 }
 
                 self.visibility.push(scroll_needed);
             }
         }
+
+        Ok(())
     }
 
-    pub fn adjust_scroll(&mut self, scroll: &mut usize, selected: &mut usize) -> bool {
-        self.reflow_scroll(false);
+    pub fn adjust_scroll(
+        &mut self,
+        scroll: &mut usize,
+        selected: &mut usize,
+    ) -> Result<bool, RSError> {
+        self.reflow_scroll(false)?;
 
         let sel = (*selected).clone();
         let scr = (*scroll).clone();
@@ -71,14 +87,14 @@ impl PageEntries {
             0
         };
 
-        !(sel == *selected && scr == *scroll)
+        Ok(!(sel == *selected && scr == *scroll))
     }
 
-    pub fn is_entry_visible(&self, index: usize, scroll: usize) -> Option<Rect> {
-        let (w, _) = crossterm::terminal::size().unwrap();
+    pub fn is_entry_visible(&self, index: usize, scroll: usize) -> Result<Option<Rect>, RSError> {
+        let (w, _) = crossterm::terminal::size()?;
 
         if self.visibility[index] != scroll {
-            return None;
+            return Ok(None);
         }
 
         let mut he = 0;
@@ -88,13 +104,17 @@ impl PageEntries {
             }
         }
 
-        return Some(Rect::new(2, 2 + he, w - 4, entry_height(self.lvls[index])));
+        return Ok(Some(Rect::new(
+            2,
+            2 + he,
+            w - 4,
+            entry_height(self.lvls[index]),
+        )));
     }
 
     pub fn visible_range_with_lvl<'a>(
         &'a self,
         scroll: usize,
-        parent_type: EntryType,
     ) -> Box<dyn Iterator<Item = (usize, EntrySpaceLvl)> + 'a> {
         let start = match self.visibility.iter().position(|&x| x == scroll) {
             Some(s) => s,
@@ -105,30 +125,53 @@ impl PageEntries {
             None => 0,
         };
 
+        log::error!("vis {} {}", start, end);
+
         Box::new((start..end).map(move |x| -> (usize, EntrySpaceLvl) { (x, self.lvls[x]) }))
     }
 
-    pub fn set(&mut self, vs: Vec<EntryIdentifier>, parent_type: EntryType) {
-        self.lvls = Vec::new();
-
-        for index in 0..vs.len() {
+    pub fn set(&mut self, vs: Vec<EntryIdentifier>, parent_type: EntryType) -> bool {
+        let calc_lvl = |vs: &Vec<EntryIdentifier>, index: usize| -> EntrySpaceLvl {
             if vs[index].entry_type == parent_type {
                 if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
-                    self.lvls.push(EntrySpaceLvl::ParentNoChildren);
+                    EntrySpaceLvl::ParentNoChildren
                 } else {
-                    self.lvls.push(EntrySpaceLvl::Parent);
+                    EntrySpaceLvl::Parent
                 }
             } else {
                 if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
-                    self.lvls.push(EntrySpaceLvl::LastChild);
+                    EntrySpaceLvl::LastChild
                 } else {
-                    self.lvls.push(EntrySpaceLvl::MidChild);
+                    EntrySpaceLvl::MidChild
                 }
             }
+        };
+
+        let mut ret;
+        if vs.len() == self.len() {
+            ret = true;
+            for (i, e) in vs.iter().enumerate() {
+                if *e != self.get(i).unwrap() || calc_lvl(&vs, i) != self.lvls[i] {
+                    ret = false;
+                    break;
+                }
+            }
+        } else {
+            ret = false;
+        };
+
+        if !ret {
+            self.lvls = Vec::new();
+
+            for index in 0..vs.len() {
+                self.lvls.push(calc_lvl(&vs, index));
+            }
+
+            self.reflow_scroll(true).unwrap();
+
+            self.entries = vs;
         }
 
-        self.reflow_scroll(true);
-
-        self.entries = vs;
+        ret
     }
 }

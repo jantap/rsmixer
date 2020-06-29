@@ -1,10 +1,8 @@
+use super::Widget;
+use crate::RSError;
 use crate::{
     draw_range, repeat_string,
-    ui::{
-        util::{get_style, Rect},
-        Widget,
-    },
-    Result,
+    ui::util::{get_style, Rect},
 };
 
 use std::io::Write;
@@ -37,12 +35,22 @@ impl BlockWidget {
 }
 
 impl<W: Write> Widget<W> for BlockWidget {
-    fn render(self, area: Rect, buf: &mut W) -> Result<()> {
-        let top = get_style("normal").apply(format!(
-            "┌{}{}┐",
-            self.title,
-            repeat_string!("─", area.width - 2 - self.title.len() as u16)
-        ));
+    fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+        if area.width < 2 || area.height < 2 {
+            return Err(RSError::TerminalTooSmall);
+        }
+
+        let top = if (area.width as usize) < 2 + self.title.len() {
+            (&self.title[0..area.width as usize - 2]).to_string()
+        } else {
+            format!(
+                "{}{}",
+                self.title,
+                repeat_string!("─", area.width - 2 - self.title.len() as u16)
+            )
+        };
+
+        let top = get_style("normal").apply(format!("┌{}┐", top,));
         let bot = get_style("normal").apply(format!("└{}┘", repeat_string!("─", area.width - 2)));
         execute!(buf, MoveTo(area.x, area.y))?;
         write!(buf, "{}", top)?;
@@ -57,7 +65,13 @@ impl<W: Write> Widget<W> for BlockWidget {
                 write!(buf, "{}", sides.clone())?;
             }
         } else {
-            draw_range!(buf, "│", area.x..area.x+1, area.y..area.y + area.height - 1, get_style("normal"));
+            draw_range!(
+                buf,
+                "│",
+                area.x..area.x + 1,
+                area.y..area.y + area.height - 1,
+                get_style("normal")
+            );
             draw_range!(
                 buf,
                 "│",

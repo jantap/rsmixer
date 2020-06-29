@@ -1,11 +1,10 @@
+use super::Widget;
 use crate::{
     draw_at, repeat_string,
-    ui::{
-        util::{get_style, Rect},
-        Widget,
-    },
-    Result,
+    ui::util::{get_style, Rect},
 };
+
+use crate::RSError;
 
 use std::{
     cmp::{max, min},
@@ -14,7 +13,7 @@ use std::{
 
 use crossterm::{cursor::MoveTo, execute};
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum VolumeWidgetBorder {
     Single,
     Upper,
@@ -22,7 +21,7 @@ pub enum VolumeWidgetBorder {
     None,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct VolumeWidget {
     pub percent: f32,
     pub border: VolumeWidgetBorder,
@@ -59,7 +58,7 @@ impl VolumeWidget {
 }
 
 impl<W: Write> Widget<W> for VolumeWidget {
-    fn render(self, area: Rect, buf: &mut W) -> Result<()> {
+    fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
         // draw_rect!(buf, " ", area, get_style("normal"));
         if self.border != VolumeWidgetBorder::None {
             let ch1 = match self.border {

@@ -1,5 +1,8 @@
 use crate::{bishopify, BishopMessage};
-use crate::{Entry, ui::PageType, EntryIdentifier, EntryType};
+use crate::{
+    entry::{Entry, EntryIdentifier},
+    ui::PageType,
+};
 use pulse::volume::ChannelVolumes;
 
 pub static CHANNEL_CAPACITY: usize = 32;
@@ -7,6 +10,8 @@ pub static CHANNEL_CAPACITY: usize = 32;
 pub static UI_MESSAGE: u32 = 1;
 pub static PA_MESSAGE: u32 = 2;
 
+type MonSrc = Option<u32>;
+type M = Vec<(Entry, MonSrc)>;
 bishopify!(Letter,
     ExitSignal => 0,
 
@@ -24,4 +29,7 @@ bishopify!(Letter,
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,
     SetVolume(EntryIdentifier, ChannelVolumes) => PA_MESSAGE,
+    CreateMonitors(M) => PA_MESSAGE,
+    SetSuspend(EntryIdentifier, bool) => PA_MESSAGE,
+    KillEntry(EntryIdentifier) => PA_MESSAGE,
 );

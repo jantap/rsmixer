@@ -1,11 +1,6 @@
 use crate::{Letter, BINDINGS, DISPATCH};
 
-use std::io::Read;
-
-use async_std::prelude::*;
-use async_std::task;
-
-use log::info;
+use tokio::stream::StreamExt;
 
 pub async fn start() {
     let mut reader = crossterm::event::EventStream::new();

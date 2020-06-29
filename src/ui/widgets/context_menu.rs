@@ -1,19 +1,17 @@
+use super::super::models::ContextMenuOption;
+use super::BlockWidget;
+use super::Widget;
 use crate::{
     draw_at,
-    draw_range, repeat_string,
-    ui::{
-        util::{get_style, Rect},
-        Widget,
-    },
-    Result,
+    entry::EntryIdentifier,
+    ui::util::{get_style, Rect},
 };
 use std::cmp::max;
-use super::super::{ ContextMenuOption, EntryIdentifier };
-use super::BlockWidget;
 
+use crate::RSError;
 use std::io::Write;
 
-use crossterm::{cursor::MoveTo, execute};
+use crossterm::execute;
 
 #[derive(Clone)]
 pub struct ContextMenuWidget {
@@ -45,7 +43,7 @@ impl ContextMenuWidget {
 }
 
 impl<W: Write> Widget<W> for ContextMenuWidget {
-    fn render(mut self, mut area: Rect, buf: &mut W) -> Result<()> {
+    fn render(&mut self, mut area: Rect, buf: &mut W) -> Result<(), RSError> {
         let recommended_h = self.options.len() + 6;
         if recommended_h < area.height as usize {
             self.scrolling = false;
@@ -62,11 +60,11 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
         let target_w = max(40, longest_word + 4) as u16;
 
         if area.width > target_w {
-            area.x += (area.width - target_w)/2;
+            area.x += (area.width - target_w) / 2;
             area.width = target_w;
         }
 
-        let b = BlockWidget::default().clean_inside(true);
+        let mut b = BlockWidget::default().clean_inside(true);
         b.render(area, buf)?;
 
         let mut starty = area.y + 3;
@@ -74,8 +72,17 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
         for (i, o) in self.options.iter().enumerate() {
             let s: String = o.clone().into();
             let startx = area.x + area.width / 2 - s.len() as u16 / 2;
-            draw_at!(buf, s, startx, starty,
-                    if self.selected == i { get_style("inverted") }else {get_style("normal") });
+            draw_at!(
+                buf,
+                s,
+                startx,
+                starty,
+                if self.selected == i {
+                    get_style("inverted")
+                } else {
+                    get_style("normal")
+                }
+            );
 
             starty += 1;
         }

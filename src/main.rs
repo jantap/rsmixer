@@ -50,7 +50,7 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + S
 async fn run() -> Result<()> {
     let stdout = env::var("RUST_LOG").is_err();
     if stdout {
-        simple_logging::log_to_file("log", LevelFilter::Info).unwrap();
+        simple_logging::log_to_file("log", LevelFilter::Debug).unwrap();
     } else {
         env_logger::init();
     }
@@ -139,7 +139,7 @@ async fn run() -> Result<()> {
     //     // task::block_on(pa_interface.connect_and_start_mainloop()).unwrap();
     // });
 
-    let x = events.join(ui).join(pa_interface::start());
+    let x = pa_interface::start().join(ui).join(events);
     log::error!("start program");
     x.await;
     log::error!("quit program");

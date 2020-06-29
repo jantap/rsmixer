@@ -258,6 +258,57 @@ async fn start_mainloop(
                         }
                     };
                 }
+                Letter::MoveEntryToParent(ident, parent) => {
+                    match ident.entry_type {
+                        EntryType::SinkInput => {
+                            context.borrow_mut().introspect().move_sink_input_by_index(
+                                ident.index,
+                                parent.index,
+                                Some(Box::new(move |stat| {
+                                    if !stat {
+                                        return;
+                                    }
+                                    SINK_INPUTS.lock().unwrap().remove(&ident.index);
+                                    // if let Some(s) =
+                                    //     SINK_INPUTS.lock().unwrap().get_mut(&ident.index)
+                                    // {
+                                    //     s.sink = parent.index;
+                                    //     task::spawn(async move {
+                                    //         DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                    //         DISPATCH.event(Letter::EntryUpdate(parent)).await;
+                                    //     });
+                                    // }
+                                    INFO_QUEUE.lock().unwrap().insert(parent);
+                                    INFO_QUEUE.lock().unwrap().insert(ident);
+                                })),
+                            );
+                        }
+                        EntryType::SourceOutput => {
+                            context.borrow_mut().introspect().move_source_output_by_index(
+                                ident.index,
+                                parent.index,
+                                Some(Box::new(move |stat| {
+                                    if !stat {
+                                        return;
+                                    }
+                                    SOURCE_OUTPUTS.lock().unwrap().remove(&ident.index);
+                                    // if let Some(s) =
+                                    //     SOURCE_OUTPUTS.lock().unwrap().get_mut(&ident.index)
+                                    // {
+                                    //     s.monitor_source = parent.index;
+                                    //     task::spawn(async move {
+                                    //         DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                    //         DISPATCH.event(Letter::EntryUpdate(parent)).await;
+                                    //     });
+                                    // }
+                                    INFO_QUEUE.lock().unwrap().insert(parent);
+                                    INFO_QUEUE.lock().unwrap().insert(ident);
+                                })),
+                            );
+                        }
+                        _ => {},
+                    };
+                }
                 Letter::SetVolume(ident, vol) => {
                     match ident.entry_type {
                         EntryType::Sink => {

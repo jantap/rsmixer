@@ -1,4 +1,6 @@
 use super::{ EntryIdentifier, EntryType };
+use crate::DISPATCH;
+use crate::comms::Letter;
 
 
 pub fn context_menu(typ: EntryType) -> Vec<ContextMenuOption> {
@@ -20,7 +22,7 @@ pub fn context_menu(typ: EntryType) -> Vec<ContextMenuOption> {
 
 #[derive(PartialEq, Clone)]
 pub enum ContextMenuOption {
-    Entry(EntryIdentifier, String),
+    MoveToEntry(EntryIdentifier, String),
     Kill,
     Move,
     Suspend,
@@ -31,7 +33,7 @@ pub enum ContextMenuOption {
 impl From<ContextMenuOption> for String {
     fn from(option: ContextMenuOption) -> Self {
         match option {
-            ContextMenuOption::Entry(_, s) => s.clone(),
+            ContextMenuOption::MoveToEntry(_, s) => s.clone(),
             ContextMenuOption::Kill => "Kill".into(),
             ContextMenuOption::Move => "Move".into(),
             ContextMenuOption::Suspend => "Suspend".into(),
@@ -47,9 +49,13 @@ pub enum ContextMenuEffect {
     PresentParents,
 }
 
-pub fn resolve(ident: EntryIdentifier, answer: ContextMenuOption) -> ContextMenuEffect {
+pub async fn resolve(ident: EntryIdentifier, answer: ContextMenuOption) -> ContextMenuEffect {
     if answer == ContextMenuOption::Move {
         return ContextMenuEffect::PresentParents;
+    }
+    if let ContextMenuOption::MoveToEntry(entry, s) = answer {
+        log::error!("{:?} entry {}", entry, s);
+        DISPATCH.event(Letter::MoveEntryToParent(ident, entry)).await;
     }
 
     return ContextMenuEffect::None;

@@ -151,7 +151,7 @@ pub async fn start() -> Result<()> {
                         selected = min(selected + how_much as usize, page_entries.len());
                         redraw = RedrawType::Entries;
                     } else {
-                        selected_context = min(selected_context + how_much as usize, page_entries.len());
+                        selected_context = min(selected_context + how_much as usize, context_options.len());
                         redraw = RedrawType::ContextMenu;
                     }
                 }
@@ -204,7 +204,7 @@ pub async fn start() -> Result<()> {
                         redraw = RedrawType::ContextMenu;
                         context_options = context_menus::context_menu(page_entries.get(selected).entry_type);
                     } else {
-                        let ans = context_menus::resolve(page_entries.get(selected), context_options[selected_context].clone());
+                        let ans = context_menus::resolve(page_entries.get(selected), context_options[selected_context].clone()).await;
 
                         match ans {
                             ContextMenuEffect::None => {
@@ -218,7 +218,7 @@ pub async fn start() -> Result<()> {
                                     EntryType::Source
                                 };
 
-                                context_options = entries.iter_type(p_type).map(|(ident, entry)| ContextMenuOption::Entry(*ident, entry.name.clone())).collect();
+                                context_options = entries.iter_type(p_type).map(|(ident, entry)| ContextMenuOption::MoveToEntry(*ident, entry.name.clone())).collect();
                                 redraw = RedrawType::ContextMenu;
                             }
                             _ => {},

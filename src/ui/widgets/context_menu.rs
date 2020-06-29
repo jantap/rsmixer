@@ -7,6 +7,7 @@ use crate::{
     },
     Result,
 };
+use std::cmp::max;
 use super::super::{ ContextMenuOption, EntryIdentifier };
 use super::BlockWidget;
 
@@ -53,9 +54,16 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
             self.scrolling = true;
         }
 
-        if area.width > 40 {
-            area.x += (area.width - 40)/2;
-            area.width = 40;
+        let mut longest_word = 0;
+        self.options.iter().for_each(|o| {
+            longest_word = max(longest_word, String::from(o.clone()).len());
+        });
+
+        let target_w = max(40, longest_word + 4) as u16;
+
+        if area.width > target_w {
+            area.x += (area.width - target_w)/2;
+            area.width = target_w;
         }
 
         let b = BlockWidget::default().clean_inside(true);

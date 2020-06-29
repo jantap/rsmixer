@@ -371,6 +371,7 @@ pub fn create_monitor(
             }
         },
     ));
+    log::error!("RAZ");
 
     // Stream state change callback
     {
@@ -401,6 +402,7 @@ pub fn create_monitor(
         Some(i) => i.to_string(),
         None => String::new(),
     };
+    log::error!("DWA");
 
     debug!("[PADataInterface] Connecting stream");
     match stream.borrow_mut().connect_record(

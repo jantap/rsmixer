@@ -22,5 +22,6 @@ bishopify!(Letter,
     OpenContextMenu => UI_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
+    MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,
     SetVolume(EntryIdentifier, ChannelVolumes) => PA_MESSAGE,
 );

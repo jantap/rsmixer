@@ -190,9 +190,10 @@ async fn start_mainloop(
                                     }
                                     if let Some(s) = SINKS.lock().unwrap().get_mut(&ident.index) {
                                         s.mute = mute;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                     INFO_QUEUE.lock().unwrap().insert(ident);
                                 })),
@@ -210,9 +211,10 @@ async fn start_mainloop(
                                         SINK_INPUTS.lock().unwrap().get_mut(&ident.index)
                                     {
                                         s.mute = mute;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                     INFO_QUEUE.lock().unwrap().insert(ident);
                                 })),
@@ -228,9 +230,10 @@ async fn start_mainloop(
                                     }
                                     if let Some(s) = SOURCES.lock().unwrap().get_mut(&ident.index) {
                                         s.mute = mute;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                     INFO_QUEUE.lock().unwrap().insert(ident);
                                 })),
@@ -248,9 +251,10 @@ async fn start_mainloop(
                                         SOURCE_OUTPUTS.lock().unwrap().get_mut(&ident.index)
                                     {
                                         s.mute = mute;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                     INFO_QUEUE.lock().unwrap().insert(ident);
                                 })),
@@ -321,9 +325,10 @@ async fn start_mainloop(
                                     }
                                     if let Some(s) = SINKS.lock().unwrap().get_mut(&ident.index) {
                                         s.volume = vol;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                 })),
                             );
@@ -340,9 +345,10 @@ async fn start_mainloop(
                                         SINK_INPUTS.lock().unwrap().get_mut(&ident.index)
                                     {
                                         s.volume = vol;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                 })),
                             );
@@ -362,9 +368,10 @@ async fn start_mainloop(
                                             SOURCES.lock().unwrap().get_mut(&ident.index)
                                         {
                                             s.volume = vol;
-                                            task::spawn(async move {
-                                                DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                            });
+                                            UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                            // task::spawn(async move {
+                                            //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                            // });
                                         }
                                     })),
                                 );
@@ -381,9 +388,10 @@ async fn start_mainloop(
                                         SOURCE_OUTPUTS.lock().unwrap().get_mut(&ident.index)
                                     {
                                         s.volume = vol;
-                                        task::spawn(async move {
-                                            DISPATCH.event(Letter::EntryUpdate(ident)).await;
-                                        });
+                                        UI_UPDATE_ENTRY_QUEUE.lock().unwrap().insert(ident);
+                                        // task::spawn(async move {
+                                        //     DISPATCH.event(Letter::EntryUpdate(ident)).await;
+                                        // });
                                     }
                                 })),
                             );
@@ -444,9 +452,13 @@ async fn start_mainloop(
 
         UI_UPDATE_ENTRY_QUEUE.lock().unwrap().retain(|ident| {
             let i = (*ident).clone();
-            task::spawn(async move {
+            let e = match i.into_entry() {
+                Ok(e) =>e,
+                Err(_) => { return false;},
+            };
+            task::spawn(async move {;
                 debug!("send ui update {:?} {}", i.entry_type, i.index);
-                DISPATCH.event(Letter::EntryUpdate(i)).await;
+                DISPATCH.event(Letter::EntryUpdate(i, e)).await;
             });
             return false;
         });

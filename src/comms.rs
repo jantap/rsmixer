@@ -1,5 +1,5 @@
 use crate::{bishopify, BishopMessage};
-use crate::{ui::PageType, EntryIdentifier, EntryType};
+use crate::{Entry, ui::PageType, EntryIdentifier, EntryType};
 use pulse::volume::ChannelVolumes;
 
 pub static CHANNEL_CAPACITY: usize = 32;
@@ -12,7 +12,7 @@ bishopify!(Letter,
 
     Redraw => UI_MESSAGE,
     EntryRemoved(EntryIdentifier) => UI_MESSAGE,
-    EntryUpdate(EntryIdentifier) => UI_MESSAGE,
+    EntryUpdate(EntryIdentifier, Entry) => UI_MESSAGE,
     PeakVolumeUpdate(EntryIdentifier, f32) => UI_MESSAGE,
     RequstChangeVolume(i16) => UI_MESSAGE,
     MoveUp(u16) => UI_MESSAGE,

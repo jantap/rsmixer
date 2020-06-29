@@ -86,7 +86,7 @@ macro_rules! bishopify {
     ($enu:ident, $( $x:ident $( ( $( $s:ident),* ) )? => $y:expr ),* $( , )?) => {
         use crate::bishopify_internal;
 
-        #[derive(Clone, Copy, PartialEq)]
+        #[derive(Clone, PartialEq)]
         pub enum $enu {
             $( $x $( ( $( $s ),* ) )? ),*
         }

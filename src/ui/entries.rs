@@ -1,7 +1,7 @@
 use crate::{EntryIdentifier, EntryType};
 use std::collections::BTreeMap;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Entry {
     pub entry_type: EntryType,
     pub index: u32,

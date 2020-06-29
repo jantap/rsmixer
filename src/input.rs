@@ -28,7 +28,7 @@ pub async fn start() {
                 //     continue;
                 // }
                 if let Some(letter) = BINDINGS.get().get(&event.code) {
-                    DISPATCH.event(*letter).await;
+                    DISPATCH.event(letter.clone()).await;
 
                     if *letter == Letter::ExitSignal {
                         break;

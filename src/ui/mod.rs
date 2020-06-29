@@ -116,14 +116,15 @@ pub async fn start() -> Result<()> {
                 }
                 Letter::EntryRemoved(ident) => {
                     entries.remove(&ident);
-                }
-                Letter::EntryUpdate(ident) => {
-                    let entry = match ident.into_entry() {
-                        Ok(entry) => entry,
-                        Err(_) => {
-                            continue;
+
+                    if ui_state != UIState::Normal {
+                        if page_entries.get(selected) == ident {
+                            ui_state = UIState::Normal;
+                            redraw = RedrawType::Full;
                         }
-                    };
+                    }
+                }
+                Letter::EntryUpdate(ident, entry) => {
                     entries.insert(ident, entry);
                     if page_entries.iter_entries().any(|&i| i == ident) {
                         redraw = RedrawType::Entries;
@@ -228,21 +229,30 @@ pub async fn start() -> Result<()> {
                 _ => {}
             };
 
-            if ui_state == UIState::Normal {
-                let (p, _) = parent_child_types(current_page);
-                page_entries.set(
-                    current_page
-                        .generate_page(&entries)
-                        .map(|x| *x.0)
-                        .collect::<Vec<EntryIdentifier>>(),
-                    p,
-                );
 
-                if page_entries.adjust_scroll(&mut scroll, &mut selected) && redraw != RedrawType::Full
-                {
-                    redraw = RedrawType::Entries;
+            let last_sel = if selected < page_entries.len() { page_entries.get(selected).clone() } else { EntryIdentifier::new(EntryType::Sink, 0) };
+
+            let (p, _) = parent_child_types(current_page);
+            page_entries.set(
+                current_page
+                    .generate_page(&entries)
+                    .map(|x| *x.0)
+                    .collect::<Vec<EntryIdentifier>>(),
+                p,
+            );
+
+            for (i,x) in page_entries.iter_entries().enumerate() {
+                if *x == last_sel {
+                    selected = i;
+                    break;
                 }
+            }
 
+            if page_entries.adjust_scroll(&mut scroll, &mut selected) && redraw != RedrawType::Full && redraw != RedrawType::ContextMenu {
+                redraw = RedrawType::Entries;
+            }
+
+            if ui_state == UIState::Normal {
                 if redraw == RedrawType::Full {
                     draw(
                         &mut stdout,

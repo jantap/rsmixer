@@ -1,9 +1,9 @@
 use super::common::*;
+use crate::{comms, SENDERS};
+use std::time::Duration;
 use tokio::stream::StreamExt;
 use tokio::sync::broadcast::channel;
 use tokio::sync::mpsc;
-use crate::{SENDERS,comms};
-use std::time::Duration;
 
 pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<(), RSError> {
     let (info_sx, mut info_rx) = mpsc::unbounded_channel();
@@ -33,7 +33,6 @@ pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<
                         break;
                     }
                     internal_sx.send(PAInternal::Command(cmd))?;
-                    // gend(&internal_sx, PAInternal::Command(cmd))?;
                 }
             }
             i = info => {
@@ -44,8 +43,6 @@ pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<
             _ = inter => {
                 send(&internal_sx, PAInternal::Tick)?;
             }
-            // _ = dur => {
-            // }
         };
     }
 

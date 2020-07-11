@@ -39,7 +39,7 @@ impl std::default::Default for RsMixerConfig {
         c.insert("fg".to_string(), "red".to_string());
         c.insert("bg".to_string(), "black".to_string());
         styles.insert("red".to_string(), c.clone());
-        c.insert("fg".to_string(), "orange".to_string());
+        c.insert("fg".to_string(), "yellow".to_string());
         c.insert("bg".to_string(), "black".to_string());
         styles.insert("orange".to_string(), c.clone());
         c.insert("fg".to_string(), "green".to_string());

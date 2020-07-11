@@ -1,5 +1,5 @@
 use super::common::*;
-use super::{pa_actions, callbacks};
+use super::{callbacks, pa_actions};
 
 use pulse::proplist::Proplist;
 use std::ops::Deref;
@@ -114,28 +114,6 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
     let mut source_output_monitors: Monitors = HashMap::new();
     let mut source_monitors: Monitors = HashMap::new();
 
-    let remove_failed_monitors =
-        |index: &u32, x: &mut (Rc<RefCell<Stream>>, Option<u32>, cb_channel::Sender<u32>)| match x
-            .0
-            .borrow_mut()
-            .get_state()
-        {
-            pulse::stream::State::Failed => {
-                info!(
-                    "[PAInterface] Disconnecting {} sink input monitor (failed state)",
-                    index
-                );
-                return false;
-            }
-            pulse::stream::State::Terminated => {
-                info!(
-                    "[PAInterface] Disconnecting {} sink input monitor (failed state)",
-                    index
-                );
-                return false;
-            }
-            _ => true,
-        };
 
     while let Ok(msg) = internal_rx.recv() {
         mainloop.borrow_mut().lock();
@@ -145,10 +123,10 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
             }
             PAInternal::Tick => {
                 // remove failed monitors
-                sink_input_monitors.retain(remove_failed_monitors);
-                sink_monitors.retain(remove_failed_monitors);
-                source_output_monitors.retain(remove_failed_monitors);
-                source_monitors.retain(remove_failed_monitors);
+                sink_input_monitors.retain(pa_actions::remove_failed_monitors);
+                sink_monitors.retain(pa_actions::remove_failed_monitors);
+                source_output_monitors.retain(pa_actions::remove_failed_monitors);
+                source_monitors.retain(pa_actions::remove_failed_monitors);
             }
             PAInternal::Command(cmd) => {
                 if let None = pa_actions::handle_command(cmd.clone(), &context) {

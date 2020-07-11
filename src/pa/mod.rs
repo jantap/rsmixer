@@ -1,14 +1,14 @@
-mod common;
-mod sync_loop;
 mod async_loop;
-mod pa_actions;
 mod callbacks;
+mod common;
 mod monitor;
+mod pa_actions;
+mod sync_loop;
 
 use common::*;
 use lazy_static::lazy_static;
-use tokio::sync::mpsc;
 use state::Storage;
+use tokio::sync::mpsc;
 
 pub use async_loop::start_async;
 pub use sync_loop::start;

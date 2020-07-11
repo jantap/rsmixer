@@ -1,16 +1,17 @@
-use crate::draw_at;
-use crate::entry::{EntrySpaceLvl, Entry};
-use crate::ui::{
-    util::{get_style, Rect},
-    widgets::{VolumeWidgetBorder, Widget},
+use crate::{
+    RSError, draw_at, 
+    entry::{Entry, EntrySpaceLvl},
+    ui::{
+        util::{get_style, Rect},
+        widgets::{VolumeWidgetBorder, Widget},
+    },
 };
-use crate::RSError;
+
+use pulse::volume;
 
 use std::io::Write;
 
 use crossterm::{cursor::MoveTo, execute};
-
-use pulse::volume;
 
 impl<W: Write> Widget<W> for Entry {
     fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
@@ -20,6 +21,12 @@ impl<W: Write> Widget<W> for Entry {
             "normal"
         };
         let style = get_style(style);
+        let name_style = if self.is_selected {
+            "inverted"
+        } else {
+            "normal"
+        };
+        let name_style = get_style(name_style);
 
         let area1: Rect;
         let mut area2: Rect;
@@ -59,18 +66,24 @@ impl<W: Write> Widget<W> for Entry {
             .collect::<String>();
 
         execute!(buf, MoveTo(area1.x, area1.y))?;
-        write!(buf, "{}", style.clone().apply(short_name))?;
+        write!(buf, "{}", name_style.clone().apply(short_name))?;
 
         let vol_perc = format!("  {}", (main_vol * 150.0) as u32);
         let vol_perc = String::from(&vol_perc[vol_perc.len() - 3..vol_perc.len()]);
         let vol_db = self.volume.avg().print_db();
         if vol_db.len() + vol_perc.len() <= area1.width as usize + 3 {
-            let vol_str = format!("{}{}{}", vol_db, (0..area1.width as usize - 3 - vol_perc.len() - vol_db.len()).map(|_| " ").collect::<String>(), vol_perc);
+            let vol_str = format!(
+                "{}{}{}",
+                vol_db,
+                (0..area1.width as usize - 3 - vol_perc.len() - vol_db.len())
+                    .map(|_| " ")
+                    .collect::<String>(),
+                vol_perc
+            );
 
             execute!(buf, MoveTo(area1.x + 1, area1.y + 1))?;
             write!(buf, "{}", style.clone().apply(vol_str))?;
         }
-
 
         let mut v = Vec::new();
         match self.position {

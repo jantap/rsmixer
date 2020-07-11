@@ -1,16 +1,18 @@
-use crate::DISPATCH;
 use super::common::*;
+
+use crate::{
+    entry::{Entry, EntrySpaceLvl},
+    ui::widgets::VolumeWidget,
+    DISPATCH,
+};
+
 use pulse::{
-    def::{SinkState, SourceState},
     callbacks::ListResult,
     context::{
         introspect::{SinkInfo, SinkInputInfo, SourceInfo, SourceOutputInfo},
         subscribe::{subscription_masks, Operation},
-    }
-};
-use crate::{
-    ui::widgets::VolumeWidget,
-    entry::{Entry, EntrySpaceLvl},
+    },
+    def::{SinkState, SourceState},
 };
 
 pub fn subscribe(context: &Rc<RefCell<Context>>) -> Result<(), RSError> {
@@ -237,6 +239,9 @@ pub fn on_source_output_info(res: ListResult<&SourceOutputInfo>) {
                 Some(s) => s,
                 None => String::from(""),
             };
+            if n == "RsMixerContext" {
+                return;
+            }
             let ident = EntryIdentifier::new(EntryType::SourceOutput, i.index);
             let entry = Entry {
                 entry_type: EntryType::SourceOutput,
@@ -263,4 +268,3 @@ pub fn on_source_output_info(res: ListResult<&SourceOutputInfo>) {
         _ => {}
     };
 }
-

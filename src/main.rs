@@ -12,8 +12,8 @@ mod config;
 mod entry;
 mod errors;
 mod input;
-mod ui;
 mod pa;
+mod ui;
 
 use bishop::{BishopMessage, Dispatch, Senders};
 pub use errors::RSError;
@@ -46,6 +46,7 @@ static BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
 pub type Styles = HashMap<String, ContentStyle>;
 
 async fn run() -> Result<(), RSError> {
+    // @TODO choose where to log and verbosity
     let stdout = env::var("RUST_LOG").is_err();
     if stdout {
         simple_logging::log_to_file("log", LevelFilter::Debug).unwrap();
@@ -91,7 +92,7 @@ async fn run() -> Result<(), RSError> {
     };
 
     match tokio::try_join!(ui, pa, pa_async) {
-        _ => {
+        r => {
             DISPATCH.event(Letter::ExitSignal).await;
 
             let mut stdout = std::io::stdout();
@@ -102,6 +103,10 @@ async fn run() -> Result<(), RSError> {
             )
             .unwrap();
             crossterm::terminal::disable_raw_mode().unwrap();
+
+            if let Err(err) = r {
+                println!("{}", err);
+            }
         }
     }
 

@@ -126,6 +126,61 @@ fn set_mute(ident: EntryIdentifier, mute: bool, context: &Rc<RefCell<Context>>) 
     };
 }
 
+pub fn remove_failed_monitors(index: &u32,
+                                  x: &mut (
+        Rc<RefCell<Stream>>,
+        Option<u32>,
+        cb_channel::Sender<u32>,
+    )) -> bool {
+    match x.0.borrow_mut().get_state() {
+        pulse::stream::State::Failed => {
+            info!(
+                "[PAInterface] Disconnecting {} sink input monitor (failed state)",
+                index
+            );
+            false
+        }
+        pulse::stream::State::Terminated => {
+            info!(
+                "[PAInterface] Disconnecting {} sink input monitor (failed state)",
+                index
+            );
+            false
+        }
+        _ => true,
+    }
+}
+
+pub fn create_monitors(
+    mainloop: &Rc<RefCell<Mainloop>>,
+    context: &Rc<RefCell<Context>>,
+    sink_monitors: &mut Monitors,
+    sink_input_monitors: &mut Monitors,
+    source_monitors: &mut Monitors,
+    _source_output_monitors: &mut Monitors,
+    targets: &Vec<(Entry, Option<u32>)>,
+) {
+    sink_monitors.retain(remove_failed_monitors);
+    sink_input_monitors.retain(remove_failed_monitors);
+    source_monitors.retain(remove_failed_monitors);
+
+    sink_monitors.retain(|k, _| {
+        targets.iter().find(|(e, _)| {
+            e.entry_type == EntryType::Sink && e.index == *k
+        }) != None
+    });
+    sink_input_monitors.retain(|k, _| {
+        targets.iter().find(|(e, _)| {
+            e.entry_type == EntryType::SinkInput && e.index == *k
+        }) != None
+    });
+    source_monitors.retain(|k, _| {
+        targets.iter().find(|(e, _)| {
+            e.entry_type == EntryType::Source && e.index == *k
+        }) != None
+    });
+}
+
 pub fn create_monitor_for_entry(
     mainloop: &Rc<RefCell<Mainloop>>,
     context: &Rc<RefCell<Context>>,
@@ -136,6 +191,7 @@ pub fn create_monitor_for_entry(
     entry: Entry,
     monitor_src: Option<u32>,
 ) {
+    log::error!("CREATE MON FOR {:?} {}", entry.entry_type, entry.index);
     let (sx, rx) = cb_channel::unbounded();
     let mut source_index = None;
     let mut stream_index = None;

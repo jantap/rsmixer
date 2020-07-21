@@ -218,22 +218,15 @@ pub fn create_monitor_for_entry(
         if ms.contains_key(&entry.index) {
             return;
         }
-        ms.insert(
-            entry.index,
-            (
-                monitor::create(
-                    &mainloop,
-                    &context,
-                    &*SPEC,
-                    entry.entry_type,
-                    source_index,
-                    stream_index,
-                    rx,
-                )
-                .unwrap(),
-                monitor_src,
-                sx,
-            ),
-        );
+        if let Ok(stream) = monitor::create( &mainloop, &context, &*SPEC, entry.entry_type, source_index, stream_index, rx,) {
+            ms.insert(
+                entry.index,
+                (
+                    stream,
+                    monitor_src,
+                    sx,
+                ),
+            );
+        }
     }
 }

@@ -25,7 +25,7 @@ impl Error for RSError {}
 impl fmt::Display for RSError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::TaskHandleError(_) => write!(f, "Join handle error"),
+            Self::TaskHandleError(e) => write!(f, "Join handle error\n{}", e),
             Self::TerminalError(_) => write!(f, "Terminal error"),
             Self::TerminalTooSmall => write!(f, "Terminal is too small"),
             Self::IOError(_) => write!(f, "IO error"),

@@ -74,6 +74,7 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
     .await?;
 
     while let Some(Ok(msg)) = rx.next().await {
+        log::error!("cur letter {:?}", msg.clone());
         // run action handlers which will decide what to redraw
         state.redraw = RedrawType::None;
 

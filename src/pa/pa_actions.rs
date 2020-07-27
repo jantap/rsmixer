@@ -164,21 +164,49 @@ pub fn create_monitors(
     sink_input_monitors.retain(remove_failed_monitors);
     source_monitors.retain(remove_failed_monitors);
 
-    sink_monitors.retain(|k, _| {
-        targets.iter().find(|(e, _)| {
+    sink_monitors.retain(|k, v| {
+        let ret = targets.iter().find(|(e, _)| {
             e.entry_type == EntryType::Sink && e.index == *k
-        }) != None
+        }) != None;
+
+        if !ret {
+            match v.2.send(0) {
+                _ => {},
+            }
+        }
+
+        ret
     });
-    sink_input_monitors.retain(|k, _| {
-        targets.iter().find(|(e, _)| {
+    sink_input_monitors.retain(|k, v| {
+        let ret = targets.iter().find(|(e, _)| {
             e.entry_type == EntryType::SinkInput && e.index == *k
-        }) != None
+        }) != None;
+
+        if !ret {
+            match v.2.send(0) {
+                _ => {},
+            }
+        }
+
+        ret
     });
-    source_monitors.retain(|k, _| {
-        targets.iter().find(|(e, _)| {
+    source_monitors.retain(|k, v| {
+        let ret = targets.iter().find(|(e, _)| {
             e.entry_type == EntryType::Source && e.index == *k
-        }) != None
+        }) != None;
+
+        if !ret {
+            match v.2.send(0) {
+                _ => {},
+            }
+        }
+
+        ret
     });
+
+    for (e, m) in targets.iter() {
+        create_monitor_for_entry(mainloop, context,sink_monitors, sink_input_monitors, source_monitors, _source_output_monitors,e, *m);
+    }
 }
 
 pub fn create_monitor_for_entry(
@@ -188,7 +216,7 @@ pub fn create_monitor_for_entry(
     sink_input_monitors: &mut Monitors,
     source_monitors: &mut Monitors,
     _source_output_monitors: &mut Monitors,
-    entry: Entry,
+    entry: &Entry,
     monitor_src: Option<u32>,
 ) {
     log::error!("CREATE MON FOR {:?} {}", entry.entry_type, entry.index);

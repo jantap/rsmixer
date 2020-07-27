@@ -123,10 +123,10 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
             }
             PAInternal::Tick => {
                 // remove failed monitors
-                sink_input_monitors.retain(pa_actions::remove_failed_monitors);
-                sink_monitors.retain(pa_actions::remove_failed_monitors);
-                source_output_monitors.retain(pa_actions::remove_failed_monitors);
-                source_monitors.retain(pa_actions::remove_failed_monitors);
+                // sink_input_monitors.retain(pa_actions::remove_failed_monitors);
+                // sink_monitors.retain(pa_actions::remove_failed_monitors);
+                // source_output_monitors.retain(pa_actions::remove_failed_monitors);
+                // source_monitors.retain(pa_actions::remove_failed_monitors);
             }
             PAInternal::Command(cmd) => {
                 if let None = pa_actions::handle_command(cmd.clone(), &context) {
@@ -134,32 +134,16 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
                 }
 
                 if let Letter::CreateMonitors(monitors) = cmd.clone() {
-                    sink_input_monitors.retain(|k, v| {
-                        let x = monitors.iter().find(|(e, _)| {
-                            e.index == *k
-                                && e.entry_type == EntryType::SinkInput
-                                && e.monitor_source == v.1
-                        }) != None;
-                        if x {
-                            match v.2.send(0) {
-                                _ => {}
-                            };
-                        }
 
-                        x
-                    });
-                    for (ent, mon_src) in &monitors {
-                        pa_actions::create_monitor_for_entry(
-                            &mainloop,
-                            &context,
-                            &mut sink_monitors,
-                            &mut sink_input_monitors,
-                            &mut source_monitors,
-                            &mut source_output_monitors,
-                            ent.clone(),
-                            mon_src.clone(),
-                        );
-                    }
+                    pa_actions::create_monitors(
+                        &mainloop,
+                        &context,
+                        &mut sink_monitors,
+                        &mut sink_input_monitors,
+                        &mut source_monitors,
+                        &mut source_output_monitors,
+                        &monitors,
+                    );
                 }
             }
         };

@@ -13,8 +13,6 @@ use tokio::sync::mpsc;
 pub use async_loop::start_async;
 pub use sync_loop::start;
 
-pub type Monitors = HashMap<u32, (Rc<RefCell<Stream>>, Option<u32>, cb_channel::Sender<u32>)>;
-
 pub enum PAInternal {
     Tick,
     Command(Letter),

@@ -1,21 +1,102 @@
 use super::common::*;
 use pulse::stream::PeekResult;
+use std::collections::HashSet;
 use std::convert::TryInto;
+
+pub struct Monitor {
+    stream: Rc<RefCell<Stream>>,
+    monitor_src: Option<u32>,
+    exit_sender: cb_channel::Sender<u32>,
+}
+
+pub struct Monitors(HashMap<EntryIdentifier, Monitor>);
+
+impl Default for Monitors {
+    fn default() -> Self {
+        Self {
+            0: HashMap::new(),
+        }
+    }
+}
+
+impl Monitors {
+    pub fn insert(&mut self, ident: EntryIdentifier, monitor: Monitor) -> Option<Monitor> {
+        self.0.insert(ident, monitor)
+    }
+
+    pub fn filter(&mut self, mainloop: &Rc<RefCell<Mainloop>>, context: &Rc<RefCell<Context>>, targets: &HashMap<EntryIdentifier, Option<u32>>) {
+
+        // remove failed streams
+        // then send exit signal if stream is unwanted
+        self.0.retain(|ident, monitor| {
+            match monitor.stream.borrow_mut().get_state() {
+                pulse::stream::State::Terminated
+                | pulse::stream::State::Failed => {
+                    info!(
+                        "[PAInterface] Disconnecting {} sink input monitor (failed state)",
+                        ident.index
+                    );
+                    return false;
+                }
+                _ => {}
+            };
+
+            if targets.get(ident) == None {
+                match monitor.exit_sender.send(0) {
+                    _ => {},
+                }
+            }
+
+            true
+        });
+
+        targets.iter().for_each(|(ident, monitor_src)| {
+            match self.0.get(ident) {
+                None => {
+                    self.create_monitor(mainloop, context, *ident, *monitor_src);
+                }
+                _ => {}
+            }
+        });
+    }
+
+    fn create_monitor(&mut self, mainloop: &Rc<RefCell<Mainloop>>, context: &Rc<RefCell<Context>>, ident: EntryIdentifier, monitor_src: Option<u32>) {
+        if self.0.contains_key(&ident) {
+            return;
+        }
+        let (sx, rx) = cb_channel::unbounded();
+        if let Ok(stream) = create(&mainloop, &context, &*SPEC, ident, monitor_src, rx,) {
+            self.0.insert(
+                ident,
+                Monitor {
+                    stream,
+                    monitor_src,
+                    exit_sender: sx,
+                },
+            );
+        }
+    }
+}
 
 fn slice_to_4_bytes(slice: &[u8]) -> [u8; 4] {
     slice.try_into().expect("slice with incorrect length")
 }
 
-pub fn create(
+fn create(
     p_mainloop: &Rc<RefCell<Mainloop>>,
     p_context: &Rc<RefCell<Context>>,
     p_spec: &pulse::sample::Spec,
-    entry_type: EntryType,
+    ident: EntryIdentifier,
     source_index: Option<u32>,
-    stream_index: Option<u32>,
     close_rx: cb_channel::Receiver<u32>,
 ) -> Result<Rc<RefCell<Stream>>, RSError> {
     info!("[PADataInterface] Attempting to create new monitor stream");
+
+    let stream_index = if ident.entry_type == EntryType::SinkInput {
+        Some(ident.index)
+    } else {
+        None
+    };
 
     let stream = Rc::new(RefCell::new(
         match Stream::new(&mut p_context.borrow_mut(), "RsMixer monitor", p_spec, None) {
@@ -51,18 +132,16 @@ pub fn create(
         stream.borrow_mut().set_monitor_stream(index).unwrap();
     }
 
-    let s = match source_index {
-        Some(i) => i.to_string(),
-        None => String::new(),
-    };
+    let x;
+    let mut s = None;
+    if let Some(i) = source_index {
+        x = i.to_string();
+        s = Some(x.as_str());
+    }
 
     debug!("[PADataInterface] Connecting stream");
     match stream.borrow_mut().connect_record(
-        if source_index.is_some() {
-            Some(&s.as_str())
-        } else {
-            None
-        },
+        s,
         Some(&pulse::def::BufferAttr {
             maxlength: std::u32::MAX,
             tlength: std::u32::MAX,
@@ -130,14 +209,8 @@ pub fn create(
                                 let size = data.len();
                                 let data_slice = slice_to_4_bytes(&data[(size-4) .. size]);
                                 let peak = f32::from_ne_bytes(data_slice).abs();
-                                let index = match entry_type {
-                                    EntryType::SinkInput => stream_index.unwrap(),
-                                    EntryType::Sink => source_index.unwrap(),
-                                    EntryType::SourceOutput => source_index.unwrap(),
-                                    EntryType::Source => source_index.unwrap(),
-                                };
 
-                                DISPATCH.sync_event(Letter::PeakVolumeUpdate(EntryIdentifier::new(entry_type, index), peak));
+                                DISPATCH.sync_event(Letter::PeakVolumeUpdate(ident, peak));
 
                                 unsafe { (*stream_ref.as_ptr()).discard().unwrap(); };
                             },

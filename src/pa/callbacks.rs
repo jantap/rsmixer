@@ -217,7 +217,7 @@ pub fn on_source_info(res: ListResult<&SourceInfo>) {
                 peak: 0.0,
                 mute: i.mute,
                 volume: i.volume,
-                monitor_source: None,
+                monitor_source: Some(i.index),
                 parent: None,
                 sink: None,
                 suspended: i.state == SourceState::Suspended,

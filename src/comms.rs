@@ -4,6 +4,7 @@ use crate::{
     ui::PageType,
 };
 use pulse::volume::ChannelVolumes;
+use std::collections::HashMap;
 
 pub static CHANNEL_CAPACITY: usize = 32;
 
@@ -11,7 +12,7 @@ pub static UI_MESSAGE: u32 = 1;
 pub static PA_MESSAGE: u32 = 2;
 
 type MonSrc = Option<u32>;
-type M = Vec<(Entry, MonSrc)>;
+type M = HashMap<EntryIdentifier, MonSrc>;
 bishopify!(Letter,
     ExitSignal => 0,
 

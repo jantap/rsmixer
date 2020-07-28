@@ -1,4 +1,4 @@
-pub use super::{Monitors, PAInternal, INFO_SX, SPEC};
+pub use super::{monitor::Monitors, PAInternal, INFO_SX, SPEC};
 pub use crate::entry::{EntryIdentifier, EntryType};
 pub use crate::{Letter, RSError, DISPATCH};
 pub use log::{debug, error, info};

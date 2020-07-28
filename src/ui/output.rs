@@ -4,6 +4,7 @@ use crate::entry::{Entries, Entry, EntryIdentifier, EntryType};
 use crate::ui::draw::{draw_page, redraw};
 use crate::ui::models::{ContextMenuOption, PageEntries};
 use crate::{RSError, DISPATCH};
+use std::collections::HashMap;
 
 use super::util::parent_child_types;
 use crate::Letter;
@@ -142,22 +143,28 @@ async fn update_page_entries(state: &mut UIState) -> Result<(), RSError> {
     Ok(())
 }
 
-fn monitor_list(state: &mut UIState) -> Vec<(Entry, Option<u32>)> {
-    let mut monitors = Vec::new();
+fn monitor_list(state: &mut UIState) -> HashMap<EntryIdentifier, Option<u32>> {
+    let mut monitors = HashMap::new();
     state.page_entries.iter_entries().for_each(|ident| {
         let mut monitor_src = None;
         if let Some(entry) = state.entries.get(ident) {
-            if ident.entry_type == EntryType::SinkInput {
-                if let Some(sink) = entry.sink {
-                    if let Some(s) = state
-                        .entries
-                        .get(&EntryIdentifier::new(EntryType::Sink, sink))
-                    {
-                        monitor_src = s.monitor_source;
+            match ident.entry_type {
+                EntryType::SinkInput => {
+                    if let Some(sink) = entry.sink {
+                        if let Some(s) = state
+                            .entries
+                            .get(&EntryIdentifier::new(EntryType::Sink, sink))
+                        {
+                            monitor_src = s.monitor_source;
+                        }
                     }
                 }
-            }
-            monitors.push((entry.clone(), monitor_src));
+                _ => {
+                    monitor_src = entry.monitor_source;
+                }
+            };
+
+            monitors.insert(EntryIdentifier::new(entry.entry_type, entry.index), monitor_src);
         }
     });
 

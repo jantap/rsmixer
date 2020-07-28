@@ -109,11 +109,8 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
 
     debug!("[PAInterface] Actually starting our mainloop");
 
-    let mut sink_input_monitors: Monitors = HashMap::new();
-    let mut sink_monitors: Monitors = HashMap::new();
-    let mut source_output_monitors: Monitors = HashMap::new();
-    let mut source_monitors: Monitors = HashMap::new();
-
+    let mut monitors = Monitors::default();
+    let mut last_targets = HashMap::new();
 
     while let Ok(msg) = internal_rx.recv() {
         mainloop.borrow_mut().lock();
@@ -127,23 +124,16 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
                 // sink_monitors.retain(pa_actions::remove_failed_monitors);
                 // source_output_monitors.retain(pa_actions::remove_failed_monitors);
                 // source_monitors.retain(pa_actions::remove_failed_monitors);
+                monitors.filter(&mainloop, &context, &last_targets);
             }
             PAInternal::Command(cmd) => {
                 if let None = pa_actions::handle_command(cmd.clone(), &context) {
                     break;
                 }
 
-                if let Letter::CreateMonitors(monitors) = cmd.clone() {
-
-                    pa_actions::create_monitors(
-                        &mainloop,
-                        &context,
-                        &mut sink_monitors,
-                        &mut sink_input_monitors,
-                        &mut source_monitors,
-                        &mut source_output_monitors,
-                        &monitors,
-                    );
+                if let Letter::CreateMonitors(mons) = cmd.clone() {
+                    last_targets = mons;
+                    monitors.filter(&mainloop, &context, &last_targets);
                 }
             }
         };

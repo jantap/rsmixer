@@ -126,12 +126,10 @@ fn set_mute(ident: EntryIdentifier, mute: bool, context: &Rc<RefCell<Context>>) 
     };
 }
 
-pub fn remove_failed_monitors(index: &u32,
-                                  x: &mut (
-        Rc<RefCell<Stream>>,
-        Option<u32>,
-        cb_channel::Sender<u32>,
-    )) -> bool {
+pub fn remove_failed_monitors(
+    index: &u32,
+    x: &mut (Rc<RefCell<Stream>>, Option<u32>, cb_channel::Sender<u32>),
+) -> bool {
     match x.0.borrow_mut().get_state() {
         pulse::stream::State::Failed => {
             info!(
@@ -150,4 +148,3 @@ pub fn remove_failed_monitors(index: &u32,
         _ => true,
     }
 }
-

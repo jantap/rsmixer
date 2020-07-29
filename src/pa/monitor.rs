@@ -13,9 +13,7 @@ pub struct Monitors(HashMap<EntryIdentifier, Monitor>);
 
 impl Default for Monitors {
     fn default() -> Self {
-        Self {
-            0: HashMap::new(),
-        }
+        Self { 0: HashMap::new() }
     }
 }
 
@@ -24,14 +22,17 @@ impl Monitors {
         self.0.insert(ident, monitor)
     }
 
-    pub fn filter(&mut self, mainloop: &Rc<RefCell<Mainloop>>, context: &Rc<RefCell<Context>>, targets: &HashMap<EntryIdentifier, Option<u32>>) {
-
+    pub fn filter(
+        &mut self,
+        mainloop: &Rc<RefCell<Mainloop>>,
+        context: &Rc<RefCell<Context>>,
+        targets: &HashMap<EntryIdentifier, Option<u32>>,
+    ) {
         // remove failed streams
         // then send exit signal if stream is unwanted
         self.0.retain(|ident, monitor| {
             match monitor.stream.borrow_mut().get_state() {
-                pulse::stream::State::Terminated
-                | pulse::stream::State::Failed => {
+                pulse::stream::State::Terminated | pulse::stream::State::Failed => {
                     info!(
                         "[PAInterface] Disconnecting {} sink input monitor (failed state)",
                         ident.index
@@ -43,29 +44,35 @@ impl Monitors {
 
             if targets.get(ident) == None {
                 match monitor.exit_sender.send(0) {
-                    _ => {},
+                    _ => {}
                 }
             }
 
             true
         });
 
-        targets.iter().for_each(|(ident, monitor_src)| {
-            match self.0.get(ident) {
+        targets
+            .iter()
+            .for_each(|(ident, monitor_src)| match self.0.get(ident) {
                 None => {
                     self.create_monitor(mainloop, context, *ident, *monitor_src);
                 }
                 _ => {}
-            }
-        });
+            });
     }
 
-    fn create_monitor(&mut self, mainloop: &Rc<RefCell<Mainloop>>, context: &Rc<RefCell<Context>>, ident: EntryIdentifier, monitor_src: Option<u32>) {
+    fn create_monitor(
+        &mut self,
+        mainloop: &Rc<RefCell<Mainloop>>,
+        context: &Rc<RefCell<Context>>,
+        ident: EntryIdentifier,
+        monitor_src: Option<u32>,
+    ) {
         if self.0.contains_key(&ident) {
             return;
         }
         let (sx, rx) = cb_channel::unbounded();
-        if let Ok(stream) = create(&mainloop, &context, &*SPEC, ident, monitor_src, rx,) {
+        if let Ok(stream) = create(&mainloop, &context, &*SPEC, ident, monitor_src, rx) {
             self.0.insert(
                 ident,
                 Monitor {

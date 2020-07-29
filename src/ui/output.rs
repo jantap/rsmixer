@@ -164,7 +164,10 @@ fn monitor_list(state: &mut UIState) -> HashMap<EntryIdentifier, Option<u32>> {
                 }
             };
 
-            monitors.insert(EntryIdentifier::new(entry.entry_type, entry.index), monitor_src);
+            monitors.insert(
+                EntryIdentifier::new(entry.entry_type, entry.index),
+                monitor_src,
+            );
         }
     });
 

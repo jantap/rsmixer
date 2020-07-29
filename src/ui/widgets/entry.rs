@@ -1,10 +1,11 @@
 use crate::{
-    RSError, draw_at, 
+    draw_at,
     entry::{Entry, EntrySpaceLvl},
     ui::{
         util::{get_style, Rect},
         widgets::{VolumeWidgetBorder, Widget},
     },
+    RSError,
 };
 
 use pulse::volume;

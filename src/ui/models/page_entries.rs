@@ -132,7 +132,9 @@ impl PageEntries {
 
     pub fn set(&mut self, vs: Vec<EntryIdentifier>, parent_type: EntryType) -> bool {
         let calc_lvl = |vs: &Vec<EntryIdentifier>, index: usize| -> EntrySpaceLvl {
-            if vs[index].entry_type == parent_type {
+            if parent_type == EntryType::Card {
+                EntrySpaceLvl::Card
+            } else if vs[index].entry_type == parent_type {
                 if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
                     EntrySpaceLvl::ParentNoChildren
                 } else {

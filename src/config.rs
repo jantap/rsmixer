@@ -24,6 +24,7 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("L".to_string(), "raise_volume(15)".to_string());
         bindings.insert("1".to_string(), "show_output".to_string());
         bindings.insert("2".to_string(), "show_input".to_string());
+        bindings.insert("3".to_string(), "show_cards".to_string());
         bindings.insert("Enter".to_string(), "context_menu".to_string());
         let mut styles = HashMap::new();
         let mut c = HashMap::new();
@@ -101,6 +102,7 @@ impl From<String> for Letter {
             "mute" => Letter::RequestMute,
             "show_output" => Letter::ChangePage(PageType::Output),
             "show_input" => Letter::ChangePage(PageType::Input),
+            "show_cards" => Letter::ChangePage(PageType::Cards),
             "context_menu" => Letter::OpenContextMenu,
             "lower_volume" => Letter::RequstChangeVolume(-(a.parse::<i16>().unwrap())),
             "raise_volume" => Letter::RequstChangeVolume(a.parse().unwrap()),

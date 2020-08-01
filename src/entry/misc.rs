@@ -5,6 +5,7 @@ pub enum EntrySpaceLvl {
     ParentNoChildren,
     MidChild,
     LastChild,
+    Card,
 }
 
 #[derive(Clone, Copy, PartialEq, Hash, Eq, Debug)]
@@ -13,6 +14,7 @@ pub enum EntryType {
     SinkInput,
     Source,
     SourceOutput,
+    Card,
 }
 
 #[derive(Clone, Copy, PartialEq, Hash, Debug)]
@@ -36,6 +38,7 @@ impl std::cmp::Ord for EntryIdentifier {
             EntryType::Source => 2,
             EntryType::SinkInput => 3,
             EntryType::SourceOutput => 4,
+            EntryType::Card => 5,
         };
 
         if self.entry_type == other.entry_type && self.index == other.index {

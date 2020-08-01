@@ -1,6 +1,6 @@
 use crate::{
     draw_at,
-    entry::{Entry, EntrySpaceLvl},
+    entry::{Entry, EntryType, EntrySpaceLvl},
     ui::{
         util::{get_style, Rect},
         widgets::{VolumeWidgetBorder, Widget},
@@ -11,11 +11,53 @@ use crate::{
 use pulse::volume;
 
 use std::io::Write;
+use std::cmp::{min,max};
 
 use crossterm::{cursor::MoveTo, execute};
 
 impl<W: Write> Widget<W> for Entry {
     fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+        if self.entry_type == EntryType::Card {
+            self.render_card_entry(area, buf)
+        } else {
+            self.render_play_entry(area, buf)
+        }
+    }
+}
+
+impl Entry {
+    fn render_card_entry<W: Write>(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+        let card = self.card_entry.as_mut().unwrap();
+
+        let style = if self.is_selected {
+            "normal.bold"
+        } else {
+            "normal"
+        };
+        let style = get_style(style);
+        let name_style = if self.is_selected {
+            "inverted"
+        } else {
+            "normal"
+        };
+        let name_style = get_style(name_style);
+
+        let left_name_len = min(self.name.len(), (area.width / 2).into());
+
+        execute!(buf, MoveTo(area.x, area.y))?;
+        write!(buf, "{}", name_style.clone().apply(&self.name[0..left_name_len]))?;
+
+        if let Some(index) = card.selected_profile {
+            let right_name_len = min(card.profiles[index].description.len(), (area.width / 2).into());
+            execute!(buf, MoveTo(area.x + area.width - right_name_len as u16, area.y))?;
+            write!(buf, "{}", style.clone().apply(&card.profiles[index].description[0..right_name_len]))?;
+        }
+
+        Ok(())
+    }
+    fn render_play_entry<W: Write>(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+        let play = self.play_entry.as_mut().unwrap();
+
         let style = if self.is_selected {
             "normal.bold"
         } else {
@@ -52,13 +94,13 @@ impl<W: Write> Widget<W> for Entry {
             area2 = Rect::new(0, 0, 0, 0);
         }
 
-        let main_vol = (self.volume.avg().0 as f32) / (volume::VOLUME_NORM.0 as f32 * 1.5);
-        self.volume_bar = self
+        let main_vol = (play.volume.avg().0 as f32) / (volume::VOLUME_NORM.0 as f32 * 1.5);
+        play.volume_bar = play
             .volume_bar
             .volume(main_vol)
-            .mute(self.mute)
+            .mute(play.mute)
             .border(VolumeWidgetBorder::Upper);
-        self.peak_volume_bar = self.peak_volume_bar.mute(self.mute).volume(self.peak);
+        play.peak_volume_bar = play.peak_volume_bar.mute(play.mute).volume(play.peak);
 
         let short_name = self
             .name
@@ -71,7 +113,7 @@ impl<W: Write> Widget<W> for Entry {
 
         let vol_perc = format!("  {}", (main_vol * 150.0) as u32);
         let vol_perc = String::from(&vol_perc[vol_perc.len() - 3..vol_perc.len()]);
-        let vol_db = self.volume.avg().print_db();
+        let vol_db = play.volume.avg().print_db();
         if vol_db.len() + vol_perc.len() <= area1.width as usize + 3 {
             let vol_str = format!(
                 "{}{}{}",
@@ -122,9 +164,9 @@ impl<W: Write> Widget<W> for Entry {
             draw_at!(buf, c, area2.x + area2.width, area2.y + 1, style.clone());
             draw_at!(buf, c, area2.x - 1, area2.y + 1, style.clone());
 
-            self.volume_bar.render(area2, buf)?;
+            play.volume_bar.render(area2, buf)?;
             area2.y += 1;
-            self.volume_bar
+            play.volume_bar
                 .border(VolumeWidgetBorder::Lower)
                 .render(area2, buf)?;
         }
@@ -132,7 +174,7 @@ impl<W: Write> Widget<W> for Entry {
         area_a.y += 2;
         area_a.height = 1;
         area_a.width -= 1;
-        self.peak_volume_bar.render(area_a, buf)?;
+        play.peak_volume_bar.render(area_a, buf)?;
 
         buf.flush()?;
 

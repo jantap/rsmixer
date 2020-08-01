@@ -19,7 +19,7 @@ use std::io;
 
 use crossterm::{cursor::Hide, execute};
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum RedrawType {
     Full,
     Entries,
@@ -27,6 +27,48 @@ pub enum RedrawType {
     ContextMenu,
     None,
     Exit,
+}
+impl Eq for RedrawType {}
+
+impl From<RedrawType> for u32 {
+    fn from(redraw: RedrawType) -> u32 {
+        match redraw {
+            RedrawType::Full => 1000,
+            RedrawType::Entries => 500,
+            RedrawType::ContextMenu => 500,
+            RedrawType::PeakVolume(_) => 100,
+            RedrawType::None => 1,
+            RedrawType::Exit => 10000,
+        }
+    }
+}
+impl std::cmp::PartialOrd for RedrawType {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl std::cmp::Ord for RedrawType {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let a = u32::from(*self);
+        let b = u32::from(*other);
+
+        if a > b {
+            std::cmp::Ordering::Greater
+        } else if b > a {
+            std::cmp::Ordering::Less
+        } else {
+            std::cmp::Ordering::Equal
+        }
+    }
+}
+
+impl RedrawType {
+    fn take_bigger(&mut self, mut other: Self) {
+        if self.cmp(&&mut other) == std::cmp::Ordering::Less {
+            *self = other;
+        }
+    }
 }
 
 #[derive(PartialEq)]
@@ -75,24 +117,46 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
     .await?;
 
     while let Some(Ok(msg)) = rx.next().await {
-        log::error!("cur letter {:?}", msg.clone());
         // run action handlers which will decide what to redraw
         state.redraw = RedrawType::None;
 
         state.redraw = general::action_handler(&msg, &mut state).await;
+
+        match msg {
+            Letter::PeakVolumeUpdate(_,_) => {},
+            _ => {
+                log::error!("{:?}", state.redraw);
+            }
+        };
 
         if state.redraw == RedrawType::Exit {
             break;
         }
 
         let proposed_redraw = match state.ui_mode {
-            UIMode::Normal => normal::action_handler(&msg, &mut state).await,
+            UIMode::Normal => {
+                let mut rdrw = normal::action_handler(&msg, &mut state).await;
+                if state.current_page != PageType::Cards {
+                    rdrw.take_bigger(play_entries::action_handler(&msg, &mut state).await);
+                }
+                rdrw
+            },
             UIMode::ContextMenu => context_menu::action_handler(&msg, &mut state).await,
         };
+        match msg {
+            Letter::PeakVolumeUpdate(_,_) => {},
+            _ => {
+                log::error!("{:?}", state.redraw);
+            }
+        };
 
-        if state.redraw != RedrawType::Full {
-            state.redraw = proposed_redraw;
-        }
+        state.redraw.take_bigger(proposed_redraw);
+        match msg {
+            Letter::PeakVolumeUpdate(_,_) => {},
+            _ => {
+                log::error!("{:?}", state.redraw);
+            }
+        };
 
         update_page_entries(&mut state).await?;
 
@@ -117,11 +181,15 @@ async fn update_page_entries(state: &mut UIState) -> Result<(), RSError> {
             .collect::<Vec<EntryIdentifier>>(),
         p,
     ) {
-        state.redraw = RedrawType::Entries;
+        state.redraw.take_bigger(RedrawType::Entries);
 
         DISPATCH
-            .event(Letter::CreateMonitors(monitor_list(state)))
-            .await;
+            .event(Letter::CreateMonitors(
+                    if state.current_page != PageType::Cards {
+                        monitor_list(state)
+                    } else {
+                        HashMap::new()
+                    })).await;
     }
 
     for (i, x) in state.page_entries.iter_entries().enumerate() {
@@ -150,17 +218,17 @@ fn monitor_list(state: &mut UIState) -> HashMap<EntryIdentifier, Option<u32>> {
         if let Some(entry) = state.entries.get(ident) {
             match ident.entry_type {
                 EntryType::SinkInput => {
-                    if let Some(sink) = entry.sink {
+                    if let Some(sink) = entry.play_entry.as_ref().unwrap().sink {
                         if let Some(s) = state
                             .entries
                             .get(&EntryIdentifier::new(EntryType::Sink, sink))
                         {
-                            monitor_src = s.monitor_source;
+                            monitor_src = s.play_entry.as_ref().unwrap().monitor_source;
                         }
                     }
                 }
                 _ => {
-                    monitor_src = entry.monitor_source;
+                    monitor_src = entry.play_entry.as_ref().unwrap().monitor_source;
                 }
             };
 

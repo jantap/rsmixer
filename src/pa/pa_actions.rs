@@ -10,6 +10,9 @@ pub fn handle_command(cmd: Letter, context: &Rc<RefCell<Context>>) -> Option<()>
         Letter::MoveEntryToParent(ident, parent) => {
             move_entry_to_parent(ident, parent, &context);
         }
+        Letter::ChangeCardProfile(ident, profile) => {
+            change_card_profile(ident, profile, &context);
+        }
         Letter::SetVolume(ident, vol) => {
             set_volume(ident, vol, &context);
         }
@@ -47,7 +50,19 @@ fn set_volume(
         EntryType::SourceOutput => {
             introspector.set_source_output_volume(ident.index, &vol, None);
         }
+        _ => {}
     };
+}
+
+fn change_card_profile(
+    ident: EntryIdentifier,
+    profile: String,
+    context: &Rc<RefCell<Context>>,
+) {
+    if ident.entry_type != EntryType::Card {
+        return
+    }
+    context.borrow_mut().introspect().set_card_profile_by_index(ident.index, &profile[..], None);
 }
 
 fn move_entry_to_parent(
@@ -123,6 +138,7 @@ fn set_mute(ident: EntryIdentifier, mute: bool, context: &Rc<RefCell<Context>>) 
         EntryType::SourceOutput => {
             introspector.set_source_output_mute(ident.index, mute, None);
         }
+        _ => {}
     };
 }
 

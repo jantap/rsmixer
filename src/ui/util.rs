@@ -40,15 +40,12 @@ impl Rect {
 pub enum PageType {
     Output,
     Input,
+    Cards,
 }
 impl Eq for PageType {}
 impl Display for PageType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            PageType::Output => "Output",
-            PageType::Input => "Input",
-        };
-        write!(f, "{}", s)
+        write!(f, "{}", self.as_str())
     }
 }
 impl PageType {
@@ -56,12 +53,19 @@ impl PageType {
         match self {
             PageType::Output => "Output",
             PageType::Input => "Input",
+            PageType::Cards => "Cards",
         }
     }
     pub fn generate_page<'a>(
         &'a self,
         entries: &'a Entries,
     ) -> Box<dyn Iterator<Item = (&EntryIdentifier, &Entry)> + 'a> {
+        if *self == PageType::Cards {
+            return Box::new(
+                entries.iter_type(EntryType::Card)
+            );
+        }
+
         let (parent, child) = parent_child_types(*self);
 
         return Box::new(
@@ -100,7 +104,9 @@ pub fn get_style(name: &'static str) -> ContentStyle {
 }
 
 pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
-    if lvl == EntrySpaceLvl::ParentNoChildren || lvl == EntrySpaceLvl::LastChild {
+    if lvl == EntrySpaceLvl::Card {
+        1
+    } else if lvl == EntrySpaceLvl::ParentNoChildren || lvl == EntrySpaceLvl::LastChild {
         4
     } else {
         3
@@ -108,10 +114,10 @@ pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
 }
 
 pub fn parent_child_types(page: PageType) -> (EntryType, EntryType) {
-    if page == PageType::Output {
-        (EntryType::Sink, EntryType::SinkInput)
-    } else {
-        (EntryType::Source, EntryType::SourceOutput)
+    match page {
+        PageType::Input => (EntryType::Sink, EntryType::SinkInput),
+        PageType::Output => (EntryType::Source, EntryType::SourceOutput),
+        PageType::Cards => (EntryType::Card, EntryType::Card),
     }
 }
 

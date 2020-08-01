@@ -29,6 +29,7 @@ bishopify!(Letter,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,
+    ChangeCardProfile(EntryIdentifier, String) => PA_MESSAGE,
     SetVolume(EntryIdentifier, ChannelVolumes) => PA_MESSAGE,
     CreateMonitors(M) => PA_MESSAGE,
     SetSuspend(EntryIdentifier, bool) => PA_MESSAGE,

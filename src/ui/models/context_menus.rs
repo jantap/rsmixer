@@ -5,7 +5,7 @@ use crate::DISPATCH;
 pub fn context_menu(entry: &Entry) -> Vec<ContextMenuOption> {
     match entry.entry_type {
         EntryType::Source | EntryType::Sink => vec![
-            if entry.suspended {
+            if entry.play_entry.as_ref().unwrap().suspended {
                 ContextMenuOption::Resume
             } else {
                 ContextMenuOption::Suspend
@@ -14,12 +14,14 @@ pub fn context_menu(entry: &Entry) -> Vec<ContextMenuOption> {
         ],
         EntryType::SinkInput => vec![ContextMenuOption::Move, ContextMenuOption::Kill],
         EntryType::SourceOutput => vec![],
+        EntryType::Card => entry.card_entry.as_ref().unwrap().profiles.iter().map(|p| ContextMenuOption::ChangeCardProfile(p.name.clone(), p.description.clone())).collect(),
     }
 }
 
 #[derive(PartialEq, Clone)]
 pub enum ContextMenuOption {
     MoveToEntry(EntryIdentifier, String),
+    ChangeCardProfile(String, String),
     Kill,
     Move,
     Suspend,
@@ -31,6 +33,7 @@ impl From<ContextMenuOption> for String {
     fn from(option: ContextMenuOption) -> Self {
         match option {
             ContextMenuOption::MoveToEntry(_, s) => s.clone(),
+            ContextMenuOption::ChangeCardProfile(_, s) => s.clone(),
             ContextMenuOption::Kill => "Kill".into(),
             ContextMenuOption::Move => "Move".into(),
             ContextMenuOption::Suspend => "Suspend".into(),
@@ -52,6 +55,12 @@ pub async fn resolve(ident: EntryIdentifier, answer: ContextMenuOption) -> Conte
         ContextMenuOption::MoveToEntry(entry, _) => {
             DISPATCH
                 .event(Letter::MoveEntryToParent(ident, entry))
+                .await;
+            ContextMenuEffect::None
+        }
+        ContextMenuOption::ChangeCardProfile(name, _) => {
+            DISPATCH
+                .event(Letter::ChangeCardProfile(ident, name))
                 .await;
             ContextMenuEffect::None
         }

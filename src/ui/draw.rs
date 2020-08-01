@@ -1,6 +1,6 @@
 use crate::draw_rect;
 use crate::{
-    entry::{Entries, Entry},
+    entry::{Entries, EntryType, Entry},
     ui::{
         models::PageEntries,
         output::{RedrawType, UIState},
@@ -59,6 +59,8 @@ pub async fn draw_page<W: Write>(
 ) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;
 
+    log::error!("REDRAW PAGE {:?}", current_page);
+
     let mut b = BlockWidget::default()
         .clean_inside(true)
         .title(current_page.as_str().to_string());
@@ -104,6 +106,9 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
             .await;
         }
         RedrawType::PeakVolume(ident) => {
+            if ident.entry_type == EntryType::Card {
+                return Ok(());
+            }
             if let Some(index) = state.page_entries.iter_entries().position(|p| *p == ident) {
                 if let Some(mut area) = state.page_entries.is_entry_visible(index, state.scroll)? {
                     area.y += 2;
@@ -118,9 +123,10 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
                     };
 
                     let area = Entry::calc_area(state.page_entries.lvls[index], area);
+                    let play = ent.play_entry.as_mut().unwrap();
 
-                    let vol = VolumeWidget::default().volume(ent.peak);
-                    return vol.mute(ent.mute).render(area, stdout);
+                    let vol = VolumeWidget::default().volume(play.peak);
+                    return vol.mute(play.mute).render(area, stdout);
                 }
             }
         }

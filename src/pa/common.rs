@@ -21,6 +21,7 @@ impl From<Facility> for EntryType {
             Facility::Source => EntryType::Source,
             Facility::SinkInput => EntryType::SinkInput,
             Facility::SourceOutput => EntryType::SourceOutput,
+            Facility::Card => EntryType::Card,
             _ => EntryType::Sink,
         }
     }

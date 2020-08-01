@@ -7,7 +7,7 @@ pub mod widgets;
 
 use crate::input;
 use crate::RSError;
-use crate::{comms, SENDERS};
+use crate::{events, SENDERS};
 pub use util::{PageType, Rect};
 
 use output::ui_loop;
@@ -16,8 +16,8 @@ use tokio::sync::broadcast::channel;
 use tokio::task;
 
 pub async fn start() -> Result<(), RSError> {
-    let (sx, rx) = channel(comms::CHANNEL_CAPACITY);
-    SENDERS.register(comms::UI_MESSAGE, sx).await;
+    let (sx, rx) = channel(events::CHANNEL_CAPACITY);
+    SENDERS.register(events::UI_MESSAGE, sx).await;
 
     let w = async move {
         match task::spawn(input::start()).await {

@@ -1,4 +1,4 @@
-use crate::comms::Letter;
+use crate::Letter;
 use crate::entry::{Entry, EntryIdentifier, EntryType};
 use crate::DISPATCH;
 
@@ -14,7 +14,14 @@ pub fn context_menu(entry: &Entry) -> Vec<ContextMenuOption> {
         ],
         EntryType::SinkInput => vec![ContextMenuOption::Move, ContextMenuOption::Kill],
         EntryType::SourceOutput => vec![],
-        EntryType::Card => entry.card_entry.as_ref().unwrap().profiles.iter().map(|p| ContextMenuOption::ChangeCardProfile(p.name.clone(), p.description.clone())).collect(),
+        EntryType::Card => entry
+            .card_entry
+            .as_ref()
+            .unwrap()
+            .profiles
+            .iter()
+            .map(|p| ContextMenuOption::ChangeCardProfile(p.name.clone(), p.description.clone()))
+            .collect(),
     }
 }
 
@@ -59,9 +66,7 @@ pub async fn resolve(ident: EntryIdentifier, answer: ContextMenuOption) -> Conte
             ContextMenuEffect::None
         }
         ContextMenuOption::ChangeCardProfile(name, _) => {
-            DISPATCH
-                .event(Letter::ChangeCardProfile(ident, name))
-                .await;
+            DISPATCH.event(Letter::ChangeCardProfile(ident, name)).await;
             ContextMenuEffect::None
         }
         ContextMenuOption::Suspend => {

@@ -1,6 +1,6 @@
 use super::action_handlers::*;
 pub use super::widgets::VolumeWidget;
-use crate::entry::{Entries, Entry, EntryIdentifier, EntryType};
+use crate::entry::{Entries, EntryIdentifier, EntryType};
 use crate::ui::draw::{draw_page, redraw};
 use crate::ui::models::{ContextMenuOption, PageEntries};
 use crate::{RSError, DISPATCH};
@@ -123,7 +123,7 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
         state.redraw = general::action_handler(&msg, &mut state).await;
 
         match msg {
-            Letter::PeakVolumeUpdate(_,_) => {},
+            Letter::PeakVolumeUpdate(_, _) => {}
             _ => {
                 log::error!("{:?}", state.redraw);
             }
@@ -140,11 +140,11 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
                     rdrw.take_bigger(play_entries::action_handler(&msg, &mut state).await);
                 }
                 rdrw
-            },
+            }
             UIMode::ContextMenu => context_menu::action_handler(&msg, &mut state).await,
         };
         match msg {
-            Letter::PeakVolumeUpdate(_,_) => {},
+            Letter::PeakVolumeUpdate(_, _) => {}
             _ => {
                 log::error!("{:?}", state.redraw);
             }
@@ -152,7 +152,7 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
 
         state.redraw.take_bigger(proposed_redraw);
         match msg {
-            Letter::PeakVolumeUpdate(_,_) => {},
+            Letter::PeakVolumeUpdate(_, _) => {}
             _ => {
                 log::error!("{:?}", state.redraw);
             }
@@ -185,11 +185,13 @@ async fn update_page_entries(state: &mut UIState) -> Result<(), RSError> {
 
         DISPATCH
             .event(Letter::CreateMonitors(
-                    if state.current_page != PageType::Cards {
-                        monitor_list(state)
-                    } else {
-                        HashMap::new()
-                    })).await;
+                if state.current_page != PageType::Cards {
+                    monitor_list(state)
+                } else {
+                    HashMap::new()
+                },
+            ))
+            .await;
     }
 
     for (i, x) in state.page_entries.iter_entries().enumerate() {

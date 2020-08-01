@@ -20,7 +20,7 @@ impl Eq for PlayEntry {}
 pub struct CardProfile {
     pub name: String,
     pub description: String,
-    pub available:bool,
+    pub available: bool,
 }
 impl Eq for CardProfile {}
 

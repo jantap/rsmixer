@@ -1,11 +1,9 @@
 use super::common::*;
 use pulse::stream::PeekResult;
-use std::collections::HashSet;
 use std::convert::TryInto;
 
 pub struct Monitor {
     stream: Rc<RefCell<Stream>>,
-    monitor_src: Option<u32>,
     exit_sender: cb_channel::Sender<u32>,
 }
 
@@ -18,10 +16,6 @@ impl Default for Monitors {
 }
 
 impl Monitors {
-    pub fn insert(&mut self, ident: EntryIdentifier, monitor: Monitor) -> Option<Monitor> {
-        self.0.insert(ident, monitor)
-    }
-
     pub fn filter(
         &mut self,
         mainloop: &Rc<RefCell<Mainloop>>,
@@ -77,7 +71,6 @@ impl Monitors {
                 ident,
                 Monitor {
                     stream,
-                    monitor_src,
                     exit_sender: sx,
                 },
             );

@@ -22,7 +22,7 @@ futures = "0.3.5"
 send_wrapper = "0.4.0"
 crossbeam-channel = "0.4.2"
 confy = "0.4.0"
-serde = { version = "1.0.114", futures = ["derive"] }
+serde = { version = "1.0.114", features = ["derive"] }
 
 #[profile.release]
 #debug = true

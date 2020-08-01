@@ -1,4 +1,4 @@
-use crate::{bishopify, BishopMessage};
+use crate::{messages, Message};
 use crate::{
     entry::{Entry, EntryIdentifier},
     ui::PageType,
@@ -6,14 +6,12 @@ use crate::{
 use pulse::volume::ChannelVolumes;
 use std::collections::HashMap;
 
-pub static CHANNEL_CAPACITY: usize = 32;
-
-pub static UI_MESSAGE: u32 = 1;
-pub static PA_MESSAGE: u32 = 2;
+use super::{UI_MESSAGE, PA_MESSAGE};
 
 type MonSrc = Option<u32>;
 type M = HashMap<EntryIdentifier, MonSrc>;
-bishopify!(Letter,
+
+messages!(Letter,
     ExitSignal => 0,
 
     Redraw => UI_MESSAGE,

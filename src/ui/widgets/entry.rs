@@ -1,6 +1,6 @@
 use crate::{
     draw_at,
-    entry::{Entry, EntryType, EntrySpaceLvl},
+    entry::{Entry, EntrySpaceLvl, EntryType},
     ui::{
         util::{get_style, Rect},
         widgets::{VolumeWidgetBorder, Widget},
@@ -10,8 +10,8 @@ use crate::{
 
 use pulse::volume;
 
+use std::cmp::min;
 use std::io::Write;
-use std::cmp::{min,max};
 
 use crossterm::{cursor::MoveTo, execute};
 
@@ -45,12 +45,28 @@ impl Entry {
         let left_name_len = min(self.name.len(), (area.width / 2).into());
 
         execute!(buf, MoveTo(area.x, area.y))?;
-        write!(buf, "{}", name_style.clone().apply(&self.name[0..left_name_len]))?;
+        write!(
+            buf,
+            "{}",
+            name_style.clone().apply(&self.name[0..left_name_len])
+        )?;
 
         if let Some(index) = card.selected_profile {
-            let right_name_len = min(card.profiles[index].description.len(), (area.width / 2).into());
-            execute!(buf, MoveTo(area.x + area.width - right_name_len as u16, area.y))?;
-            write!(buf, "{}", style.clone().apply(&card.profiles[index].description[0..right_name_len]))?;
+            let right_name_len = min(
+                card.profiles[index].description.len(),
+                (area.width / 2).into(),
+            );
+            execute!(
+                buf,
+                MoveTo(area.x + area.width - right_name_len as u16, area.y)
+            )?;
+            write!(
+                buf,
+                "{}",
+                style
+                    .clone()
+                    .apply(&card.profiles[index].description[0..right_name_len])
+            )?;
         }
 
         Ok(())

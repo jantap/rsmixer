@@ -61,9 +61,7 @@ impl PageType {
         entries: &'a Entries,
     ) -> Box<dyn Iterator<Item = (&EntryIdentifier, &Entry)> + 'a> {
         if *self == PageType::Cards {
-            return Box::new(
-                entries.iter_type(EntryType::Card)
-            );
+            return Box::new(entries.iter_type(EntryType::Card));
         }
 
         let (parent, child) = parent_child_types(*self);

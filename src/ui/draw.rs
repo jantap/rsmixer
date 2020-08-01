@@ -1,6 +1,6 @@
 use crate::draw_rect;
 use crate::{
-    entry::{Entries, EntryType, Entry},
+    entry::{Entries, Entry, EntryType},
     ui::{
         models::PageEntries,
         output::{RedrawType, UIState},

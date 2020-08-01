@@ -1,5 +1,5 @@
 use super::common::*;
-use crate::{comms, SENDERS};
+use crate::{events, SENDERS};
 use std::time::Duration;
 use tokio::stream::StreamExt;
 use tokio::sync::broadcast::channel;
@@ -9,8 +9,8 @@ pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<
     let (info_sx, mut info_rx) = mpsc::unbounded_channel();
     (*INFO_SX).set(info_sx);
 
-    let (sx, mut command_receiver) = channel(comms::CHANNEL_CAPACITY);
-    SENDERS.register(comms::PA_MESSAGE, sx).await;
+    let (sx, mut command_receiver) = channel(events::CHANNEL_CAPACITY);
+    SENDERS.register(events::PA_MESSAGE, sx).await;
 
     let mut interval = tokio::time::interval(Duration::from_millis(50));
 

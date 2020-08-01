@@ -1,6 +1,4 @@
 use super::common::*;
-use super::monitor;
-use crate::entry::Entry;
 
 pub fn handle_command(cmd: Letter, context: &Rc<RefCell<Context>>) -> Option<()> {
     match cmd {
@@ -54,15 +52,14 @@ fn set_volume(
     };
 }
 
-fn change_card_profile(
-    ident: EntryIdentifier,
-    profile: String,
-    context: &Rc<RefCell<Context>>,
-) {
+fn change_card_profile(ident: EntryIdentifier, profile: String, context: &Rc<RefCell<Context>>) {
     if ident.entry_type != EntryType::Card {
-        return
+        return;
     }
-    context.borrow_mut().introspect().set_card_profile_by_index(ident.index, &profile[..], None);
+    context
+        .borrow_mut()
+        .introspect()
+        .set_card_profile_by_index(ident.index, &profile[..], None);
 }
 
 fn move_entry_to_parent(
@@ -140,27 +137,4 @@ fn set_mute(ident: EntryIdentifier, mute: bool, context: &Rc<RefCell<Context>>) 
         }
         _ => {}
     };
-}
-
-pub fn remove_failed_monitors(
-    index: &u32,
-    x: &mut (Rc<RefCell<Stream>>, Option<u32>, cb_channel::Sender<u32>),
-) -> bool {
-    match x.0.borrow_mut().get_state() {
-        pulse::stream::State::Failed => {
-            info!(
-                "[PAInterface] Disconnecting {} sink input monitor (failed state)",
-                index
-            );
-            false
-        }
-        pulse::stream::State::Terminated => {
-            info!(
-                "[PAInterface] Disconnecting {} sink input monitor (failed state)",
-                index
-            );
-            false
-        }
-        _ => true,
-    }
 }

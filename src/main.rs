@@ -6,16 +6,16 @@
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
-mod bishop;
-mod comms;
 mod config;
 mod entry;
 mod errors;
 mod input;
 mod pa;
 mod ui;
+mod events;
 
-use bishop::{BishopMessage, Dispatch, Senders};
+use events::{Dispatch, Senders, Message};
+pub use events::Letter;
 pub use errors::RSError;
 use std::collections::HashMap;
 use std::env;
@@ -27,7 +27,6 @@ use tokio::runtime;
 use tokio::sync::broadcast::channel;
 use tokio::task;
 
-pub use comms::Letter;
 use lazy_static::lazy_static;
 
 use crossterm::event::KeyCode;
@@ -66,7 +65,7 @@ async fn run() -> Result<(), RSError> {
     let event2 = event_sx.clone();
     DISPATCH.register(event_sx, r.clone()).await;
 
-    task::spawn(async move { bishop::start(event2, event_rx, s, r, SENDERS.clone()).await });
+    task::spawn(async move { events::start(event2, event_rx, s, r, SENDERS.clone()).await });
 
     let ui = async move {
         match task::spawn(async move { ui::start().await }).await {

@@ -1,7 +1,7 @@
 use super::common::*;
 
 use crate::{
-    entry::{Entry, CardProfile, PlayEntry, CardEntry, EntrySpaceLvl},
+    entry::{CardEntry, CardProfile, Entry, EntrySpaceLvl, PlayEntry},
     ui::widgets::VolumeWidget,
     DISPATCH,
 };
@@ -150,27 +150,29 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
                 Some(s) => s,
                 None => String::from(""),
             };
-            let profiles:Vec<CardProfile> = i.profiles.iter().filter_map(|p| { 
-                if let Some(n) = &p.name {
-                    Some(CardProfile {
-                        name: n.to_string(),
-                        description: match &p.description {
-                            Some(s) => s.to_string(),
-                            None => n.to_string(),
-                        },
-                        available: p.available,
-                    })
-                } else {
-                    None
-                }
-            }).collect();
+            let profiles: Vec<CardProfile> = i
+                .profiles
+                .iter()
+                .filter_map(|p| {
+                    if let Some(n) = &p.name {
+                        Some(CardProfile {
+                            name: n.to_string(),
+                            description: match &p.description {
+                                Some(s) => s.to_string(),
+                                None => n.to_string(),
+                            },
+                            available: p.available,
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
             let selected_profile = match &i.active_profile {
                 Some(x) => {
                     if let Some(n) = &x.name {
-                        profiles.iter().position(|p| 
-                            p.name == n.to_string()
-                        )
+                        profiles.iter().position(|p| p.name == n.to_string())
                     } else {
                         None
                     }
@@ -186,8 +188,11 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
                 parent: None,
                 position: EntrySpaceLvl::Empty,
                 is_selected: false,
-                card_entry: Some(CardEntry { profiles, selected_profile }),
-                play_entry:None,
+                card_entry: Some(CardEntry {
+                    profiles,
+                    selected_profile,
+                }),
+                play_entry: None,
             };
 
             DISPATCH.sync_event(Letter::EntryUpdate(ident, entry));

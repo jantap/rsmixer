@@ -6,9 +6,9 @@ use crate::{
 
 pub struct PageEntries {
     entries: Vec<EntryIdentifier>,
-    last_term_h: u16,
+    pub last_term_h: u16,
     pub lvls: Vec<EntrySpaceLvl>,
-    visibility: Vec<usize>,
+    pub visibility: Vec<usize>,
 }
 
 impl PageEntries {
@@ -37,57 +37,30 @@ impl PageEntries {
         }
     }
 
-    pub fn reflow_scroll(&mut self, force: bool) -> Result<(), RSError> {
-        let (_, h) = crossterm::terminal::size()?;
+    pub fn reflow_scroll(&mut self, h: u16, force: bool) {
+        log::error!("reflow 1");
+        if !force && h == self.last_term_h {
+            return;
+        }
+        log::error!("reflow 2");
 
-        if force || h != self.last_term_h {
-            self.last_term_h = h;
+        self.last_term_h = h;
 
-            self.visibility = Vec::new();
+        self.visibility = Vec::new();
 
-            let h = h - *Y_PADDING;
-            let mut scroll_needed = 0;
-            let mut curh = 0;
-            for l in &self.lvls {
-                curh += entry_height(*l);
+        let mut current_scroll_page = 0;
+        let mut current_height = 0;
 
-                if curh > h {
-                    scroll_needed += 1;
-                    curh = 0;
-                }
+        self.visibility = self.lvls.iter().map(|&e| {
+            current_height += entry_height(e);
 
-                self.visibility.push(scroll_needed);
+            if current_height > h {
+                current_scroll_page += 1;
+                current_height = 0;
             }
-        }
 
-        Ok(())
-    }
-
-    pub fn adjust_scroll(
-        &mut self,
-        scroll: &mut usize,
-        selected: &mut usize,
-    ) -> Result<bool, RSError> {
-        self.reflow_scroll(false)?;
-
-        let sel = (*selected).clone();
-        let scr = (*scroll).clone();
-
-        if *selected >= self.len() {
-            if self.len() > 0 {
-                *selected = self.len() - 1
-            } else {
-                *selected = 0;
-            };
-        }
-
-        *scroll = if *selected < self.visibility.len() {
-            self.visibility[*selected]
-        } else {
-            0
-        };
-
-        Ok(!(sel == *selected && scr == *scroll))
+            current_scroll_page
+        }).collect();
     }
 
     pub fn is_entry_visible(&self, index: usize, scroll: usize) -> Result<Option<Rect>, RSError> {
@@ -125,55 +98,49 @@ impl PageEntries {
             None => 0,
         };
 
-        log::error!("vis {} {}", start, end);
-
         Box::new((start..end).map(move |x| -> (usize, EntrySpaceLvl) { (x, self.lvls[x]) }))
     }
 
     pub fn set(&mut self, vs: Vec<EntryIdentifier>, parent_type: EntryType) -> bool {
-        let calc_lvl = |vs: &Vec<EntryIdentifier>, index: usize| -> EntrySpaceLvl {
-            if parent_type == EntryType::Card {
-                EntrySpaceLvl::Card
-            } else if vs[index].entry_type == parent_type {
-                if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
-                    EntrySpaceLvl::ParentNoChildren
-                } else {
-                    EntrySpaceLvl::Parent
-                }
-            } else {
-                if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
-                    EntrySpaceLvl::LastChild
-                } else {
-                    EntrySpaceLvl::MidChild
-                }
-            }
-        };
+        let ret = if vs.len() == self.len() {
 
-        let mut ret;
-        if vs.len() == self.len() {
-            ret = true;
-            for (i, e) in vs.iter().enumerate() {
-                if *e != self.get(i).unwrap() || calc_lvl(&vs, i) != self.lvls[i] {
-                    ret = false;
-                    break;
-                }
-            }
+            // check if any page entry changed identifier or level
+            vs.iter().enumerate().find(|&(i, &e)| e != self.get(i).unwrap() || calc_lvl(parent_type, &vs, i) != self.lvls[i]) != None
+
         } else {
-            ret = false;
+            true
         };
 
-        if !ret {
+        if ret {
             self.lvls = Vec::new();
 
             for index in 0..vs.len() {
-                self.lvls.push(calc_lvl(&vs, index));
+                self.lvls.push(calc_lvl(parent_type, &vs, index));
             }
 
-            self.reflow_scroll(true).unwrap();
+            self.reflow_scroll(self.last_term_h, true);
 
             self.entries = vs;
         }
 
         ret
+    }
+}
+
+fn calc_lvl(parent_type: EntryType, vs: &Vec<EntryIdentifier>, index: usize) -> EntrySpaceLvl {
+    if parent_type == EntryType::Card {
+        EntrySpaceLvl::Card
+    } else if vs[index].entry_type == parent_type {
+        if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
+            EntrySpaceLvl::ParentNoChildren
+        } else {
+            EntrySpaceLvl::Parent
+        }
+    } else {
+        if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
+            EntrySpaceLvl::LastChild
+        } else {
+            EntrySpaceLvl::MidChild
+        }
     }
 }

@@ -31,6 +31,7 @@ pub async fn draw_entities<W: Write>(
     draw_rect!(stdout, " ", bg, get_style("normal"));
 
     for (i, lvl) in page_entries.visible_range_with_lvl(scroll) {
+        log::error!("drawwww");
         let ent = match entries.get_mut(&page_entries.get(i).unwrap()) {
             Some(x) => x,
             None => {

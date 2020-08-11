@@ -1,6 +1,8 @@
 use crate::ui::{widgets::VolumeWidget, Rect};
 
 use super::EntrySpaceLvl;
+use super::EntryIdentifier;
+use super::Entries;
 use crate::entry::EntryType;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -57,5 +59,25 @@ impl Entry {
         area.width -= amount;
 
         area
+    }
+
+    pub fn monitor_source(&self, entries: &Entries) -> Option<u32> {
+        match self.entry_type {
+            EntryType::Card => None,
+            EntryType::SinkInput => {
+                if let Some(sink) = self.play_entry.as_ref().unwrap().sink {
+                    match entries.get(&EntryIdentifier::new(EntryType::Sink, sink))
+                    {
+                        Some(s) => s.play_entry.as_ref().unwrap().monitor_source,
+                        None => None
+                    }
+                } else {
+                    None
+                }
+            }
+            _ => {
+                self.play_entry.as_ref().unwrap().monitor_source
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@ use crate::ui::models::{ContextMenuOption, PageEntries};
 use crate::{RSError, DISPATCH};
 use std::collections::HashMap;
 
-use super::util::parent_child_types;
+use super::util::Y_PADDING;
 use crate::Letter;
 
 pub use super::util::PageType;
@@ -93,6 +93,7 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
     let mut stdout = io::stdout();
     crossterm::execute!(stdout, crossterm::terminal::EnterAlternateScreen)?;
     crossterm::terminal::enable_raw_mode()?;
+    execute!(stdout, Hide)?;
 
     let mut state = UIState {
         current_page: PageType::Output,
@@ -105,7 +106,6 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
         redraw: RedrawType::None,
         ui_mode: UIMode::Normal,
     };
-    execute!(stdout, Hide)?;
     draw_page(
         &mut stdout,
         &mut state.entries,
@@ -122,16 +122,14 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
 
         state.redraw = general::action_handler(&msg, &mut state).await;
 
-        match msg {
-            Letter::PeakVolumeUpdate(_, _) => {}
-            _ => {
-                log::error!("{:?}", state.redraw);
-            }
-        };
-
         if state.redraw == RedrawType::Exit {
             break;
         }
+
+        let r = entries_updates::action_handler(&msg, &mut state).await;
+        log::error!("{:?}", r);
+        state.redraw.take_bigger(r);
+
 
         let proposed_redraw = match state.ui_mode {
             UIMode::Normal => {
@@ -143,103 +141,14 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
             }
             UIMode::ContextMenu => context_menu::action_handler(&msg, &mut state).await,
         };
-        match msg {
-            Letter::PeakVolumeUpdate(_, _) => {}
-            _ => {
-                log::error!("{:?}", state.redraw);
-            }
-        };
 
         state.redraw.take_bigger(proposed_redraw);
-        match msg {
-            Letter::PeakVolumeUpdate(_, _) => {}
-            _ => {
-                log::error!("{:?}", state.redraw);
-            }
-        };
 
-        update_page_entries(&mut state).await?;
+        let r = scroll::scroll_handler(&msg, &mut state).await?;
+        state.redraw.take_bigger(r);
 
         redraw(&mut stdout, &mut state).await?;
     }
     Ok(())
 }
 
-async fn update_page_entries(state: &mut UIState) -> Result<(), RSError> {
-    let last_sel = if state.selected < state.page_entries.len() {
-        Some(state.page_entries.get(state.selected).unwrap().clone())
-    } else {
-        None
-    };
-
-    let (p, _) = parent_child_types(state.current_page);
-    if !state.page_entries.set(
-        state
-            .current_page
-            .generate_page(&state.entries)
-            .map(|x| *x.0)
-            .collect::<Vec<EntryIdentifier>>(),
-        p,
-    ) {
-        state.redraw.take_bigger(RedrawType::Entries);
-
-        DISPATCH
-            .event(Letter::CreateMonitors(
-                if state.current_page != PageType::Cards {
-                    monitor_list(state)
-                } else {
-                    HashMap::new()
-                },
-            ))
-            .await;
-    }
-
-    for (i, x) in state.page_entries.iter_entries().enumerate() {
-        if Some(*x) == last_sel {
-            state.selected = i;
-            break;
-        }
-    }
-
-    if state
-        .page_entries
-        .adjust_scroll(&mut state.scroll, &mut state.selected)?
-        && state.redraw != RedrawType::Full
-        && state.redraw != RedrawType::ContextMenu
-    {
-        state.redraw = RedrawType::Entries;
-    }
-
-    Ok(())
-}
-
-fn monitor_list(state: &mut UIState) -> HashMap<EntryIdentifier, Option<u32>> {
-    let mut monitors = HashMap::new();
-    state.page_entries.iter_entries().for_each(|ident| {
-        let mut monitor_src = None;
-        if let Some(entry) = state.entries.get(ident) {
-            match ident.entry_type {
-                EntryType::SinkInput => {
-                    if let Some(sink) = entry.play_entry.as_ref().unwrap().sink {
-                        if let Some(s) = state
-                            .entries
-                            .get(&EntryIdentifier::new(EntryType::Sink, sink))
-                        {
-                            monitor_src = s.play_entry.as_ref().unwrap().monitor_source;
-                        }
-                    }
-                }
-                _ => {
-                    monitor_src = entry.play_entry.as_ref().unwrap().monitor_source;
-                }
-            };
-
-            monitors.insert(
-                EntryIdentifier::new(entry.entry_type, entry.index),
-                monitor_src,
-            );
-        }
-    });
-
-    monitors
-}

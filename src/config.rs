@@ -25,7 +25,7 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("1".to_string(), "show_output".to_string());
         bindings.insert("2".to_string(), "show_input".to_string());
         bindings.insert("3".to_string(), "show_cards".to_string());
-        bindings.insert("Enter".to_string(), "context_menu".to_string());
+        bindings.insert("enter".to_string(), "context_menu".to_string());
         let mut styles = HashMap::new();
         let mut c = HashMap::new();
         c.insert("fg".to_string(), "white".to_string());

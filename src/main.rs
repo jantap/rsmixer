@@ -108,6 +108,8 @@ async fn run() -> Result<(), RSError> {
             }
         }
     }
+    
+    log::info!("EXITING");
 
     log::info!("EXITING");
 

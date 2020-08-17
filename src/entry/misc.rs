@@ -48,15 +48,14 @@ impl std::cmp::Ord for EntryIdentifier {
         let a = num(self.entry_type);
         let b = num(other.entry_type);
 
-        if a > b {
-            return std::cmp::Ordering::Greater;
-        } else if b > a {
-            return std::cmp::Ordering::Less;
+        if let std::cmp::Ordering::Equal = a.cmp(&b) {
+            if self.index > other.index {
+                return std::cmp::Ordering::Greater;
+            }
+            std::cmp::Ordering::Less
+        } else {
+            a.cmp(&b)
         }
-        if self.index > other.index {
-            return std::cmp::Ordering::Greater;
-        }
-        return std::cmp::Ordering::Less;
     }
 }
 

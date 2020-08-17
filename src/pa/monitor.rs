@@ -39,9 +39,7 @@ impl Monitors {
             };
 
             if targets.get(ident) == None {
-                match monitor.exit_sender.send(0) {
-                    _ => {}
-                }
+                let _ = monitor.exit_sender.send(0);
             }
 
             true
@@ -49,11 +47,8 @@ impl Monitors {
 
         targets
             .iter()
-            .for_each(|(ident, monitor_src)| match self.0.get(ident) {
-                None => {
-                    self.create_monitor(mainloop, context, *ident, *monitor_src);
-                }
-                _ => {}
+            .for_each(|(ident, monitor_src)| if self.0.get(ident).is_none() {
+                self.create_monitor(mainloop, context, *ident, *monitor_src);
             });
     }
 
@@ -192,7 +187,7 @@ fn create(
                 };
             };
 
-            if let Ok(_) = close_rx.try_recv() {
+            if close_rx.try_recv().is_ok() {
                 disconnect_stream();
                 return;
             }
@@ -232,5 +227,5 @@ fn create(
         })));
     }
 
-    return Ok(stream);
+    Ok(stream)
 }

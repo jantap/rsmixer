@@ -40,8 +40,8 @@ pub enum ContextMenuOption {
 impl From<ContextMenuOption> for String {
     fn from(option: ContextMenuOption) -> Self {
         match option {
-            ContextMenuOption::MoveToEntry(_, s) => s.clone(),
-            ContextMenuOption::ChangeCardProfile(_, s) => s.clone(),
+            ContextMenuOption::MoveToEntry(_, s) => s,
+            ContextMenuOption::ChangeCardProfile(_, s) => s,
             ContextMenuOption::Kill => "Kill".into(),
             ContextMenuOption::Move => "Move".into(),
             ContextMenuOption::Suspend => "Suspend".into(),

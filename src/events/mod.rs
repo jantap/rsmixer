@@ -31,25 +31,19 @@ pub async fn start<T: Send + std::fmt::Debug + Clone + Message + 'static>(
             if m.id() == 0 {
                 break;
             }
-            match sx.send(m.clone()) {
-                _ => {}
-            };
+            let _ = sx.send(m.clone());
         }
     });
     while let Ok(msg) = rx.recv().await {
-        if *&msg.id() == 0 {
-            match sync_sx.send(msg.clone()) {
-                _ => {}
-            };
+        if msg.id() == 0 {
+            let _ = sync_sx.send(msg.clone());
             let mut senders_inner = Vec::new();
             for (_, sender) in senders.0.read().await.iter() {
                 senders_inner.push(sender.clone());
             }
             for s in senders_inner {
                 let m = msg.clone();
-                match s.send(m) {
-                    _ => {}
-                };
+                let _ = s.send(m);
             }
             break;
         }
@@ -63,9 +57,7 @@ pub async fn start<T: Send + std::fmt::Debug + Clone + Message + 'static>(
         // @TODO przemyśleć to - istnieje możliwość że s będzie dropped zanim wiadomość dojdzie
         //                       czy nie lepiej jest mieć gwarancję że dojdzie?
         tokio::task::spawn(async move {
-            match s.send(msg) {
-                _ => {}
-            };
+            let _ = s.send(msg);
         });
     }
 }

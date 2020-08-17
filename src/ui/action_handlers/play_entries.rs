@@ -27,7 +27,7 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                     .entries
                     .get_mut(&state.page_entries.get(state.selected).unwrap())
                 {
-                    let mut vols = entry.play_entry.as_ref().unwrap().volume.clone();
+                    let mut vols = entry.play_entry.as_ref().unwrap().volume;
                     for v in vols.get_mut() {
                         // @TODO add config
                         // @TODO don't overflow
@@ -54,5 +54,5 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
         }
         _ => {}
     };
-    return RedrawType::None;
+    RedrawType::None
 }

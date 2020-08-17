@@ -47,7 +47,7 @@ impl Entry {
         write!(
             buf,
             "{}",
-            name_style.clone().apply(&self.name[0..left_name_len])
+            name_style.apply(&self.name[0..left_name_len])
         )?;
 
         if let Some(index) = card.selected_profile {
@@ -62,9 +62,7 @@ impl Entry {
             write!(
                 buf,
                 "{}",
-                style
-                    .clone()
-                    .apply(&card.profiles[index].description[0..right_name_len])
+                style.apply(&card.profiles[index].description[0..right_name_len])
             )?;
         }
 
@@ -89,7 +87,8 @@ impl Entry {
         let area1: Rect;
         let mut area2: Rect;
 
-        let mut area_a = Entry::calc_area(self.position, area.clone());
+        let a = area;
+        let mut area_a = Entry::calc_area(self.position, a);
         let small = area_a.width <= 35;
 
         let seventy_percent = (area_a.width as f32 * 0.7).floor() as u16;
@@ -124,7 +123,7 @@ impl Entry {
             .collect::<String>();
 
         execute!(buf, MoveTo(area1.x, area1.y))?;
-        write!(buf, "{}", name_style.clone().apply(short_name))?;
+        write!(buf, "{}", name_style.apply(short_name))?;
 
         let vol_perc = format!("  {}", (main_vol * 150.0) as u32);
         let vol_perc = String::from(&vol_perc[vol_perc.len() - 3..vol_perc.len()]);
@@ -177,7 +176,7 @@ impl Entry {
             draw_at!(buf, c, area2.x + area2.width, area2.y, style.clone());
             draw_at!(buf, c, area2.x - 1, area2.y, style.clone());
             draw_at!(buf, c, area2.x + area2.width, area2.y + 1, style.clone());
-            draw_at!(buf, c, area2.x - 1, area2.y + 1, style.clone());
+            draw_at!(buf, c, area2.x - 1, area2.y + 1, style);
 
             play.volume_bar.render(area2, buf)?;
             area2.y += 1;

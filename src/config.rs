@@ -49,7 +49,7 @@ impl std::default::Default for RsMixerConfig {
         styles.insert("orange".to_string(), c.clone());
         c.insert("fg".to_string(), "green".to_string());
         c.insert("bg".to_string(), "black".to_string());
-        styles.insert("green".to_string(), c.clone());
+        styles.insert("green".to_string(), c);
         Self {
             bindings,
             colors: styles,
@@ -117,22 +117,22 @@ impl From<String> for Letter {
     }
 }
 
-fn find_color(s: &String) -> Option<Color> {
+fn find_color(s: &str) -> Option<Color> {
     if s.chars().take(1).collect::<String>() == "#" && s.len() == 7 {
-        return Some(Color::Rgb {
+        Some(Color::Rgb {
             r: u8::from_str_radix(&s[1..3], 16).expect("error in config"),
             g: u8::from_str_radix(&s[3..5], 16).expect("error in config"),
             b: u8::from_str_radix(&s[5..7], 16).expect("error in config"),
-        });
+        })
     } else {
-        return match &s[..].parse::<Color>() {
-            Ok(c) => Some(c.clone()),
+        match &s[..].parse::<Color>() {
+            Ok(c) => Some(*c),
             Err(_) => None,
-        };
+        }
     }
 }
 
-fn find_keycode(s: &String) -> KeyCode {
+fn find_keycode(s: &str) -> KeyCode {
     match &s[..] {
         "backspace" => KeyCode::Backspace,
         "enter" => KeyCode::Enter,

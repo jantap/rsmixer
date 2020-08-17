@@ -141,218 +141,203 @@ pub fn request_info(ident: EntryIdentifier, context: &Rc<RefCell<Context>>) {
     };
 }
 pub fn on_card_info(res: ListResult<&CardInfo>) {
-    match res {
-        ListResult::Item(i) => {
-            let n = match i
-                .proplist
-                .get_str(pulse::proplist::properties::DEVICE_DESCRIPTION)
-            {
-                Some(s) => s,
-                None => String::from(""),
-            };
-            let profiles: Vec<CardProfile> = i
-                .profiles
-                .iter()
-                .filter_map(|p| {
-                    if let Some(n) = &p.name {
-                        Some(CardProfile {
-                            name: n.to_string(),
-                            description: match &p.description {
-                                Some(s) => s.to_string(),
-                                None => n.to_string(),
-                            },
-                            available: p.available,
-                        })
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            let selected_profile = match &i.active_profile {
-                Some(x) => {
-                    if let Some(n) = &x.name {
-                        profiles.iter().position(|p| p.name == n.to_string())
-                    } else {
-                        None
-                    }
+    if let ListResult::Item(i) = res {
+        let n = match i
+            .proplist
+            .get_str(pulse::proplist::properties::DEVICE_DESCRIPTION)
+        {
+            Some(s) => s,
+            None => String::from(""),
+        };
+        let profiles: Vec<CardProfile> = i
+            .profiles
+            .iter()
+            .filter_map(|p| {
+                if let Some(n) = &p.name {
+                    Some(CardProfile {
+                        name: n.to_string(),
+                        description: match &p.description {
+                            Some(s) => s.to_string(),
+                            None => n.to_string(),
+                        },
+                        available: p.available,
+                    })
+                } else {
+                    None
                 }
-                None => None,
-            };
+            })
+            .collect();
 
-            let ident = EntryIdentifier::new(EntryType::Card, i.index);
-            let entry = Entry {
-                entry_type: EntryType::Card,
-                index: i.index,
-                name: n,
-                parent: None,
-                position: EntrySpaceLvl::Empty,
-                is_selected: false,
-                card_entry: Some(CardEntry {
-                    profiles,
-                    selected_profile,
-                }),
-                play_entry: None,
-            };
+        let selected_profile = match &i.active_profile {
+            Some(x) => {
+                if let Some(n) = &x.name {
+                    profiles.iter().position(|p| p.name == *n)
+                } else {
+                    None
+                }
+            }
+            None => None,
+        };
 
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, entry));
-        }
-        _ => {}
-    };
+        let ident = EntryIdentifier::new(EntryType::Card, i.index);
+        let entry = Entry {
+            entry_type: EntryType::Card,
+            index: i.index,
+            name: n,
+            parent: None,
+            position: EntrySpaceLvl::Empty,
+            is_selected: false,
+            card_entry: Some(CardEntry {
+                profiles,
+                selected_profile,
+            }),
+            play_entry: None,
+        };
+
+        DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+    }
 }
 
 pub fn on_sink_info(res: ListResult<&SinkInfo>) {
-    match res {
-        ListResult::Item(i) => {
-            debug!("[PADataInterface] Update {} sink info", i.index);
-            let name = match &i.description {
-                Some(name) => name.to_string(),
-                None => String::new(),
-            };
-            let ident = EntryIdentifier::new(EntryType::Sink, i.index);
-            let entry = Entry {
-                entry_type: EntryType::Sink,
-                index: i.index,
-                name,
-                parent: None,
-                position: EntrySpaceLvl::Empty,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: Some(i.monitor_source),
-                    sink: None,
-                    suspended: i.state == SinkState::Suspended,
-                }),
-            };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, entry));
-        }
-        _ => {}
-    };
+    if let ListResult::Item(i) = res {
+        debug!("[PADataInterface] Update {} sink info", i.index);
+        let name = match &i.description {
+            Some(name) => name.to_string(),
+            None => String::new(),
+        };
+        let ident = EntryIdentifier::new(EntryType::Sink, i.index);
+        let entry = Entry {
+            entry_type: EntryType::Sink,
+            index: i.index,
+            name,
+            parent: None,
+            position: EntrySpaceLvl::Empty,
+            is_selected: false,
+            card_entry: None,
+            play_entry: Some(PlayEntry {
+                volume_bar: VolumeWidget::default(),
+                peak_volume_bar: VolumeWidget::default(),
+                peak: 0.0,
+                mute: i.mute,
+                volume: i.volume,
+                monitor_source: Some(i.monitor_source),
+                sink: None,
+                suspended: i.state == SinkState::Suspended,
+            }),
+        };
+        DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+    }
 }
 
 pub fn on_sink_input_info(res: ListResult<&SinkInputInfo>) {
-    match res {
-        ListResult::Item(i) => {
-            debug!("[PADataInterface] Update {} sink input info", i.index);
-            let n = match i
-                .proplist
-                .get_str(pulse::proplist::properties::APPLICATION_NAME)
-            {
-                Some(s) => s,
-                None => match &i.name {
-                    Some(s) => s.to_string(),
-                    None => String::from(""),
-                },
-            };
-            let ident = EntryIdentifier::new(EntryType::SinkInput, i.index);
-            let entry = Entry {
-                entry_type: EntryType::SinkInput,
-                parent: Some(i.sink),
-                position: EntrySpaceLvl::Empty,
-                name: n,
-                index: i.index,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: None,
-                    sink: Some(i.sink),
-                    suspended: false,
-                }),
-            };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, entry));
-            (*INFO_SX)
-                .get()
-                .send(EntryIdentifier::new(EntryType::Sink, i.sink))
-                .unwrap();
-        }
-        _ => {}
-    };
+    if let ListResult::Item(i) = res {
+        debug!("[PADataInterface] Update {} sink input info", i.index);
+        let n = match i
+            .proplist
+            .get_str(pulse::proplist::properties::APPLICATION_NAME)
+        {
+            Some(s) => s,
+            None => match &i.name {
+                Some(s) => s.to_string(),
+                None => String::from(""),
+            },
+        };
+        let ident = EntryIdentifier::new(EntryType::SinkInput, i.index);
+        let entry = Entry {
+            entry_type: EntryType::SinkInput,
+            parent: Some(i.sink),
+            position: EntrySpaceLvl::Empty,
+            name: n,
+            index: i.index,
+            is_selected: false,
+            card_entry: None,
+            play_entry: Some(PlayEntry {
+                volume_bar: VolumeWidget::default(),
+                peak_volume_bar: VolumeWidget::default(),
+                peak: 0.0,
+                mute: i.mute,
+                volume: i.volume,
+                monitor_source: None,
+                sink: Some(i.sink),
+                suspended: false,
+            }),
+        };
+        DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+        (*INFO_SX)
+            .get()
+            .send(EntryIdentifier::new(EntryType::Sink, i.sink))
+            .unwrap();
+    }
 }
 
 pub fn on_source_info(res: ListResult<&SourceInfo>) {
-    match res {
-        ListResult::Item(i) => {
-            debug!("[PADataInterface] Update {} source info", i.index);
-            let name = match &i.description {
-                Some(name) => name.to_string(),
-                None => String::new(),
-            };
-            let ident = EntryIdentifier::new(EntryType::Source, i.index);
-            let entry = Entry {
-                entry_type: EntryType::Source,
-                position: EntrySpaceLvl::Empty,
-                index: i.index,
-                name,
-                parent: None,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: Some(i.index),
-                    sink: None,
-                    suspended: i.state == SourceState::Suspended,
-                }),
-            };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, entry));
-        }
-        _ => {}
-    };
+    if let ListResult::Item(i) = res {
+        debug!("[PADataInterface] Update {} source info", i.index);
+        let name = match &i.description {
+            Some(name) => name.to_string(),
+            None => String::new(),
+        };
+        let ident = EntryIdentifier::new(EntryType::Source, i.index);
+        let entry = Entry {
+            entry_type: EntryType::Source,
+            position: EntrySpaceLvl::Empty,
+            index: i.index,
+            name,
+            parent: None,
+            is_selected: false,
+            card_entry: None,
+            play_entry: Some(PlayEntry {
+                volume_bar: VolumeWidget::default(),
+                peak_volume_bar: VolumeWidget::default(),
+                peak: 0.0,
+                mute: i.mute,
+                volume: i.volume,
+                monitor_source: Some(i.index),
+                sink: None,
+                suspended: i.state == SourceState::Suspended,
+            }),
+        };
+        DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+    }
 }
 
 pub fn on_source_output_info(res: ListResult<&SourceOutputInfo>) {
-    match res {
-        ListResult::Item(i) => {
-            debug!("[PADataInterface] Update {} source output info", i.index);
-            let n = match i
-                .proplist
-                .get_str(pulse::proplist::properties::APPLICATION_NAME)
-            {
-                Some(s) => s,
-                None => String::from(""),
-            };
-            if n == "RsMixerContext" {
-                return;
-            }
-            let ident = EntryIdentifier::new(EntryType::SourceOutput, i.index);
-            let entry = Entry {
-                entry_type: EntryType::SourceOutput,
-                parent: Some(i.source),
-                index: i.index,
-                name: n,
-                position: EntrySpaceLvl::Empty,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: Some(i.source),
-                    sink: None,
-                    suspended: false,
-                }),
-            };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, entry));
-            (*INFO_SX)
-                .get()
-                .send(EntryIdentifier::new(EntryType::Source, i.index))
-                .unwrap();
+    if let ListResult::Item(i) = res {
+        debug!("[PADataInterface] Update {} source output info", i.index);
+        let n = match i
+            .proplist
+            .get_str(pulse::proplist::properties::APPLICATION_NAME)
+        {
+            Some(s) => s,
+            None => String::from(""),
+        };
+        if n == "RsMixerContext" {
+            return;
         }
-        _ => {}
-    };
+        let ident = EntryIdentifier::new(EntryType::SourceOutput, i.index);
+        let entry = Entry {
+            entry_type: EntryType::SourceOutput,
+            parent: Some(i.source),
+            index: i.index,
+            name: n,
+            position: EntrySpaceLvl::Empty,
+            is_selected: false,
+            card_entry: None,
+            play_entry: Some(PlayEntry {
+                volume_bar: VolumeWidget::default(),
+                peak_volume_bar: VolumeWidget::default(),
+                peak: 0.0,
+                mute: i.mute,
+                volume: i.volume,
+                monitor_source: Some(i.source),
+                sink: None,
+                suspended: false,
+            }),
+        };
+        DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+        (*INFO_SX)
+            .get()
+            .send(EntryIdentifier::new(EntryType::Source, i.index))
+            .unwrap();
+    }
 }

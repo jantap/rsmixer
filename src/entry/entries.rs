@@ -4,10 +4,13 @@ use std::collections::BTreeMap;
 
 pub struct Entries(BTreeMap<EntryIdentifier, Entry>);
 
-impl Entries {
-    pub fn new() -> Self {
+impl Default for Entries {
+    fn default() -> Self {
         Self(BTreeMap::new())
     }
+}
+
+impl Entries {
     pub fn iter_type<'a>(
         &'a self,
         entry_type: EntryType,

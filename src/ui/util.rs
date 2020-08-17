@@ -70,7 +70,7 @@ impl PageType {
 
         let (parent, child) = parent_child_types(*self);
 
-        return Box::new(
+        Box::new(
             entries
                 .iter_type(parent)
                 .map(move |(ident, entry)| {
@@ -81,7 +81,7 @@ impl PageType {
                     )
                 })
                 .flatten(),
-        );
+        )
     }
 }
 

@@ -5,14 +5,16 @@ pub struct Dispatch<T: Send + Message + 'static>(
     Storage<cb_channel::Sender<T>>,
 );
 
-impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
-    pub fn new() -> Self {
+impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Default for Dispatch<T> {
+    fn default() -> Self {
         Self {
             0: Arc::new(RwLock::new(None)),
             1: Storage::new(),
         }
     }
+}
 
+impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
     pub async fn register(&self, sender: Sender<T>, sync_sender: cb_channel::Sender<T>) {
         let mut bis = self.0.write().await;
         *bis = Some(sender);
@@ -25,25 +27,14 @@ impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
     }
 
     pub async fn event(&self, ev: T) {
-        match self.0.read().await.as_ref() {
-            Some(s) => {
-                match s.send(ev.clone()) {
-                    _ => {}
-                };
-            }
-            None => {}
+        if let Some(s) = self.0.read().await.as_ref() {
+            let _ = s.send(ev.clone());
         }
     }
 
     pub fn sync_event(&self, ev: T) {
-        match self.1.try_get() {
-            Some(s) => {
-                match s.send(ev) {
-                    Err(_) => {}
-                    _ => {}
-                };
-            }
-            None => {}
+        if let Some(s) = self.1.try_get() {
+            let _ = s.send(ev);
         }
     }
 }

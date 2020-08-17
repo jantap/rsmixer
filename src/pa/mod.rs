@@ -18,7 +18,7 @@ use state::Storage;
 
 pub enum PAInternal {
     Tick,
-    Command(Letter),
+    Command(Box<Letter>),
     AskInfo(EntryIdentifier),
 }
 

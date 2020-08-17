@@ -11,15 +11,12 @@ use std::collections::HashMap;
 
 use pulse::volume::ChannelVolumes;
 
-type MonSrc = Option<u32>;
-type M = HashMap<EntryIdentifier, MonSrc>;
-
 messages!(Letter,
     ExitSignal => 0,
 
     Redraw => UI_MESSAGE,
     EntryRemoved(EntryIdentifier) => UI_MESSAGE,
-    EntryUpdate(EntryIdentifier, Entry) => UI_MESSAGE,
+    EntryUpdate(EntryIdentifier, Box<Entry>) => UI_MESSAGE,
     PeakVolumeUpdate(EntryIdentifier, f32) => UI_MESSAGE,
     RequstChangeVolume(i16) => UI_MESSAGE,
     MoveUp(u16) => UI_MESSAGE,
@@ -32,7 +29,7 @@ messages!(Letter,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,
     ChangeCardProfile(EntryIdentifier, String) => PA_MESSAGE,
     SetVolume(EntryIdentifier, ChannelVolumes) => PA_MESSAGE,
-    CreateMonitors(M) => PA_MESSAGE,
+    CreateMonitors(HashMap<EntryIdentifier, Option<u32>>) => PA_MESSAGE,
     SetSuspend(EntryIdentifier, bool) => PA_MESSAGE,
     KillEntry(EntryIdentifier) => PA_MESSAGE,
 );

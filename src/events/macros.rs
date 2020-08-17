@@ -3,12 +3,12 @@
 
 #[macro_export]
 macro_rules! messages_internal {
-    ($i:ident) => { _ }
+    ($i:ty) => { _ }
 }
 
 #[macro_export]
 macro_rules! messages {
-    ($enu:ident, $( $x:ident $( ( $( $s:ident),* ) )? => $y:expr ),* $( , )?) => {
+    ($enu:ident, $( $x:ident $( ( $( $s:ty),* ) )? => $y:expr ),* $( , )?) => {
         use crate::messages_internal;
 
         #[derive(Clone, PartialEq, Debug)]

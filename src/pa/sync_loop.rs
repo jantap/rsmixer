@@ -123,7 +123,8 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
                 monitors.filter(&mainloop, &context, &last_targets);
             }
             PAInternal::Command(cmd) => {
-                if let None = pa_actions::handle_command(cmd.clone(), &context) {
+                let cmd = cmd.deref();
+                if pa_actions::handle_command(cmd.clone(), &context).is_none() {
                     break;
                 }
 

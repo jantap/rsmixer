@@ -36,7 +36,7 @@ pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<
                     if cmd == Letter::ExitSignal {
                         break;
                     }
-                    internal_sx.send(PAInternal::Command(cmd))?;
+                    internal_sx.send(PAInternal::Command(Box::new(cmd)))?;
                 }
             }
             i = info => {

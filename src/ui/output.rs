@@ -51,13 +51,7 @@ impl std::cmp::Ord for RedrawType {
         let a = u32::from(*self);
         let b = u32::from(*other);
 
-        if a > b {
-            std::cmp::Ordering::Greater
-        } else if b > a {
-            std::cmp::Ordering::Less
-        } else {
-            std::cmp::Ordering::Equal
-        }
+        a.cmp(&b)
     }
 }
 
@@ -95,7 +89,7 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
 
     let mut state = UIState {
         current_page: PageType::Output,
-        entries: Entries::new(),
+        entries: Entries::default(),
         page_entries: PageEntries::new(),
         selected: 0,
         selected_context: 0,

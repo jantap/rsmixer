@@ -59,5 +59,5 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
         _ => {}
     };
 
-    return RedrawType::None;
+    RedrawType::None
 }

@@ -25,7 +25,7 @@ pub async fn draw_entities<W: Write>(
     let (w, h) = crossterm::terminal::size()?;
     let mut entry_size = Rect::new(2, 2, w - 4, 3);
 
-    let mut bg = entry_size.clone();
+    let mut bg = entry_size;
     bg.height = h - *Y_PADDING;
 
     draw_rect!(stdout, " ", bg, get_style("normal"));

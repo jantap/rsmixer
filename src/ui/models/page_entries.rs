@@ -81,12 +81,12 @@ impl PageEntries {
             }
         }
 
-        return Ok(Some(Rect::new(
+        Ok(Some(Rect::new(
             2,
             2 + he,
             w - 4,
             entry_height(self.lvls[index]),
-        )));
+        )))
     }
 
     pub fn visible_range_with_lvl<'a>(
@@ -131,7 +131,7 @@ impl PageEntries {
     }
 }
 
-fn calc_lvl(parent_type: EntryType, vs: &Vec<EntryIdentifier>, index: usize) -> EntrySpaceLvl {
+fn calc_lvl(parent_type: EntryType, vs: &[EntryIdentifier], index: usize) -> EntrySpaceLvl {
     if parent_type == EntryType::Card {
         EntrySpaceLvl::Card
     } else if vs[index].entry_type == parent_type {
@@ -140,11 +140,9 @@ fn calc_lvl(parent_type: EntryType, vs: &Vec<EntryIdentifier>, index: usize) -> 
         } else {
             EntrySpaceLvl::Parent
         }
+    } else if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
+        EntrySpaceLvl::LastChild
     } else {
-        if index + 1 >= vs.len() || vs[index + 1].entry_type == parent_type {
-            EntrySpaceLvl::LastChild
-        } else {
-            EntrySpaceLvl::MidChild
-        }
+        EntrySpaceLvl::MidChild
     }
 }

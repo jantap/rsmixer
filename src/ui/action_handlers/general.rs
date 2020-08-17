@@ -1,5 +1,7 @@
 use super::common::*;
 
+use std::ops::Deref;
+
 pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     match msg.clone() {
         Letter::ExitSignal => return RedrawType::Exit,
@@ -10,7 +12,7 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             state.entries.remove(&ident);
         }
         Letter::EntryUpdate(ident, entry) => {
-            state.entries.insert(ident, entry.clone());
+            state.entries.insert(ident, entry.deref().to_owned());
         }
         Letter::ChangePage(page) => {
             state.current_page = page;
@@ -20,5 +22,5 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
         _ => {}
     };
 
-    return RedrawType::None;
+    RedrawType::None
 }

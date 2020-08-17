@@ -30,8 +30,8 @@ use lazy_static::lazy_static;
 use state::Storage;
 
 lazy_static! {
-    pub static ref DISPATCH: Dispatch<Letter> = Dispatch::new();
-    pub static ref SENDERS: Senders<Letter> = Senders::new();
+    pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
+    pub static ref SENDERS: Senders<Letter> = Senders::default();
 }
 static STYLES: Storage<Styles> = Storage::new();
 static BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
@@ -84,23 +84,21 @@ async fn run() -> Result<(), RSError> {
         }
     };
 
-    match tokio::try_join!(ui, pa, pa_async) {
-        r => {
-            DISPATCH.event(Letter::ExitSignal).await;
+    let r = tokio::try_join!(ui, pa, pa_async);
 
-            let mut stdout = std::io::stdout();
-            crossterm::execute!(
-                stdout,
-                crossterm::cursor::Show,
-                crossterm::terminal::LeaveAlternateScreen
-            )
-            .unwrap();
-            crossterm::terminal::disable_raw_mode().unwrap();
+    DISPATCH.event(Letter::ExitSignal).await;
 
-            if let Err(err) = r {
-                println!("{}", err);
-            }
-        }
+    let mut stdout = std::io::stdout();
+    crossterm::execute!(
+        stdout,
+        crossterm::cursor::Show,
+        crossterm::terminal::LeaveAlternateScreen
+    )
+    .unwrap();
+    crossterm::terminal::disable_raw_mode().unwrap();
+
+    if let Err(err) = r {
+        println!("{}", err);
     }
 
     Ok(())

@@ -1,6 +1,7 @@
-use crate::Letter;
-use crate::entry::{Entry, EntryIdentifier, EntryType};
-use crate::DISPATCH;
+use crate::{
+    entry::{Entry, EntryIdentifier, EntryType},
+    Letter, DISPATCH,
+};
 
 pub fn context_menu(entry: &Entry) -> Vec<ContextMenuOption> {
     match entry.entry_type {

@@ -1,15 +1,14 @@
-
-mod macros;
-mod events;
-mod dispatch;
-mod internal_senders;
 mod common;
+mod dispatch;
+mod events;
+mod internal_senders;
+mod macros;
+
+pub use dispatch::Dispatch;
+pub use events::Letter;
+pub use internal_senders::Senders;
 
 use common::*;
-pub use internal_senders::Senders;
-pub use dispatch::Dispatch;
-
-pub use events::Letter;
 
 pub static CHANNEL_CAPACITY: usize = 32;
 

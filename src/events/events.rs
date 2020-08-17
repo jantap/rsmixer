@@ -1,12 +1,15 @@
-use crate::{messages, Message};
+use super::{PA_MESSAGE, UI_MESSAGE};
+
 use crate::{
     entry::{Entry, EntryIdentifier},
+    messages,
     ui::PageType,
+    Message,
 };
-use pulse::volume::ChannelVolumes;
+
 use std::collections::HashMap;
 
-use super::{UI_MESSAGE, PA_MESSAGE};
+use pulse::volume::ChannelVolumes;
 
 type MonSrc = Option<u32>;
 type M = HashMap<EntryIdentifier, MonSrc>;

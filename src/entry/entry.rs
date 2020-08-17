@@ -1,9 +1,6 @@
-use crate::ui::{widgets::VolumeWidget, Rect};
+use super::{Entries, EntryIdentifier, EntrySpaceLvl, EntryType};
 
-use super::EntrySpaceLvl;
-use super::EntryIdentifier;
-use super::Entries;
-use crate::entry::EntryType;
+use crate::ui::{widgets::VolumeWidget, Rect};
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct PlayEntry {
@@ -66,18 +63,15 @@ impl Entry {
             EntryType::Card => None,
             EntryType::SinkInput => {
                 if let Some(sink) = self.play_entry.as_ref().unwrap().sink {
-                    match entries.get(&EntryIdentifier::new(EntryType::Sink, sink))
-                    {
+                    match entries.get(&EntryIdentifier::new(EntryType::Sink, sink)) {
                         Some(s) => s.play_entry.as_ref().unwrap().monitor_source,
-                        None => None
+                        None => None,
                     }
                 } else {
                     None
                 }
             }
-            _ => {
-                self.play_entry.as_ref().unwrap().monitor_source
-            }
+            _ => self.play_entry.as_ref().unwrap().monitor_source,
         }
     }
 }

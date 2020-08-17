@@ -1,38 +1,32 @@
-#![feature(const_fn)]
-#![feature(new_uninit)]
-#![feature(get_mut_unchecked)]
-#![feature(async_closure)]
-
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
 mod config;
 mod entry;
 mod errors;
+mod events;
 mod input;
 mod pa;
 mod ui;
-mod events;
 
-use events::{Dispatch, Senders, Message};
-pub use events::Letter;
 pub use errors::RSError;
-use std::collections::HashMap;
-use std::env;
-use std::io::Write;
+pub use events::Letter;
 
-use log::LevelFilter;
+use config::RsMixerConfig;
+use events::{Dispatch, Message, Senders};
+
+use std::{collections::HashMap, env, io::Write};
 
 use tokio::runtime;
 use tokio::sync::broadcast::channel;
 use tokio::task;
 
+use crossterm::{event::KeyCode, style::ContentStyle};
+
+use log::LevelFilter;
+
 use lazy_static::lazy_static;
 
-use crossterm::event::KeyCode;
-use crossterm::style::ContentStyle;
-
-use config::RsMixerConfig;
 use state::Storage;
 
 lazy_static! {
@@ -108,10 +102,6 @@ async fn run() -> Result<(), RSError> {
             }
         }
     }
-    
-    log::info!("EXITING");
-
-    log::info!("EXITING");
 
     Ok(())
 }

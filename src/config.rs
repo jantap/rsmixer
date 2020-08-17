@@ -1,9 +1,13 @@
 use crate::{ui::PageType, Letter, Styles};
-use crossterm::event::KeyCode;
-use crossterm::style::Color;
-use crossterm::style::ContentStyle;
-use serde::{Deserialize, Serialize};
+
 use std::collections::HashMap;
+
+use crossterm::{
+    event::KeyCode,
+    style::{Color, ContentStyle},
+};
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct RsMixerConfig {

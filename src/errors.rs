@@ -1,6 +1,6 @@
 use crate::pa::PAInternal;
-use std::error::Error;
-use std::fmt;
+
+use std::{error::Error, fmt};
 
 #[derive(Debug)]
 pub enum RSError {

@@ -8,7 +8,9 @@ pub use context_menu::ContextMenuWidget;
 pub use volume::{VolumeWidget, VolumeWidgetBorder};
 
 use super::util::Rect;
+
 use crate::RSError;
+
 use std::io::Write;
 
 pub trait Widget<W: Write> {

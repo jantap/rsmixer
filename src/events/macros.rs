@@ -1,4 +1,4 @@
-// macro to easier implement Message trait which 
+// macro to easier implement Message trait which
 // defines where do messages go
 
 #[macro_export]

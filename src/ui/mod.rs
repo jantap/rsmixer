@@ -5,15 +5,13 @@ mod output;
 mod util;
 pub mod widgets;
 
-use crate::input;
-use crate::RSError;
-use crate::{events, SENDERS};
 pub use util::{PageType, Rect};
 
 use output::ui_loop;
-use tokio::sync::broadcast::channel;
 
-use tokio::task;
+use crate::{events, input, RSError, SENDERS};
+
+use tokio::{sync::broadcast::channel, task};
 
 pub async fn start() -> Result<(), RSError> {
     let (sx, rx) = channel(events::CHANNEL_CAPACITY);

@@ -1,6 +1,8 @@
 use super::common::*;
-use pulse::stream::PeekResult;
+
 use std::convert::TryInto;
+
+use pulse::stream::PeekResult;
 
 pub struct Monitor {
     stream: Rc<RefCell<Stream>>,

@@ -1,21 +1,19 @@
-use super::action_handlers::*;
 pub use super::widgets::VolumeWidget;
-use crate::entry::{Entries, EntryIdentifier, EntryType};
-use crate::ui::draw::{draw_page, redraw};
-use crate::ui::models::{ContextMenuOption, PageEntries};
-use crate::{RSError, DISPATCH};
-use std::collections::HashMap;
 
-use super::util::Y_PADDING;
-use crate::Letter;
+use super::{action_handlers::*, util::PageType};
 
-pub use super::util::PageType;
-use std::io::Write;
+use crate::{
+    entry::{Entries, EntryIdentifier},
+    ui::{
+        draw::{draw_page, redraw},
+        models::{ContextMenuOption, PageEntries},
+    },
+    Letter, RSError,
+};
 
-use tokio::stream::StreamExt;
-use tokio::sync::broadcast::Receiver;
+use std::io::{self, Write};
 
-use std::io;
+use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
 use crossterm::{cursor::Hide, execute};
 
@@ -117,7 +115,6 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
     .await?;
 
     while let Some(Ok(msg)) = rx.next().await {
-        log::error!("cur letter {:?}", msg.clone());
         // run action handlers which will decide what to redraw
         state.redraw = RedrawType::None;
 
@@ -128,9 +125,7 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
         }
 
         let r = entries_updates::action_handler(&msg, &mut state).await;
-        log::error!("{:?}", r);
         state.redraw.take_bigger(r);
-
 
         let proposed_redraw = match state.ui_mode {
             UIMode::Normal => {
@@ -152,4 +147,3 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
     }
     Ok(())
 }
-

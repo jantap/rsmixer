@@ -1,5 +1,5 @@
-use super::Entry;
-use super::{EntryIdentifier, EntryType};
+use super::{Entry, EntryIdentifier, EntryType};
+
 use std::collections::BTreeMap;
 
 pub struct Entries(BTreeMap<EntryIdentifier, Entry>);

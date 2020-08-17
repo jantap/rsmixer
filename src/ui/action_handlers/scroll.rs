@@ -1,7 +1,8 @@
 use super::common::*;
-use crate::RSError;
-use crate::ui::util::Y_PADDING;
-use std::cmp::{min, max};
+
+use crate::{ui::util::Y_PADDING, RSError};
+
+use std::cmp::{max, min};
 
 pub async fn scroll_handler(msg: &Letter, state: &mut UIState) -> Result<RedrawType, RSError> {
     let (_, term_h) = crossterm::terminal::size()?;
@@ -12,10 +13,11 @@ pub async fn scroll_handler(msg: &Letter, state: &mut UIState) -> Result<RedrawT
         | Letter::Redraw
         | Letter::ChangePage(_) => {
             state.page_entries.reflow_scroll(term_h - *Y_PADDING, true);
-        },
-        Letter::MoveUp(_)
-        | Letter::MoveDown(_) => {},
-        _ => { return Ok(RedrawType::None); },
+        }
+        Letter::MoveUp(_) | Letter::MoveDown(_) => {}
+        _ => {
+            return Ok(RedrawType::None);
+        }
     };
 
     if state.page_entries.len() == 0 {

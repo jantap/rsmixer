@@ -1,8 +1,9 @@
 use super::Widget;
-use crate::RSError;
+
 use crate::{
     draw_range, repeat_string,
     ui::util::{get_style, Rect},
+    RSError,
 };
 
 use std::io::Write;

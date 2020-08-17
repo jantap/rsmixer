@@ -1,7 +1,12 @@
 pub use super::{monitor::Monitors, PAInternal, INFO_SX, SPEC};
-pub use crate::entry::{EntryIdentifier, EntryType};
-pub use crate::{Letter, RSError, DISPATCH};
-pub use log::{debug, error, info};
+
+pub use crate::{
+    entry::{EntryIdentifier, EntryType},
+    Letter, RSError, DISPATCH,
+};
+
+pub use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
 pub use pulse::stream::Stream;
 pub use pulse::{
     context::{subscribe::Facility, Context},
@@ -10,9 +15,8 @@ pub use pulse::{
         threaded::Mainloop,
     },
 };
-pub use std::cell::RefCell;
-pub use std::collections::HashMap;
-pub use std::rc::Rc;
+
+pub use log::{debug, error, info};
 
 impl From<Facility> for EntryType {
     fn from(fac: Facility) -> Self {

@@ -1,12 +1,13 @@
-pub use crate::ui::models::context_menus::context_menu;
-pub use crate::ui::output::{RedrawType, UIMode, UIState};
-
-pub use crate::{Letter, DISPATCH};
-
-pub use crate::entry::EntryType;
-
-pub use crate::ui::util::PageType;
-
-pub use pulse::volume;
+pub use crate::{
+    entry::EntryType,
+    ui::{
+        models::context_menus::context_menu,
+        output::{RedrawType, UIMode, UIState},
+        util::PageType,
+    },
+    Letter, DISPATCH,
+};
 
 pub use std::cmp::{max, min};
+
+pub use pulse::volume;

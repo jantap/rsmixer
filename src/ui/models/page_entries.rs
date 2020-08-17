@@ -1,6 +1,6 @@
-use crate::ui::util::{entry_height, Rect, Y_PADDING};
 use crate::{
     entry::{EntryIdentifier, EntrySpaceLvl, EntryType},
+    ui::util::{entry_height, Rect},
     RSError,
 };
 
@@ -51,16 +51,20 @@ impl PageEntries {
         let mut current_scroll_page = 0;
         let mut current_height = 0;
 
-        self.visibility = self.lvls.iter().map(|&e| {
-            current_height += entry_height(e);
+        self.visibility = self
+            .lvls
+            .iter()
+            .map(|&e| {
+                current_height += entry_height(e);
 
-            if current_height > h {
-                current_scroll_page += 1;
-                current_height = 0;
-            }
+                if current_height > h {
+                    current_scroll_page += 1;
+                    current_height = 0;
+                }
 
-            current_scroll_page
-        }).collect();
+                current_scroll_page
+            })
+            .collect();
     }
 
     pub fn is_entry_visible(&self, index: usize, scroll: usize) -> Result<Option<Rect>, RSError> {
@@ -103,10 +107,10 @@ impl PageEntries {
 
     pub fn set(&mut self, vs: Vec<EntryIdentifier>, parent_type: EntryType) -> bool {
         let ret = if vs.len() == self.len() {
-
             // check if any page entry changed identifier or level
-            vs.iter().enumerate().find(|&(i, &e)| e != self.get(i).unwrap() || calc_lvl(parent_type, &vs, i) != self.lvls[i]) != None
-
+            vs.iter().enumerate().find(|&(i, &e)| {
+                e != self.get(i).unwrap() || calc_lvl(parent_type, &vs, i) != self.lvls[i]
+            }) != None
         } else {
             true
         };

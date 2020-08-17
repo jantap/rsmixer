@@ -1,9 +1,13 @@
 use super::common::*;
+
 use crate::{events, SENDERS};
+
 use std::time::Duration;
-use tokio::stream::StreamExt;
-use tokio::sync::broadcast::channel;
-use tokio::sync::mpsc;
+
+use tokio::{
+    stream::StreamExt,
+    sync::{broadcast::channel, mpsc},
+};
 
 pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<(), RSError> {
     let (info_sx, mut info_rx) = mpsc::unbounded_channel();

@@ -8,10 +8,9 @@ use crate::{
     RSError,
 };
 
-use pulse::volume;
+use std::{cmp::min, io::Write};
 
-use std::cmp::min;
-use std::io::Write;
+use pulse::volume;
 
 use crossterm::{cursor::MoveTo, execute};
 

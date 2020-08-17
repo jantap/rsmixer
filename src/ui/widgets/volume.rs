@@ -1,10 +1,10 @@
 use super::Widget;
+
 use crate::{
     draw_at, repeat_string,
     ui::util::{get_style, Rect},
+    RSError,
 };
-
-use crate::RSError;
 
 use std::{
     cmp::{max, min},

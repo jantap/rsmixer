@@ -1,15 +1,16 @@
 use super::common::*;
-use crate::ui::util::parent_child_types;
-use crate::entry::EntryIdentifier;
+
+use crate::{entry::EntryIdentifier, ui::util::parent_child_types};
+
 use std::collections::HashMap;
 
 pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     // we only need to update page entries if entries changed
     match msg {
-        Letter::EntryRemoved(_)
-        | Letter::EntryUpdate(_, _) 
-        | Letter::ChangePage(_) => {},
-        _ => { return RedrawType::None; },
+        Letter::EntryRemoved(_) | Letter::EntryUpdate(_, _) | Letter::ChangePage(_) => {}
+        _ => {
+            return RedrawType::None;
+        }
     };
 
     let last_sel = state.page_entries.get(state.selected);
@@ -21,14 +22,17 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             .generate_page(&state.entries)
             .map(|x| *x.0)
             .collect::<Vec<EntryIdentifier>>(),
-        p); 
-    
+        p,
+    );
 
-    if let Some(i) = state.page_entries.iter_entries().position(|&x| Some(x) == last_sel) {
+    if let Some(i) = state
+        .page_entries
+        .iter_entries()
+        .position(|&x| Some(x) == last_sel)
+    {
         state.selected = i;
     }
 
-    
     if entries_changed {
         DISPATCH
             .event(Letter::CreateMonitors(

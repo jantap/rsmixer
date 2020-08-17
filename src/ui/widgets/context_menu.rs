@@ -1,15 +1,13 @@
-use super::super::models::ContextMenuOption;
-use super::BlockWidget;
-use super::Widget;
+use super::{super::models::ContextMenuOption, BlockWidget, Widget};
+
 use crate::{
     draw_at,
     entry::EntryIdentifier,
     ui::util::{get_style, Rect},
+    RSError,
 };
-use std::cmp::max;
 
-use crate::RSError;
-use std::io::Write;
+use std::{cmp::max, io::Write};
 
 use crossterm::execute;
 

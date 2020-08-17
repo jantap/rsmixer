@@ -1,8 +1,8 @@
-use super::common::*;
-use super::{callbacks, pa_actions};
+use super::{callbacks, common::*, pa_actions};
+
+use std::ops::Deref;
 
 use pulse::proplist::Proplist;
-use std::ops::Deref;
 
 pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSError> {
     // Create new mainloop and context
@@ -120,10 +120,6 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
             }
             PAInternal::Tick => {
                 // remove failed monitors
-                // sink_input_monitors.retain(pa_actions::remove_failed_monitors);
-                // sink_monitors.retain(pa_actions::remove_failed_monitors);
-                // source_output_monitors.retain(pa_actions::remove_failed_monitors);
-                // source_monitors.retain(pa_actions::remove_failed_monitors);
                 monitors.filter(&mainloop, &context, &last_targets);
             }
             PAInternal::Command(cmd) => {

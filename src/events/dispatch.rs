@@ -1,4 +1,3 @@
-
 use super::common::*;
 
 pub struct Dispatch<T: Send + Message + 'static>(

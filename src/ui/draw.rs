@@ -1,5 +1,5 @@
-use crate::draw_rect;
 use crate::{
+    draw_rect,
     entry::{Entries, Entry, EntryType},
     ui::{
         models::PageEntries,
@@ -7,12 +7,12 @@ use crate::{
         util::{entry_height, get_style, PageType, Rect, Y_PADDING},
         widgets::{BlockWidget, ContextMenuWidget, VolumeWidget, Widget},
     },
+    RSError,
 };
-use crossterm::execute;
-
-use crate::RSError;
 
 use std::io::Write;
+
+use crossterm::execute;
 
 pub async fn draw_entities<W: Write>(
     stdout: &mut W,
@@ -31,7 +31,6 @@ pub async fn draw_entities<W: Write>(
     draw_rect!(stdout, " ", bg, get_style("normal"));
 
     for (i, lvl) in page_entries.visible_range_with_lvl(scroll) {
-        log::error!("drawwww");
         let ent = match entries.get_mut(&page_entries.get(i).unwrap()) {
             Some(x) => x,
             None => {
@@ -59,8 +58,6 @@ pub async fn draw_page<W: Write>(
     scroll: usize,
 ) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;
-
-    log::error!("REDRAW PAGE {:?}", current_page);
 
     let mut b = BlockWidget::default()
         .clean_inside(true)

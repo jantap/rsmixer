@@ -1,9 +1,13 @@
-use crate::entry::{Entries, Entry, EntryIdentifier, EntrySpaceLvl, EntryType};
-use crate::STYLES;
-use crossterm::style::Attribute;
-use crossterm::style::ContentStyle;
-use lazy_static::lazy_static;
+use crate::{
+    entry::{Entries, Entry, EntryIdentifier, EntrySpaceLvl, EntryType},
+    STYLES,
+};
+
 use std::fmt::Display;
+
+use crossterm::style::{Attribute, ContentStyle};
+
+use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref Y_PADDING: u16 = 4;

@@ -244,11 +244,9 @@ pub fn on_sink_input_info(res: ListResult<&SinkInputInfo>) {
                 .get_str(pulse::proplist::properties::APPLICATION_NAME)
             {
                 Some(s) => s,
-                None => {
-                    match &i.name {
-                        Some(s) => s.to_string(),
-                        None => String::from(""),
-                    }
+                None => match &i.name {
+                    Some(s) => s.to_string(),
+                    None => String::from(""),
                 },
             };
             let ident = EntryIdentifier::new(EntryType::SinkInput, i.index);

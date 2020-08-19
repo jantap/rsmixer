@@ -15,7 +15,7 @@ lazy_static = "1.4.0"
 unicode-width = "0.1.8"
 crossterm = { version = "0.17.5", features = ["serde", "event-stream"] }
 tokio = { version = "0.2.21", features = ["full"] }
-state = { version = "0.4.1", features = ["tls", "const_fn"] }
+state = { version = "0.4.1", features = ["tls"] }
 toml = "0.5.6"
 thiserror = "1.0.20"
 futures = "0.3.5"

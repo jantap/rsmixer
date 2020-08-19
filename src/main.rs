@@ -32,9 +32,9 @@ use state::Storage;
 lazy_static! {
     pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
     pub static ref SENDERS: Senders<Letter> = Senders::default();
+    pub static ref STYLES: Storage<Styles> = Storage::new();
+    pub static ref BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
 }
-static STYLES: Storage<Styles> = Storage::new();
-static BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
 
 pub type Styles = HashMap<String, ContentStyle>;
 

@@ -1,6 +1,12 @@
 [package]
 name = "rsmixer"
-version = "0.2.0"
+version = "0.2.1"
+license = "MIT"
+homepage = "https://github.com/jantap/rsmixer"
+repository = "https://github.com/jantap/rsmixer"
+readme = "README.md"
+categories = ["command-line-utilities"]
+keywords = ["pulseaudio", "mixer", "volume", "tui", "cli"]
 authors = ["Jan Wojcicki <janwojcicki45@gmail.com>"]
 edition = "2018"
 
@@ -23,6 +29,3 @@ send_wrapper = "0.4.0"
 crossbeam-channel = "0.4.2"
 confy = "0.4.0"
 serde = { version = "1.0.114", features = ["derive"] }
-
-#[profile.release]
-#debug = true

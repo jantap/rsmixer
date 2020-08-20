@@ -1,5 +1,7 @@
 # RsMixer
 
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/jantap/rsmixer)
+
 RsMixer is a PulseAudio volume mixer written in rust
 
 ## Features

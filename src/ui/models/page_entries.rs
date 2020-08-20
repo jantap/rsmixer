@@ -38,11 +38,9 @@ impl PageEntries {
     }
 
     pub fn reflow_scroll(&mut self, h: u16, force: bool) {
-        log::error!("reflow 1");
         if !force && h == self.last_term_h {
             return;
         }
-        log::error!("reflow 2");
 
         self.last_term_h = h;
 

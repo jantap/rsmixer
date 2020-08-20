@@ -180,7 +180,7 @@ fn create(
                 error!("[PADataInterface] Monitor failed or terminated");
             };
             let disconnect_stream = || {
-                error!("[PADataInterface] Monitor existed while the sink (input)/source (output) was already gone");
+                warn!("[PADataInterface] Monitor existed while the sink (input)/source (output) was already gone");
                 unsafe {
                     (*stream_ref.as_ptr()).disconnect().unwrap();
                     (*ml_ref.as_ptr()).signal(false);

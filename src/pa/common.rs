@@ -16,7 +16,7 @@ pub use pulse::{
     },
 };
 
-pub use log::{debug, error, info};
+pub use log::{debug, error, info, warn};
 
 impl From<Facility> for EntryType {
     fn from(fac: Facility) -> Self {

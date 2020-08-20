@@ -15,7 +15,7 @@ pub use events::Letter;
 use config::RsMixerConfig;
 use events::{Dispatch, Message, Senders};
 
-use std::{collections::HashMap, env, io::Write};
+use std::{collections::HashMap, io::Write};
 
 use tokio::runtime;
 use tokio::sync::broadcast::channel;
@@ -29,6 +29,8 @@ use lazy_static::lazy_static;
 
 use state::Storage;
 
+use gumdrop::Options;
+
 lazy_static! {
     pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
     pub static ref SENDERS: Senders<Letter> = Senders::default();
@@ -38,13 +40,25 @@ lazy_static! {
 
 pub type Styles = HashMap<String, ContentStyle>;
 
+#[derive(Debug, Options)]
+struct CliOptions {
+    #[options(help = "filepath to log to (if left empty the program doesn't log)")]
+    log_file: Option<String>,
+
+    #[options(count, help = "verbosity. Once - info, twice - debug")]
+    verbose: usize,
+}
+
 async fn run() -> Result<(), RSError> {
-    // @TODO choose where to log and verbosity
-    let stdout = env::var("RUST_LOG").is_err();
-    if stdout {
-        simple_logging::log_to_file("log", LevelFilter::Debug).unwrap();
-    } else {
-        env_logger::init();
+    let opts = CliOptions::parse_args_default_or_exit();
+
+    if let Some(file) = opts.log_file {
+        let lvl = match opts.verbose {
+            2 => LevelFilter::Debug,
+            1 => LevelFilter::Info,
+            _ => LevelFilter::Warn,
+        };
+        simple_logging::log_to_file(file, lvl).unwrap();
     }
 
     let config: RsMixerConfig = confy::load("rsmixer").unwrap();

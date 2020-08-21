@@ -16,9 +16,11 @@ impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Default for Dispatch
 
 impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
     pub async fn register(&self, sender: Sender<T>, sync_sender: cb_channel::Sender<T>) {
+        log::error!("register11");
         let mut bis = self.0.write().await;
         *bis = Some(sender);
         self.1.set(sync_sender);
+        log::error!("register22");
 
         // unsafe {
         //     let s = self.1.;

@@ -9,10 +9,7 @@ use tokio::{
     sync::{broadcast::channel, mpsc},
 };
 
-pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>) -> Result<(), RSError> {
-    let (info_sx, mut info_rx) = mpsc::unbounded_channel();
-    (*INFO_SX).set(info_sx);
-
+pub async fn start_async(internal_sx: cb_channel::Sender<PAInternal>, mut info_rx: mpsc::UnboundedReceiver<EntryIdentifier>) -> Result<(), RSError> {
     let (sx, mut command_receiver) = channel(events::CHANNEL_CAPACITY);
     SENDERS.register(events::PA_MESSAGE, sx).await;
 

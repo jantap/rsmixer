@@ -14,11 +14,12 @@ pub use events::Letter;
 
 use config::RsMixerConfig;
 use events::{Dispatch, Message, Senders};
+use pa::INFO_SX;
 
 use std::{collections::HashMap, io::Write};
 
 use tokio::runtime;
-use tokio::sync::broadcast::channel;
+use tokio::sync::{broadcast::channel, mpsc};
 use tokio::task;
 
 use crossterm::{event::KeyCode, style::ContentStyle};
@@ -84,6 +85,9 @@ async fn run() -> Result<(), RSError> {
 
     let (pa_sx, pa_rx) = cb_channel::unbounded();
 
+    let (info_sx, info_rx) = mpsc::unbounded_channel();
+    (*INFO_SX).set(info_sx);
+
     let pa = async move {
         match task::spawn_blocking(move || pa::start(pa_rx)).await {
             Ok(_) => Ok(()),
@@ -92,7 +96,7 @@ async fn run() -> Result<(), RSError> {
     };
 
     let pa_async = async move {
-        match task::spawn(async move { pa::start_async(pa_sx).await }).await {
+        match task::spawn(async move { pa::start_async(pa_sx, info_rx).await }).await {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
         }

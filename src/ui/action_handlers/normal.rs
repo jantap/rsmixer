@@ -13,7 +13,7 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             }
             if let Some(e) = state.entries.get_mut(&ident) {
                 let play = e.play_entry.as_mut().unwrap();
-                if (play.peak - peak) < f32::EPSILON {
+                if (play.peak - peak).abs() < f32::EPSILON {
                     return RedrawType::None;
                 }
                 play.peak = peak;

@@ -26,10 +26,6 @@ git clone https://github.com/jantap/rsmixer.git
 cargo install --path ./rsmixer
 ```
 
-## Known issues
-
-Sometimes the application fails to start properly
-
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)

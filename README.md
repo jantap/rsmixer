@@ -28,7 +28,7 @@ cargo install --path ./rsmixer
 
 ## Known issues
 
-Context menu doesn't handle the situation when the terminal window can't fit the contents of the menu
+Sometimes the application fails to start properly
 
 ## License
 

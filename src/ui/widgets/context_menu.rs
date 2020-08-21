@@ -67,7 +67,15 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
 
         let mut starty = area.y + 3;
 
-        for (i, o) in self.options.iter().enumerate() {
+        let start_index = max(0, self.selected as i32 - area.height as i32 + 7);
+
+        let iter = if self.scrolling {
+            self.options.iter().enumerate().skip(start_index as usize).take(area.height as usize - 6)
+        } else {
+            self.options.iter().enumerate().skip(0).take(self.options.len())
+        };
+
+        for (i, o) in iter {
             let s: String = o.clone().into();
             let startx = area.x + area.width / 2 - s.len() as u16 / 2;
             draw_at!(
@@ -83,6 +91,16 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
             );
 
             starty += 1;
+        }
+
+        if self.scrolling {
+            let w = area.x + area.width / 2;
+            if start_index != 0 {
+                draw_at!(buf, "▲", w, area.y + 2, get_style("normal"));
+            }
+            if self.selected != self.options.len() - 1 {
+                draw_at!(buf, "▼", w, starty, get_style("normal"));
+            }
         }
 
         buf.flush()?;

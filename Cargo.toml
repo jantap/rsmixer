@@ -4,6 +4,7 @@ version = "0.2.2"
 license = "MIT"
 homepage = "https://github.com/jantap/rsmixer"
 repository = "https://github.com/jantap/rsmixer"
+description = "PulseAudio volume mixer written in rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
 keywords = ["pulseaudio", "mixer", "volume", "tui", "cli"]

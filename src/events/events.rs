@@ -24,6 +24,7 @@ messages!(Letter,
     ChangePage(PageType) => UI_MESSAGE,
     RequestMute => UI_MESSAGE,
     OpenContextMenu => UI_MESSAGE,
+    CloseContextMenu => UI_MESSAGE,
     CyclePages(i8) => UI_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,

@@ -47,6 +47,8 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                         if let Some(index) = entry.card_entry.as_ref().unwrap().selected_profile {
                             state.selected_context = index;
                         }
+                    } else {
+                        state.selected_context = 0;
                     }
 
                     return RedrawType::ContextMenu;

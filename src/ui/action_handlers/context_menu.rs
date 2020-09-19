@@ -22,6 +22,10 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             );
             return RedrawType::ContextMenu;
         }
+        Letter::CloseContextMenu => {
+            state.ui_mode = UIMode::Normal;
+            return RedrawType::Full;
+        }
         Letter::OpenContextMenu => {
             if state.selected >= state.page_entries.len() {
                 return RedrawType::None;

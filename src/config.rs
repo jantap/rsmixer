@@ -32,6 +32,7 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("enter".to_string(), "context_menu".to_string());
         bindings.insert("tab".to_string(), "cycle_pages_forward".to_string());
         bindings.insert("s+tab".to_string(), "cycle_pages_backward".to_string());
+        bindings.insert("esc".to_string(), "close_context_menu".to_string());
         let mut styles = HashMap::new();
         let mut c = HashMap::new();
         c.insert("fg".to_string(), "white".to_string());
@@ -116,6 +117,7 @@ impl From<String> for Letter {
             "down" => Letter::MoveDown(a.parse().unwrap()),
             "cycle_pages_forward" => Letter::CyclePages(1),
             "cycle_pages_backward" => Letter::CyclePages(-1),
+            "close_context_menu" => Letter::CloseContextMenu,
             _ => Letter::ExitSignal,
         }
     }

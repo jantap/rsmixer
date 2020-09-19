@@ -1,6 +1,6 @@
-use crate::{ui::PageType, Letter, Styles};
+use crate::{RSError, ui::PageType, Letter, Styles};
 
-use std::collections::HashMap;
+use std::{convert::TryFrom, collections::HashMap};
 
 use crossterm::{
     event::{KeyCode, KeyEvent, KeyModifiers},
@@ -61,11 +61,11 @@ impl std::default::Default for RsMixerConfig {
 }
 
 impl RsMixerConfig {
-    pub fn load(&self) -> (Styles, HashMap<KeyEvent, Letter>) {
+    pub fn load(&self) -> Result<(Styles, HashMap<KeyEvent, Letter>), RSError> {
         let mut bindings: HashMap<KeyEvent, Letter> = HashMap::new();
 
         for (k, c) in &self.bindings {
-            bindings.insert(find_keycode(&k), c.clone().into());
+            bindings.insert(find_keycode(&k)?, Letter::try_from(c.clone())?);
         }
 
         let mut styles: Styles = HashMap::new();
@@ -75,27 +75,36 @@ impl RsMixerConfig {
             if let Some(q) = v.get("fg") {
                 if let Some(color) = find_color(q) {
                     c = c.foreground(color);
+                } else {
+                    return Err(RSError::InvalidColor(q.clone()));
                 }
             }
             if let Some(q) = v.get("bg") {
                 if let Some(color) = find_color(q) {
                     c = c.background(color);
+                } else {
+                    return Err(RSError::InvalidColor(q.clone()));
                 }
             }
             styles.insert(k.clone(), c);
         }
 
-        (styles, bindings)
+        Ok((styles, bindings))
     }
 }
 
-impl From<String> for Letter {
-    fn from(st: String) -> Letter {
+impl TryFrom<String> for Letter {
+    type Error = RSError;
+
+    fn try_from(st: String) -> Result<Letter, Self::Error> {
         let mut s = &st[..];
         let mut a = String::new();
 
         if let Some(lparen) = st.chars().position(|c| c == '(') {
-            let rparen = st.chars().position(|c| c == ')').unwrap();
+            let rparen = match st.chars().position(|c| c == ')') {
+                Some(r) => r,
+                None => { return Err(RSError::ActionBindingError(st.clone())); },
+            };
             a = st
                 .chars()
                 .skip(lparen + 1)
@@ -104,22 +113,49 @@ impl From<String> for Letter {
             s = &st[0..lparen];
         }
 
-        match s {
+        let x = match s {
             "exit" => Letter::ExitSignal,
             "mute" => Letter::RequestMute,
             "show_output" => Letter::ChangePage(PageType::Output),
             "show_input" => Letter::ChangePage(PageType::Input),
             "show_cards" => Letter::ChangePage(PageType::Cards),
             "context_menu" => Letter::OpenContextMenu,
-            "lower_volume" => Letter::RequstChangeVolume(-(a.parse::<i16>().unwrap())),
-            "raise_volume" => Letter::RequstChangeVolume(a.parse().unwrap()),
-            "up" => Letter::MoveUp(a.parse().unwrap()),
-            "down" => Letter::MoveDown(a.parse().unwrap()),
+            "lower_volume" => {
+                let a = match a.parse::<i16>() {
+                    Ok(x) => x,
+                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                };
+                Letter::RequstChangeVolume(-a)
+            }
+            "raise_volume" => {
+                let a = match a.parse::<i16>() {
+                    Ok(x) => x,
+                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                };
+                Letter::RequstChangeVolume(a)
+            }
+            "up" => {
+                let a = match a.parse::<u16>() {
+                    Ok(x) => x,
+                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                };
+                Letter::MoveUp(a)
+            }
+            "down" => {
+                let a = match a.parse::<u16>() {
+                    Ok(x) => x,
+                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                };
+                Letter::MoveDown(a)
+            }
             "cycle_pages_forward" => Letter::CyclePages(1),
             "cycle_pages_backward" => Letter::CyclePages(-1),
             "close_context_menu" => Letter::CloseContextMenu,
-            _ => Letter::ExitSignal,
-        }
+            _ => {
+                return Err(RSError::ActionBindingError(st.clone()));
+            }
+        };
+        Ok(x)
     }
 }
 
@@ -138,8 +174,8 @@ fn find_color(s: &str) -> Option<Color> {
     }
 }
 
-fn find_keycode(s: &str) -> KeyEvent {
-    let mut s = String::from(s);
+fn find_keycode(key: &str) -> Result<KeyEvent, RSError> {
+    let mut s = String::from(key);
     let mut modifiers = KeyModifiers::empty();
     if let Some(x) = s.find("s+") {
         modifiers = modifiers | KeyModifiers::SHIFT;
@@ -171,15 +207,21 @@ fn find_keycode(s: &str) -> KeyEvent {
             "insert" => KeyCode::Insert,
             "null" => KeyCode::Null,
             "esc" => KeyCode::Esc,
-        _ => KeyCode::Char(s.chars().next().unwrap()),
+            _ => {
+                if s.len() == 1 {
+                    KeyCode::Char(s.chars().next().unwrap())
+                } else {
+                    return Err(RSError::KeyCodeError(String::from(key)));
+                }
+            }
     };
 
     if modifiers == KeyModifiers::SHIFT && code == KeyCode::Tab {
-        return KeyEvent { code: KeyCode::BackTab, modifiers: KeyModifiers::empty() };
-    }
-
-    KeyEvent {
-        code,
-        modifiers,
+        Ok(KeyEvent { code: KeyCode::BackTab, modifiers: KeyModifiers::empty() })
+    } else {
+        Ok(KeyEvent {
+            code,
+            modifiers,
+        })
     }
 }

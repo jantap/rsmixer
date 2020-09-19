@@ -48,10 +48,18 @@ struct CliOptions {
 
     #[options(count, help = "verbosity. Once - info, twice - debug")]
     verbose: usize,
+
+    #[options(help = "show this text")]
+    help: bool,
 }
 
 async fn run() -> Result<(), RSError> {
     let opts = CliOptions::parse_args_default_or_exit();
+
+    if opts.help {
+        println!("{}", CliOptions::usage());
+        return Ok(());
+    }
 
     if let Some(file) = opts.log_file {
         let lvl = match opts.verbose {
@@ -62,9 +70,9 @@ async fn run() -> Result<(), RSError> {
         simple_logging::log_to_file(file, lvl).unwrap();
     }
 
-    let config: RsMixerConfig = confy::load("rsmixer").unwrap();
+    let config: RsMixerConfig = confy::load("rsmixer")?;
 
-    let (styles, bindings) = config.load();
+    let (styles, bindings) = config.load()?;
 
     STYLES.set(styles);
     BINDINGS.set(bindings);
@@ -115,11 +123,10 @@ async fn run() -> Result<(), RSError> {
     .unwrap();
     crossterm::terminal::disable_raw_mode().unwrap();
 
-    if let Err(err) = r {
-        println!("{}", err);
+    match r {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err),
     }
-
-    Ok(())
 }
 
 fn main() -> Result<(), RSError> {
@@ -127,5 +134,11 @@ fn main() -> Result<(), RSError> {
         .threaded_scheduler()
         .enable_time()
         .build()?;
-    threaded_rt.block_on(async { run().await })
+    threaded_rt.block_on(async { 
+        if let Err(err) = run().await {
+            eprintln!("{}", err);
+        }
+    });
+
+    Ok(())
 }

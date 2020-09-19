@@ -7,6 +7,12 @@ pub enum RSError {
     // General errors
     TaskHandleError(tokio::task::JoinError),
 
+    // Config related errors
+    ConfyError(confy::ConfyError),
+    KeyCodeError(String),
+    ActionBindingError(String),
+    InvalidColor(String),
+
     // UI related errors
     TerminalTooSmall,
     TerminalError(crossterm::ErrorKind),
@@ -37,6 +43,10 @@ impl fmt::Display for RSError {
                 "Error in internal communication between pulseaudio threads"
             ),
             Self::NoEntryError => write!(f, "Error while creating entry"),
+            Self::ConfyError(err) => err.fmt(f),
+            Self::KeyCodeError(kc) => write!(f, "Error in config file\n'{}' is not a valid key binding", kc),
+            Self::ActionBindingError(act) => write!(f, "Error in config file\n'{}' is not a valid action", act),
+            Self::InvalidColor(color) => write!(f, "Error in config file\n'{}' is not a valid color", color),
         }
     }
 }
@@ -62,5 +72,11 @@ impl From<cb_channel::SendError<PAInternal>> for RSError {
 impl From<tokio::task::JoinError> for RSError {
     fn from(err: tokio::task::JoinError) -> RSError {
         RSError::TaskHandleError(err)
+    }
+}
+
+impl From<confy::ConfyError> for RSError {
+    fn from(err: confy::ConfyError) -> RSError {
+        RSError::ConfyError(err)
     }
 }

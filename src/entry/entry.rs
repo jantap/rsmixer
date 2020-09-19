@@ -19,6 +19,7 @@ impl Eq for PlayEntry {}
 pub struct CardProfile {
     pub name: String,
     pub description: String,
+    #[cfg(any(feature = "libpulse_latest", feature = "libpulse8"))]
     pub available: bool,
 }
 impl Eq for CardProfile {}

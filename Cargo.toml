@@ -11,11 +11,15 @@ keywords = ["pulseaudio", "mixer", "volume", "tui", "cli"]
 authors = ["Jan Wojcicki <janwojcicki45@gmail.com>"]
 edition = "2018"
 
+[features]
+default = ["libpulse_latest"]
+libpulse8 = ["libpulse-binding/pa_v8"]
+libpulse_latest = ["libpulse-binding/pa_latest"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# libpulse-binding = { version = "2.16.0", default-features = false }
-libpulse-binding = "2.16.0"
+libpulse-binding = { version = "2.16.0", default-features = false }
 simple-logging = "2.0.2"
 env_logger = "0.7.1"
 log = "0.4.8"

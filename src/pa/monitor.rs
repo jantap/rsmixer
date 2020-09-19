@@ -108,11 +108,11 @@ fn create(
     {
         debug!("[PADataInterface] Registering stream state change callback");
         let ml_ref = Rc::clone(&p_mainloop);
-        let stream_ref = Rc::clone(&stream);
+        let stream_ref = Rc::downgrade(&stream);
         stream
             .borrow_mut()
             .set_state_callback(Some(Box::new(move || {
-                let state = unsafe { (*stream_ref.as_ptr()).get_state() };
+                let state = unsafe { (*(*stream_ref.as_ptr()).as_ptr()).get_state() };
                 match state {
                     pulse::stream::State::Ready
                     | pulse::stream::State::Failed
@@ -174,7 +174,7 @@ fn create(
     {
         info!("[PADataInterface] Registering stream read callback");
         let ml_ref = Rc::clone(&p_mainloop);
-        let stream_ref = Rc::clone(&stream);
+        let stream_ref = Rc::downgrade(&stream);
         stream.borrow_mut().set_read_callback(Some(Box::new(move |_size: usize| {
             let remove_failed = || {
                 error!("[PADataInterface] Monitor failed or terminated");
@@ -182,7 +182,7 @@ fn create(
             let disconnect_stream = || {
                 warn!("[PADataInterface] Monitor existed while the sink (input)/source (output) was already gone");
                 unsafe {
-                    (*stream_ref.as_ptr()).disconnect().unwrap();
+                    (*(*stream_ref.as_ptr()).as_ptr()).disconnect().unwrap();
                     (*ml_ref.as_ptr()).signal(false);
                 };
             };
@@ -192,7 +192,7 @@ fn create(
                 return;
             }
 
-            match unsafe {(*stream_ref.as_ptr()).get_state() }{
+            match unsafe {(*(*stream_ref.as_ptr()).as_ptr()).get_state() }{
                 pulse::stream::State::Failed => {
                     remove_failed();
                 },
@@ -200,7 +200,7 @@ fn create(
                     remove_failed();
                 },
                 pulse::stream::State::Ready => {
-                    match unsafe{ (*stream_ref.as_ptr()).peek() } {
+                    match unsafe{ (*(*stream_ref.as_ptr()).as_ptr()).peek() } {
                         Ok(res) => match res {
                             PeekResult::Data(data) => {
                                 let size = data.len();
@@ -209,10 +209,10 @@ fn create(
 
                                 DISPATCH.sync_event(Letter::PeakVolumeUpdate(ident, peak));
 
-                                unsafe { (*stream_ref.as_ptr()).discard().unwrap(); };
+                                unsafe { (*(*stream_ref.as_ptr()).as_ptr()).discard().unwrap(); };
                             },
                             PeekResult::Hole(_) => {
-                                unsafe { (*stream_ref.as_ptr()).discard().unwrap(); };
+                                unsafe { (*(*stream_ref.as_ptr()).as_ptr()).discard().unwrap(); };
                             },
                             _ => {},
                         },

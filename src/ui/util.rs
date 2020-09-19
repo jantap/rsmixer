@@ -52,6 +52,26 @@ impl Display for PageType {
         write!(f, "{}", self.as_str())
     }
 }
+impl From<PageType> for i8 {
+    fn from(p: PageType) -> i8 {
+        match p {
+            PageType::Output => 0,
+            PageType::Input => 1,
+            PageType::Cards => 2,
+        }
+    }
+}
+impl From<i8> for PageType {
+    fn from(p: i8) -> PageType {
+        match p {
+            -1 => PageType::Cards,
+            0 => PageType::Output,
+            1 => PageType::Input,
+            2 => PageType::Cards,
+            _ => PageType::Output,
+        }
+    }
+}
 impl PageType {
     pub fn as_str(&self) -> &'static str {
         match self {

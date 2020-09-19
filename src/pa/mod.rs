@@ -16,6 +16,7 @@ use lazy_static::lazy_static;
 
 use state::Storage;
 
+#[derive(Debug)]
 pub enum PAInternal {
     Tick,
     Command(Box<Letter>),

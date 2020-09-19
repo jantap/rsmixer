@@ -19,10 +19,8 @@ pub async fn start() {
         };
         match ev {
             crossterm::event::Event::Key(event) => {
-                // if !event.modifiers.is_empty() {
-                //     continue;
-                // }
-                if let Some(letter) = BINDINGS.get().get(&event.code) {
+                log::error!("{:?}\n\n{:?}", BINDINGS.get(), event);
+                if let Some(letter) = BINDINGS.get().get(&event) {
                     DISPATCH.event(letter.clone()).await;
 
                     if *letter == Letter::ExitSignal {

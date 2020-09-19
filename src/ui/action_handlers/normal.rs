@@ -30,6 +30,10 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             state.selected = min(state.selected + how_much as usize, state.page_entries.len());
             return RedrawType::Entries;
         }
+        Letter::CyclePages(which_way) => {
+            DISPATCH.event(Letter::ChangePage(PageType::from(i8::from(state.current_page) + which_way))).await;
+            return RedrawType::None;
+        }
         Letter::OpenContextMenu => {
             if state.selected < state.page_entries.len() {
                 if let Some(entry) = state

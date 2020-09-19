@@ -22,7 +22,7 @@ use tokio::runtime;
 use tokio::sync::{broadcast::channel, mpsc};
 use tokio::task;
 
-use crossterm::{event::KeyCode, style::ContentStyle};
+use crossterm::{event::KeyEvent, style::ContentStyle};
 
 use log::LevelFilter;
 
@@ -36,7 +36,7 @@ lazy_static! {
     pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
     pub static ref SENDERS: Senders<Letter> = Senders::default();
     pub static ref STYLES: Storage<Styles> = Storage::new();
-    pub static ref BINDINGS: Storage<HashMap<KeyCode, Letter>> = Storage::new();
+    pub static ref BINDINGS: Storage<HashMap<KeyEvent, Letter>> = Storage::new();
 }
 
 pub type Styles = HashMap<String, ContentStyle>;

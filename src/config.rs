@@ -3,7 +3,7 @@ use crate::{ui::PageType, Letter, Styles};
 use std::collections::HashMap;
 
 use crossterm::{
-    event::KeyCode,
+    event::{KeyCode, KeyEvent, KeyModifiers},
     style::{Color, ContentStyle},
 };
 
@@ -30,6 +30,8 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("2".to_string(), "show_input".to_string());
         bindings.insert("3".to_string(), "show_cards".to_string());
         bindings.insert("enter".to_string(), "context_menu".to_string());
+        bindings.insert("tab".to_string(), "cycle_pages_forward".to_string());
+        bindings.insert("s+tab".to_string(), "cycle_pages_backward".to_string());
         let mut styles = HashMap::new();
         let mut c = HashMap::new();
         c.insert("fg".to_string(), "white".to_string());
@@ -58,8 +60,8 @@ impl std::default::Default for RsMixerConfig {
 }
 
 impl RsMixerConfig {
-    pub fn load(&self) -> (Styles, HashMap<KeyCode, Letter>) {
-        let mut bindings: HashMap<KeyCode, Letter> = HashMap::new();
+    pub fn load(&self) -> (Styles, HashMap<KeyEvent, Letter>) {
+        let mut bindings: HashMap<KeyEvent, Letter> = HashMap::new();
 
         for (k, c) in &self.bindings {
             bindings.insert(find_keycode(&k), c.clone().into());
@@ -112,6 +114,8 @@ impl From<String> for Letter {
             "raise_volume" => Letter::RequstChangeVolume(a.parse().unwrap()),
             "up" => Letter::MoveUp(a.parse().unwrap()),
             "down" => Letter::MoveDown(a.parse().unwrap()),
+            "cycle_pages_forward" => Letter::CyclePages(1),
+            "cycle_pages_backward" => Letter::CyclePages(-1),
             _ => Letter::ExitSignal,
         }
     }
@@ -132,24 +136,48 @@ fn find_color(s: &str) -> Option<Color> {
     }
 }
 
-fn find_keycode(s: &str) -> KeyCode {
-    match &s[..] {
-        "backspace" => KeyCode::Backspace,
-        "enter" => KeyCode::Enter,
-        "left" => KeyCode::Left,
-        "right" => KeyCode::Right,
-        "up" => KeyCode::Up,
-        "down" => KeyCode::Down,
-        "home" => KeyCode::Home,
-        "end" => KeyCode::End,
-        "pageup" => KeyCode::PageUp,
-        "pagedown" => KeyCode::PageDown,
-        "tab" => KeyCode::Tab,
-        "backtab" => KeyCode::BackTab,
-        "delete" => KeyCode::Delete,
-        "insert" => KeyCode::Insert,
-        "null" => KeyCode::Null,
-        "esc" => KeyCode::Esc,
+fn find_keycode(s: &str) -> KeyEvent {
+    let mut s = String::from(s);
+    let mut modifiers = KeyModifiers::empty();
+    if let Some(x) = s.find("s+") {
+        modifiers = modifiers | KeyModifiers::SHIFT;
+        s = format!("{}{}", &s[0..x], &s[x+2..s.len()]);
+    }
+    if let Some(x) = s.find("c+") {
+        modifiers = modifiers | KeyModifiers::CONTROL;
+        s = format!("{}{}", &s[0..x], &s[x+2..s.len()]);
+    }
+    if let Some(x) = s.find("a+") {
+        modifiers = modifiers | KeyModifiers::ALT;
+        s = format!("{}{}", &s[0..x], &s[x+2..s.len()]);
+    }
+
+    let code = match &s[..] {
+            "backspace" => KeyCode::Backspace,
+            "enter" => KeyCode::Enter,
+            "left" => KeyCode::Left,
+            "right" => KeyCode::Right,
+            "up" => KeyCode::Up,
+            "down" => KeyCode::Down,
+            "home" => KeyCode::Home,
+            "end" => KeyCode::End,
+            "pageup" => KeyCode::PageUp,
+            "pagedown" => KeyCode::PageDown,
+            "tab" => KeyCode::Tab,
+            "backtab" => KeyCode::BackTab,
+            "delete" => KeyCode::Delete,
+            "insert" => KeyCode::Insert,
+            "null" => KeyCode::Null,
+            "esc" => KeyCode::Esc,
         _ => KeyCode::Char(s.chars().next().unwrap()),
+    };
+
+    if modifiers == KeyModifiers::SHIFT && code == KeyCode::Tab {
+        return KeyEvent { code: KeyCode::BackTab, modifiers: KeyModifiers::empty() };
+    }
+
+    KeyEvent {
+        code,
+        modifiers,
     }
 }

@@ -42,6 +42,13 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                 {
                     state.ui_mode = UIMode::ContextMenu;
                     state.context_options = context_menu(entry);
+
+                    if entry.entry_type == EntryType::Card {
+                        if let Some(index) = entry.card_entry.as_ref().unwrap().selected_profile {
+                            state.selected_context = index;
+                        }
+                    }
+
                     return RedrawType::ContextMenu;
                 }
             }

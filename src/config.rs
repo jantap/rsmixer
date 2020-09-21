@@ -1,4 +1,4 @@
-use crate::{RSError, ui::PageType, Letter, Styles};
+use crate::{RSError, ui::PageType, Letter, Styles, helpers::{colors, keys}};
 
 use std::{convert::TryFrom, collections::HashMap};
 
@@ -65,7 +65,7 @@ impl RsMixerConfig {
         let mut bindings: HashMap<KeyEvent, Letter> = HashMap::new();
 
         for (k, c) in &self.bindings {
-            bindings.insert(find_keycode(&k)?, Letter::try_from(c.clone())?);
+            bindings.insert(keys::try_string_to_keyevent(&k)?, Letter::try_from(c.clone())?);
         }
 
         let mut styles: Styles = HashMap::new();
@@ -73,14 +73,14 @@ impl RsMixerConfig {
         for (k, v) in &self.colors {
             let mut c = ContentStyle::new();
             if let Some(q) = v.get("fg") {
-                if let Some(color) = find_color(q) {
+                if let Some(color) = colors::str_to_color(q) {
                     c = c.foreground(color);
                 } else {
                     return Err(RSError::InvalidColor(q.clone()));
                 }
             }
             if let Some(q) = v.get("bg") {
-                if let Some(color) = find_color(q) {
+                if let Some(color) = colors::str_to_color(q) {
                     c = c.background(color);
                 } else {
                     return Err(RSError::InvalidColor(q.clone()));
@@ -159,69 +159,3 @@ impl TryFrom<String> for Letter {
     }
 }
 
-fn find_color(s: &str) -> Option<Color> {
-    if s.chars().take(1).collect::<String>() == "#" && s.len() == 7 {
-        Some(Color::Rgb {
-            r: u8::from_str_radix(&s[1..3], 16).expect("error in config"),
-            g: u8::from_str_radix(&s[3..5], 16).expect("error in config"),
-            b: u8::from_str_radix(&s[5..7], 16).expect("error in config"),
-        })
-    } else {
-        match &s[..].parse::<Color>() {
-            Ok(c) => Some(*c),
-            Err(_) => None,
-        }
-    }
-}
-
-fn find_keycode(key: &str) -> Result<KeyEvent, RSError> {
-    let mut s = String::from(key);
-    let mut modifiers = KeyModifiers::empty();
-    if let Some(x) = s.find("s+") {
-        modifiers = modifiers | KeyModifiers::SHIFT;
-        s = format!("{}{}", &s[0..x], &s[x+2..s.len()]);
-    }
-    if let Some(x) = s.find("c+") {
-        modifiers = modifiers | KeyModifiers::CONTROL;
-        s = format!("{}{}", &s[0..x], &s[x+2..s.len()]);
-    }
-    if let Some(x) = s.find("a+") {
-        modifiers = modifiers | KeyModifiers::ALT;
-        s = format!("{}{}", &s[0..x], &s[x+2..s.len()]);
-    }
-
-    let code = match &s[..] {
-            "backspace" => KeyCode::Backspace,
-            "enter" => KeyCode::Enter,
-            "left" => KeyCode::Left,
-            "right" => KeyCode::Right,
-            "up" => KeyCode::Up,
-            "down" => KeyCode::Down,
-            "home" => KeyCode::Home,
-            "end" => KeyCode::End,
-            "pageup" => KeyCode::PageUp,
-            "pagedown" => KeyCode::PageDown,
-            "tab" => KeyCode::Tab,
-            "backtab" => KeyCode::BackTab,
-            "delete" => KeyCode::Delete,
-            "insert" => KeyCode::Insert,
-            "null" => KeyCode::Null,
-            "esc" => KeyCode::Esc,
-            _ => {
-                if s.len() == 1 {
-                    KeyCode::Char(s.chars().next().unwrap())
-                } else {
-                    return Err(RSError::KeyCodeError(String::from(key)));
-                }
-            }
-    };
-
-    if modifiers == KeyModifiers::SHIFT && code == KeyCode::Tab {
-        Ok(KeyEvent { code: KeyCode::BackTab, modifiers: KeyModifiers::empty() })
-    } else {
-        Ok(KeyEvent {
-            code,
-            modifiers,
-        })
-    }
-}

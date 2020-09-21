@@ -19,6 +19,12 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
+        Letter::CloseContextMenu => {
+            if state.ui_mode == UIMode::Help {
+                state.ui_mode = UIMode::Normal;
+                return RedrawType::Full;
+            }
+        }
         _ => {}
     };
 

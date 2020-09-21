@@ -78,7 +78,7 @@ async fn run() -> Result<(), RSError> {
     STYLES.set(styles);
     BINDINGS.set(bindings);
 
-    println!("{:?}", helpers::help_text::generate());
+    let hl = helpers::help_text::generate();
 
     let (event_sx, event_rx) = channel(32);
     let (r, s) = cb_channel::unbounded();

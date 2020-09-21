@@ -19,6 +19,7 @@ use crossterm::{cursor::Hide, execute};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum RedrawType {
+    Help,
     Full,
     Entries,
     PeakVolume(EntryIdentifier),
@@ -31,6 +32,7 @@ impl Eq for RedrawType {}
 impl From<RedrawType> for u32 {
     fn from(redraw: RedrawType) -> u32 {
         match redraw {
+            RedrawType::Help => 2000,
             RedrawType::Full => 1000,
             RedrawType::Entries => 500,
             RedrawType::ContextMenu => 500,
@@ -67,6 +69,7 @@ impl RedrawType {
 pub enum UIMode {
     Normal,
     ContextMenu,
+    Help,
 }
 
 pub struct UIState {
@@ -130,6 +133,13 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
                 rdrw
             }
             UIMode::ContextMenu => context_menu::action_handler(&msg, &mut state).await,
+            UIMode::Help => {
+                if msg == Letter::Redraw {
+                    RedrawType::Help
+                } else {
+                    RedrawType::None
+                }
+            }
         };
 
         state.redraw.take_bigger(proposed_redraw);

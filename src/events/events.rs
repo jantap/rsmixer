@@ -26,6 +26,7 @@ messages!(Letter,
     OpenContextMenu => UI_MESSAGE,
     CloseContextMenu => UI_MESSAGE,
     CyclePages(i8) => UI_MESSAGE,
+    ShowHelp => UI_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,

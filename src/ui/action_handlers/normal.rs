@@ -55,6 +55,10 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                 }
             }
         }
+        Letter::ShowHelp => {
+            state.ui_mode = UIMode::Help;
+            return RedrawType::Help;
+        }
         _ => {}
     };
     RedrawType::None

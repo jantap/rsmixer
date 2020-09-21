@@ -1,4 +1,4 @@
-use crate::{Letter, BINDINGS, ui::PageType, helpers::keys};
+use crate::{Letter, BINDINGS, ui::PageType, helpers::keys, RSError};
 
 use std::{mem::discriminant, collections::HashSet};
 
@@ -46,7 +46,7 @@ pub fn generate() -> Vec<HelpLine> {
                           LetterMatcher::Concrete(Letter::RequstChangeVolume(vd)),
                           LetterMatcher::Concrete(Letter::RequstChangeVolume(-vd))]))
     }
-    categories.push(("Mute".to_string(), vec![LetterMatcher::Concrete(Letter::RequestMute)]));
+    categories.push(("Mute/unmute".to_string(), vec![LetterMatcher::Concrete(Letter::RequestMute)]));
     categories.push(("Change page".to_string(), vec![LetterMatcher::Any(Letter::ChangePage(PageType::Output))]));
     categories.push(("Cycle pages".to_string(), vec![LetterMatcher::Any(Letter::CyclePages(0))]));
     categories.push(("Context menu".to_string(), vec![LetterMatcher::Any(Letter::OpenContextMenu)]));
@@ -67,4 +67,60 @@ pub fn generate() -> Vec<HelpLine> {
     }
 
     help_lines
+}
+
+pub fn help_lines_to_strings(hls: &Vec<HelpLine>, width: u16) -> Result<(u16, Vec<String>), RSError> {
+    let mut lines = Vec::new();
+
+    let longest_name = hls.iter().map(|hl| hl.category.len()).max().unwrap();
+    let longest_first_two = hls.iter().map(|hl| {
+        let mut c = 0;
+        if hl.key_events.len() > 0 {
+            c += hl.key_events[0].len();
+        }
+        if hl.key_events.len() > 1 {
+            c += hl.key_events[1].len();
+        }
+        c
+    }).max().unwrap();
+    let longest_key_ev = hls.iter().map(|hl| {
+        hl.key_events.iter().map(|ev| ev.len()).max().unwrap()
+    }).max().unwrap();
+
+    let big_width = longest_name + longest_first_two + 5;
+    let small_width = longest_name + longest_key_ev + 3;
+
+    if width < small_width as u16 {
+        return Err(RSError::TerminalTooSmall);
+    }
+    let width = if width > big_width as u16 {
+        big_width
+    } else {
+        small_width
+    };
+
+    for hl in hls {
+        let available_width = width - longest_name - 3;
+        let mut current_lines = Vec::new();
+        current_lines.push("".to_string());
+
+        for ev in &hl.key_events {
+            let cond = available_width >= current_lines.last().unwrap().len() + ev.len();
+            if cond {
+                let cur = current_lines.last_mut().unwrap();
+                *cur = format!("{}{}  ", cur, ev);
+            } else {
+                current_lines.push(format!("{}  ", ev.clone()));
+            }
+        }
+
+        let first = current_lines.first_mut().unwrap();
+        let whitespace_needed = width - longest_name - (*first).len();
+        let whitespace = (0..whitespace_needed).map(|_| " ").collect::<String>();
+        *first = format!("{}{}{}", first.clone(), whitespace, hl.category);
+
+        lines.append(&mut current_lines);
+    }
+
+    Ok((width as u16, lines))
 }

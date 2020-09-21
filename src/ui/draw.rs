@@ -3,10 +3,11 @@ use crate::{
     entry::{Entries, Entry, EntryType},
     ui::{
         models::PageEntries,
-        output::{RedrawType, UIState},
+        output::{RedrawType, UIState, UIMode},
         util::{entry_height, get_style, PageType, Rect, Y_PADDING},
         widgets::{BlockWidget, ContextMenuWidget, VolumeWidget, Widget},
     },
+    helpers::help_text,
     RSError,
 };
 
@@ -49,6 +50,36 @@ pub async fn draw_entities<W: Write>(
     Ok(())
 }
 
+pub async fn draw_help<W: Write>(
+    stdout: &mut W,
+) -> Result<(), RSError> {
+    let (w, h) = crossterm::terminal::size()?;
+
+    let lines = help_text::generate();
+    let (mut width, lines) = help_text::help_lines_to_strings(&lines, w-4)?;
+
+    width += 4;
+    let height = std::cmp::min(lines.len()+4, h as usize) as u16;
+    let width = std::cmp::min(width, w);
+
+    let mut b = BlockWidget::default()
+        .clean_inside(true)
+        .title("Help".to_string());
+    let x = w / 2 - width / 2; 
+    let y = h / 2 - height / 2;
+    b.render(Rect::new(x, y, width, height), stdout)?;
+
+    
+    for (i, l) in lines.iter().enumerate() {
+        execute!(stdout, crossterm::cursor::MoveTo(x + 2, y + 2 + i as u16))?;
+
+        write!(stdout, "{}", get_style("normal").apply(l))?;
+    }
+    stdout.flush()?;
+
+    Ok(())
+}
+
 pub async fn draw_page<W: Write>(
     stdout: &mut W,
     entries: &mut Entries,
@@ -79,19 +110,46 @@ pub async fn draw_page<W: Write>(
     Ok(())
 }
 
+pub async fn terminal_too_small<W: Write>(stdout: &mut W) -> Result<(), RSError> {
+    let (w, h) = crossterm::terminal::size()?;
+    execute!(stdout, crossterm::cursor::MoveTo(0, 0))?;
+    let x = get_style("normal").apply(format!(
+        "terminal too small{}",
+        (0..w * h - 18).map(|_| " ").collect::<String>()
+    ));
+    write!(stdout, "{}", x)?;
+    stdout.flush()?;
+    return Ok(());
+}
+
 pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;
     if w < 20 || h < 5 {
-        execute!(stdout, crossterm::cursor::MoveTo(0, 0))?;
-        let x = get_style("normal").apply(format!(
-            "terminal too small{}",
-            (0..w * h - 18).map(|_| " ").collect::<String>()
-        ));
-        write!(stdout, "{}", x)?;
-        stdout.flush()?;
+        return terminal_too_small(stdout).await;
+    }
+    
+    if state.ui_mode == UIMode::Help && state.redraw != RedrawType::Help {
         return Ok(());
     }
+
     match state.redraw {
+        RedrawType::Help => {
+            draw_page(
+                stdout,
+                &mut state.entries,
+                &state.page_entries,
+                &state.current_page,
+                state.selected,
+                state.scroll,
+            )
+            .await?;
+            match draw_help(stdout).await {
+                Err(RSError::TerminalTooSmall) => {
+                    return terminal_too_small(stdout).await;
+                }
+                r => return r,
+            };
+        }
         RedrawType::Full => {
             return draw_page(
                 stdout,

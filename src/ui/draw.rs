@@ -11,7 +11,7 @@ use crate::{
     RSError,
 };
 
-use std::io::Write;
+use std::{collections::HashSet, io::Write};
 
 use crossterm::execute;
 
@@ -22,6 +22,7 @@ pub async fn draw_entities<W: Write>(
     _current_page: &PageType,
     selected: usize,
     scroll: usize,
+    affected: Option<HashSet<usize>>,
 ) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;
     let mut entry_size = Rect::new(2, 2, w - 4, 3);
@@ -29,9 +30,18 @@ pub async fn draw_entities<W: Write>(
     let mut bg = entry_size;
     bg.height = h - *Y_PADDING;
 
-    draw_rect!(stdout, " ", bg, get_style("normal"));
+    if affected.is_none() {
+        draw_rect!(stdout, " ", bg, get_style("normal"));
+    }
 
     for (i, lvl) in page_entries.visible_range_with_lvl(scroll) {
+        if let Some(aff) = affected.clone() {
+            if aff.get(&i).is_none() {
+                entry_size.y += entry_height(lvl);
+                continue;
+            }
+        }
+
         let ent = match entries.get_mut(&page_entries.get(i).unwrap()) {
             Some(x) => x,
             None => {
@@ -102,6 +112,7 @@ pub async fn draw_page<W: Write>(
         current_page,
         selected,
         scroll,
+        None,
     )
     .await?;
 
@@ -132,7 +143,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
         return Ok(());
     }
 
-    match state.redraw {
+    match &state.redraw {
         RedrawType::Help => {
             draw_page(
                 stdout,
@@ -165,7 +176,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
             if ident.entry_type == EntryType::Card {
                 return Ok(());
             }
-            if let Some(index) = state.page_entries.iter_entries().position(|p| *p == ident) {
+            if let Some(index) = state.page_entries.iter_entries().position(|p| *p == *ident) {
                 if let Some(mut area) = state.page_entries.is_entry_visible(index, state.scroll)? {
                     area.y += 2;
                     area.height = 1;
@@ -186,6 +197,18 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
                 }
             }
         }
+        RedrawType::PartialEntries(affected) => {
+            return draw_entities(
+                stdout,
+                &mut state.entries,
+                &state.page_entries,
+                &state.current_page,
+                state.selected,
+                state.scroll,
+                Some(affected.clone()),
+            )
+            .await;
+        }
         RedrawType::Entries => {
             return draw_entities(
                 stdout,
@@ -194,6 +217,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
                 &state.current_page,
                 state.selected,
                 state.scroll,
+                None
             )
             .await;
         }

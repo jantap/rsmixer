@@ -11,17 +11,18 @@ use crate::{
     Letter, RSError,
 };
 
-use std::io::{self, Write};
+use std::{collections::HashSet, io::{self, Write}};
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
 use crossterm::{cursor::Hide, execute};
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum RedrawType {
     Help,
     Full,
     Entries,
+    PartialEntries(HashSet<usize>),
     PeakVolume(EntryIdentifier),
     ContextMenu,
     None,
@@ -36,6 +37,7 @@ impl From<RedrawType> for u32 {
             RedrawType::Full => 1000,
             RedrawType::Entries => 500,
             RedrawType::ContextMenu => 500,
+            RedrawType::PartialEntries(_) => 400,
             RedrawType::PeakVolume(_) => 100,
             RedrawType::None => 1,
             RedrawType::Exit => 10000,
@@ -50,8 +52,8 @@ impl std::cmp::PartialOrd for RedrawType {
 
 impl std::cmp::Ord for RedrawType {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let a = u32::from(*self);
-        let b = u32::from(*other);
+        let a = u32::from(self.clone());
+        let b = u32::from(other.clone());
 
         a.cmp(&b)
     }
@@ -59,6 +61,19 @@ impl std::cmp::Ord for RedrawType {
 
 impl RedrawType {
     fn take_bigger(&mut self, mut other: Self) {
+        if let RedrawType::PartialEntries(p1) = self {
+            if let RedrawType::PartialEntries(p2) = other {
+                let mut ps = HashSet::new();
+                for p in p1.iter() {
+                    ps.insert(*p);
+                }
+                for p in p2.iter() {
+                    ps.insert(*p);
+                }
+                *self = RedrawType::PartialEntries(ps);
+                return;
+            }
+        }
         if self.cmp(&&mut other) == std::cmp::Ordering::Less {
             *self = other;
         }

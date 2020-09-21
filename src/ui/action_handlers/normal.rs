@@ -1,5 +1,7 @@
 use super::common::*;
 
+use std::collections::HashSet;
+
 pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     match msg.clone() {
         Letter::EntryUpdate(ident, _) => {
@@ -23,12 +25,20 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             }
         }
         Letter::MoveUp(how_much) => {
+            let mut affected = HashSet::new();
+            affected.insert(state.selected);
             state.selected = max(state.selected as i32 - how_much as i32, 0) as usize;
-            return RedrawType::Entries;
+            affected.insert(state.selected);
+
+            return RedrawType::PartialEntries(affected);
         }
         Letter::MoveDown(how_much) => {
+            let mut affected = HashSet::new();
+            affected.insert(state.selected);
             state.selected = min(state.selected + how_much as usize, state.page_entries.len());
-            return RedrawType::Entries;
+            affected.insert(state.selected);
+
+            return RedrawType::PartialEntries(affected);
         }
         Letter::CyclePages(which_way) => {
             DISPATCH.event(Letter::ChangePage(PageType::from(i8::from(state.current_page) + which_way))).await;

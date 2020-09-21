@@ -184,6 +184,7 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
         let entry = Entry {
             entry_type: EntryType::Card,
             index: i.index,
+            hidden: false,
             name: n,
             parent: None,
             position: EntrySpaceLvl::Empty,
@@ -209,6 +210,7 @@ pub fn on_sink_info(res: ListResult<&SinkInfo>) {
         let ident = EntryIdentifier::new(EntryType::Sink, i.index);
         let entry = Entry {
             entry_type: EntryType::Sink,
+            hidden: false,
             index: i.index,
             name,
             parent: None,
@@ -246,6 +248,7 @@ pub fn on_sink_input_info(res: ListResult<&SinkInputInfo>) {
         let ident = EntryIdentifier::new(EntryType::SinkInput, i.index);
         let entry = Entry {
             entry_type: EntryType::SinkInput,
+            hidden: false,
             parent: Some(i.sink),
             position: EntrySpaceLvl::Empty,
             name: n,
@@ -283,6 +286,7 @@ pub fn on_source_info(res: ListResult<&SourceInfo>) {
             entry_type: EntryType::Source,
             position: EntrySpaceLvl::Empty,
             index: i.index,
+            hidden: false,
             name,
             parent: None,
             is_selected: false,
@@ -319,6 +323,7 @@ pub fn on_source_output_info(res: ListResult<&SourceOutputInfo>) {
         let entry = Entry {
             entry_type: EntryType::SourceOutput,
             parent: Some(i.source),
+            hidden: false,
             index: i.index,
             name: n,
             position: EntrySpaceLvl::Empty,

@@ -7,7 +7,15 @@ use std::collections::HashMap;
 pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     // we only need to update page entries if entries changed
     match msg {
-        Letter::EntryRemoved(_) | Letter::EntryUpdate(_, _) | Letter::ChangePage(_) => {}
+        Letter::EntryRemoved(_)
+        | Letter::EntryUpdate(_, _)
+        | Letter::ChangePage(_) => {}
+
+        Letter::Hide => {
+            if let Some(selected) = state.page_entries.get(state.selected) {
+                state.entries.hide(selected);
+            }
+        }
         _ => {
             return RedrawType::None;
         }

@@ -97,7 +97,7 @@ impl PageType {
                     std::iter::once((ident, entry)).chain(
                         entries
                             .iter_type(child)
-                            .filter(move |(_, e)| e.parent == Some(ident.index)),
+                            .filter(move |(_, e)| e.parent == Some(ident.index) && !e.hidden),
                     )
                 })
                 .flatten(),

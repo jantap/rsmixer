@@ -33,4 +33,23 @@ impl Entries {
     pub fn insert(&mut self, entry_ident: EntryIdentifier, val: Entry) -> Option<Entry> {
         self.0.insert(entry_ident, val)
     }
+    pub fn hide(&mut self, ident: EntryIdentifier) {
+        let (entry_type, index, parent) = if let Some(entry) = self.0.get(&ident) {
+            (entry.entry_type, entry.index, entry.parent)
+        } else {
+            return
+        };
+
+        match entry_type {
+            EntryType::Sink | EntryType::Source => {
+                let desired = if entry_type == EntryType::Sink { EntryType::SinkInput } else { EntryType::SourceOutput };
+                    self.0.iter_mut().filter(|(i, _)| i.entry_type == desired).filter(|(_, e)| e.parent == Some(index)).for_each(|(_, e)| e.hidden = !e.hidden);
+            }
+            EntryType::SinkInput | EntryType::SourceOutput => {
+                let desired = if entry_type == EntryType::SinkInput { EntryType::SinkInput } else { EntryType::SourceOutput };
+                self.0.iter_mut().filter(|(ident, _)| ident.entry_type == desired).filter(|(_, e)| e.parent == parent).for_each(|(_, e)| e.hidden = !e.hidden);
+            }
+            _ => {}
+        }
+    }
 }

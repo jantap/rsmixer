@@ -41,6 +41,7 @@ pub struct Entry {
     pub position: EntrySpaceLvl,
     pub play_entry: Option<PlayEntry>,
     pub card_entry: Option<CardEntry>,
+    pub hidden: bool,
 }
 impl Eq for Entry {}
 

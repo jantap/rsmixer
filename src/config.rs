@@ -152,6 +152,7 @@ impl TryFrom<String> for Letter {
             "cycle_pages_forward" => Letter::CyclePages(1),
             "cycle_pages_backward" => Letter::CyclePages(-1),
             "close_context_menu" => Letter::CloseContextMenu,
+            "hide" => Letter::Hide,
             _ => {
                 return Err(RSError::ActionBindingError(st.clone()));
             }

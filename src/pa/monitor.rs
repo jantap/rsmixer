@@ -27,16 +27,16 @@ impl Monitors {
         // remove failed streams
         // then send exit signal if stream is unwanted
         self.0.retain(|ident, monitor| {
-            match monitor.stream.borrow_mut().get_state() {
-                pulse::stream::State::Terminated | pulse::stream::State::Failed => {
-                    info!(
-                        "[PAInterface] Disconnecting {} sink input monitor (failed state)",
-                        ident.index
-                    );
-                    return false;
-                }
-                _ => {}
-            };
+            // match monitor.stream.borrow_mut().get_state() {
+            //     pulse::stream::State::Terminated | pulse::stream::State::Failed => {
+            //         info!(
+            //             "[PAInterface] Disconnecting {} sink input monitor (failed state)",
+            //             ident.index
+            //         );
+            //         return false;
+            //     }
+            //     _ => {}
+            // };
 
             if targets.get(ident) == None {
                 let _ = monitor.exit_sender.send(0);
@@ -45,11 +45,11 @@ impl Monitors {
             true
         });
 
-        targets
-            .iter()
-            .for_each(|(ident, monitor_src)| if self.0.get(ident).is_none() {
+        targets.iter().for_each(|(ident, monitor_src)| {
+            if self.0.get(ident).is_none() {
                 self.create_monitor(mainloop, context, *ident, *monitor_src);
-            });
+            }
+        });
     }
 
     fn create_monitor(
@@ -154,6 +154,7 @@ fn create(
         }
     };
 
+
     debug!("[PADataInterface] Waiting for stream to be ready");
     loop {
         match stream.borrow_mut().get_state() {
@@ -169,6 +170,7 @@ fn create(
             }
         }
     }
+
     stream.borrow_mut().set_state_callback(None);
 
     {
@@ -176,11 +178,14 @@ fn create(
         let ml_ref = Rc::clone(&p_mainloop);
         let stream_ref = Rc::downgrade(&stream);
         stream.borrow_mut().set_read_callback(Some(Box::new(move |_size: usize| {
+    if ident.entry_type == EntryType::SinkInput {
+        log::error!("KURWARAAAAAAAA1" );
+    }
             let remove_failed = || {
                 error!("[PADataInterface] Monitor failed or terminated");
             };
             let disconnect_stream = || {
-                warn!("[PADataInterface] Monitor existed while the sink (input)/source (output) was already gone");
+                warn!("[PADataInterface] {:?} Monitor existed while the sink (input)/source (output) was already gone", ident);
                 unsafe {
                     (*(*stream_ref.as_ptr()).as_ptr()).disconnect().unwrap();
                     (*ml_ref.as_ptr()).signal(false);

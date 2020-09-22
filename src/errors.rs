@@ -44,9 +44,17 @@ impl fmt::Display for RSError {
             ),
             Self::NoEntryError => write!(f, "Error while creating entry"),
             Self::ConfyError(err) => err.fmt(f),
-            Self::KeyCodeError(kc) => write!(f, "Error in config file\n'{}' is not a valid key binding", kc),
-            Self::ActionBindingError(act) => write!(f, "Error in config file\n'{}' is not a valid action", act),
-            Self::InvalidColor(color) => write!(f, "Error in config file\n'{}' is not a valid color", color),
+            Self::KeyCodeError(kc) => write!(
+                f,
+                "Error in config file\n'{}' is not a valid key binding",
+                kc
+            ),
+            Self::ActionBindingError(act) => {
+                write!(f, "Error in config file\n'{}' is not a valid action", act)
+            }
+            Self::InvalidColor(color) => {
+                write!(f, "Error in config file\n'{}' is not a valid color", color)
+            }
         }
     }
 }

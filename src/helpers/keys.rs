@@ -1,4 +1,3 @@
-
 use crate::RSError;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -8,7 +7,6 @@ pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
     let mut modifiers = KeyModifiers::empty();
 
     let parts = s.split("+").collect::<Vec<_>>();
-
 
     for &p in parts.iter().take(parts.len() - 1) {
         match p {
@@ -21,58 +19,53 @@ pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
 
     let code = *parts.last().unwrap();
     let code = match code {
-            "backspace" => KeyCode::Backspace,
-            "enter" => KeyCode::Enter,
-            "left" => KeyCode::Left,
-            "right" => KeyCode::Right,
-            "up" => KeyCode::Up,
-            "down" => KeyCode::Down,
-            "home" => KeyCode::Home,
-            "end" => KeyCode::End,
-            "pageup" => KeyCode::PageUp,
-            "pagedown" => KeyCode::PageDown,
-            "tab" => {
-                if modifiers.contains(KeyModifiers::SHIFT) {
-                    modifiers = !modifiers ^ !KeyModifiers::SHIFT;
-                    KeyCode::BackTab
+        "backspace" => KeyCode::Backspace,
+        "enter" => KeyCode::Enter,
+        "left" => KeyCode::Left,
+        "right" => KeyCode::Right,
+        "up" => KeyCode::Up,
+        "down" => KeyCode::Down,
+        "home" => KeyCode::Home,
+        "end" => KeyCode::End,
+        "pageup" => KeyCode::PageUp,
+        "pagedown" => KeyCode::PageDown,
+        "tab" => {
+            if modifiers.contains(KeyModifiers::SHIFT) {
+                modifiers = !modifiers ^ !KeyModifiers::SHIFT;
+                KeyCode::BackTab
+            } else {
+                KeyCode::Tab
+            }
+        }
+        "backtab" => KeyCode::BackTab,
+        "delete" => KeyCode::Delete,
+        "insert" => KeyCode::Insert,
+        "null" => KeyCode::Null,
+        "esc" => KeyCode::Esc,
+        _ => match code.len() {
+            1 => {
+                let big_c = code.to_uppercase().chars().next().unwrap();
+                let c = code.chars().next().unwrap();
+                if modifiers.contains(KeyModifiers::SHIFT)
+                    && KeyCode::Char(c) != KeyCode::Char(big_c)
+                {
+                    KeyCode::Char(big_c)
                 } else {
-                    KeyCode::Tab
-                }
-            },
-            "backtab" => KeyCode::BackTab,
-            "delete" => KeyCode::Delete,
-            "insert" => KeyCode::Insert,
-            "null" => KeyCode::Null,
-            "esc" => KeyCode::Esc,
-            _ => {
-                match code.len() {
-                    1 => {
-                        let big_c = code.to_uppercase().chars().next().unwrap();
-                        let c = code.chars().next().unwrap();
-                        if modifiers.contains(KeyModifiers::SHIFT)
-                            && KeyCode::Char(c) != KeyCode::Char(big_c) {
-                                KeyCode::Char(big_c)
-                        } else {
-                            KeyCode::Char(c)
-                        }
-                    }
-                    2 => {
-                        if let Ok(f) = code[1..code.len()].parse::<u8>() {
-                            KeyCode::F(f)
-                        } else {
-                            return Err(RSError::KeyCodeError(String::from(key)));
-                        }
-                    },
-                    _ => return Err(RSError::KeyCodeError(String::from(key))),
+                    KeyCode::Char(c)
                 }
             }
+            2 => {
+                if let Ok(f) = code[1..code.len()].parse::<u8>() {
+                    KeyCode::F(f)
+                } else {
+                    return Err(RSError::KeyCodeError(String::from(key)));
+                }
+            }
+            _ => return Err(RSError::KeyCodeError(String::from(key))),
+        },
     };
 
-
-    Ok(KeyEvent {
-        code,
-        modifiers,
-    })
+    Ok(KeyEvent { code, modifiers })
 }
 
 pub fn keyevent_to_string(key_ev: &KeyEvent) -> String {

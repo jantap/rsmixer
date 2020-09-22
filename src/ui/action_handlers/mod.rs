@@ -5,3 +5,4 @@ pub mod general;
 pub mod normal;
 pub mod play_entries;
 pub mod scroll;
+pub mod move_entry;

@@ -44,11 +44,7 @@ impl Entry {
         let left_name_len = min(self.name.len(), (area.width / 2).into());
 
         execute!(buf, MoveTo(area.x, area.y))?;
-        write!(
-            buf,
-            "{}",
-            name_style.apply(&self.name[0..left_name_len])
-        )?;
+        write!(buf, "{}", name_style.apply(&self.name[0..left_name_len]))?;
 
         if let Some(index) = card.selected_profile {
             let right_name_len = min(

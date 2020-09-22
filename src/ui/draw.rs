@@ -1,13 +1,13 @@
 use crate::{
     draw_rect,
     entry::{Entries, Entry, EntryType},
+    helpers::help_text,
     ui::{
         models::PageEntries,
-        output::{RedrawType, UIState, UIMode},
+        output::{RedrawType, UIMode, UIState},
         util::{entry_height, get_style, PageType, Rect, Y_PADDING},
         widgets::{BlockWidget, ContextMenuWidget, VolumeWidget, Widget},
     },
-    helpers::help_text,
     RSError,
 };
 
@@ -60,26 +60,23 @@ pub async fn draw_entities<W: Write>(
     Ok(())
 }
 
-pub async fn draw_help<W: Write>(
-    stdout: &mut W,
-) -> Result<(), RSError> {
+pub async fn draw_help<W: Write>(stdout: &mut W) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;
 
     let lines = help_text::generate();
-    let (mut width, lines) = help_text::help_lines_to_strings(&lines, w-4)?;
+    let (mut width, lines) = help_text::help_lines_to_strings(&lines, w - 4)?;
 
     width += 4;
-    let height = std::cmp::min(lines.len()+4, h as usize) as u16;
+    let height = std::cmp::min(lines.len() + 4, h as usize) as u16;
     let width = std::cmp::min(width, w);
 
     let mut b = BlockWidget::default()
         .clean_inside(true)
         .title("Help".to_string());
-    let x = w / 2 - width / 2; 
+    let x = w / 2 - width / 2;
     let y = h / 2 - height / 2;
     b.render(Rect::new(x, y, width, height), stdout)?;
 
-    
     for (i, l) in lines.iter().enumerate() {
         execute!(stdout, crossterm::cursor::MoveTo(x + 2, y + 2 + i as u16))?;
 
@@ -138,7 +135,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
     if w < 20 || h < 5 {
         return terminal_too_small(stdout).await;
     }
-    
+
     if state.ui_mode == UIMode::Help && state.redraw != RedrawType::Help {
         return Ok(());
     }
@@ -217,7 +214,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut UIState) -> Result<(),
                 &state.current_page,
                 state.selected,
                 state.scroll,
-                None
+                None,
             )
             .await;
         }

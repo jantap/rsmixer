@@ -27,6 +27,18 @@ impl Entries {
     pub fn get_mut(&mut self, ident: &EntryIdentifier) -> Option<&mut Entry> {
         self.0.get_mut(ident)
     }
+    pub fn position<P>(&mut self, predicate: P) -> Option<usize>
+    where
+        P: FnMut((&EntryIdentifier, &Entry)) -> bool,
+    {
+        self.0.iter().position(predicate)
+    }
+    pub fn find<P>(&mut self, predicate: P) -> Option<(&EntryIdentifier, &Entry)>
+    where
+        P: FnMut(&(&EntryIdentifier, &Entry)) -> bool,
+    {
+        self.0.iter().find(predicate)
+    }
     pub fn remove(&mut self, ident: &EntryIdentifier) -> Option<Entry> {
         self.0.remove(ident)
     }
@@ -37,17 +49,33 @@ impl Entries {
         let (entry_type, index, parent) = if let Some(entry) = self.0.get(&ident) {
             (entry.entry_type, entry.index, entry.parent)
         } else {
-            return
+            return;
         };
 
         match entry_type {
             EntryType::Sink | EntryType::Source => {
-                let desired = if entry_type == EntryType::Sink { EntryType::SinkInput } else { EntryType::SourceOutput };
-                    self.0.iter_mut().filter(|(i, _)| i.entry_type == desired).filter(|(_, e)| e.parent == Some(index)).for_each(|(_, e)| e.hidden = !e.hidden);
+                let desired = if entry_type == EntryType::Sink {
+                    EntryType::SinkInput
+                } else {
+                    EntryType::SourceOutput
+                };
+                self.0
+                    .iter_mut()
+                    .filter(|(i, _)| i.entry_type == desired)
+                    .filter(|(_, e)| e.parent == Some(index))
+                    .for_each(|(_, e)| e.hidden = !e.hidden);
             }
             EntryType::SinkInput | EntryType::SourceOutput => {
-                let desired = if entry_type == EntryType::SinkInput { EntryType::SinkInput } else { EntryType::SourceOutput };
-                self.0.iter_mut().filter(|(ident, _)| ident.entry_type == desired).filter(|(_, e)| e.parent == parent).for_each(|(_, e)| e.hidden = !e.hidden);
+                let desired = if entry_type == EntryType::SinkInput {
+                    EntryType::SinkInput
+                } else {
+                    EntryType::SourceOutput
+                };
+                self.0
+                    .iter_mut()
+                    .filter(|(ident, _)| ident.entry_type == desired)
+                    .filter(|(_, e)| e.parent == parent)
+                    .for_each(|(_, e)| e.hidden = !e.hidden);
             }
             _ => {}
         }

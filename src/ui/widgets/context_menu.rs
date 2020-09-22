@@ -70,9 +70,17 @@ impl<W: Write> Widget<W> for ContextMenuWidget {
         let start_index = max(0, self.selected as i32 - area.height as i32 + 7);
 
         let iter = if self.scrolling {
-            self.options.iter().enumerate().skip(start_index as usize).take(area.height as usize - 6)
+            self.options
+                .iter()
+                .enumerate()
+                .skip(start_index as usize)
+                .take(area.height as usize - 6)
         } else {
-            self.options.iter().enumerate().skip(0).take(self.options.len())
+            self.options
+                .iter()
+                .enumerate()
+                .skip(0)
+                .take(self.options.len())
         };
 
         for (i, o) in iter {

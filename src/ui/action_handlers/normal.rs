@@ -41,7 +41,11 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
             return RedrawType::PartialEntries(affected);
         }
         Letter::CyclePages(which_way) => {
-            DISPATCH.event(Letter::ChangePage(PageType::from(i8::from(state.current_page) + which_way))).await;
+            DISPATCH
+                .event(Letter::ChangePage(PageType::from(
+                    i8::from(state.current_page) + which_way,
+                )))
+                .await;
             return RedrawType::None;
         }
         Letter::OpenContextMenu => {

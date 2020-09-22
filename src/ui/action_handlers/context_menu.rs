@@ -1,6 +1,12 @@
 use super::common::*;
 
-use crate::ui::models::context_menus::{self, ContextMenuEffect, ContextMenuOption};
+use crate::{
+    entry::EntryIdentifier,
+    ui::{
+        models::context_menus::{self, ContextMenuEffect, ContextMenuOption},
+        util::parent_child_types,
+    },
+};
 
 pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     match msg.clone() {
@@ -43,22 +49,18 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                     return RedrawType::Full;
                 }
                 ContextMenuEffect::PresentParents => {
-                    let p_type = if state.page_entries.get(state.selected).unwrap().entry_type
-                        == EntryType::SinkInput
-                    {
-                        EntryType::Sink
-                    } else {
-                        EntryType::Source
+                    let (parent_type, _) = parent_child_types(state.current_page);
+                    let entry_ident = state.page_entries.get(state.selected).unwrap();
+                    let entry_parent = EntryIdentifier::new(
+                        parent_type,
+                        state.entries.get(&entry_ident).unwrap().parent.unwrap(),
+                    );
+                    let parent_ident = match state.entries.find(|(&i, _)| i == entry_parent) {
+                        Some((i, _)) => i.clone(),
+                        None => EntryIdentifier::new(parent_type, 0),
                     };
-
-                    state.context_options = state
-                        .entries
-                        .iter_type(p_type)
-                        .map(|(ident, entry)| {
-                            ContextMenuOption::MoveToEntry(*ident, entry.name.clone())
-                        })
-                        .collect();
-                    return RedrawType::ContextMenu;
+                    state.ui_mode = UIMode::MoveEntry(entry_ident, parent_ident);
+                    return RedrawType::Full;
                 }
             };
         }

@@ -1,9 +1,10 @@
 use crate::{
     entry::{Entries, Entry, EntryIdentifier, EntrySpaceLvl, EntryType},
+    ui::output::UIMode,
     STYLES,
 };
 
-use std::fmt::Display;
+use std::{fmt::Display, iter};
 
 use crossterm::style::{Attribute, ContentStyle};
 
@@ -83,12 +84,32 @@ impl PageType {
     pub fn generate_page<'a>(
         &'a self,
         entries: &'a Entries,
+        ui_mode: &'a UIMode,
     ) -> Box<dyn Iterator<Item = (&EntryIdentifier, &Entry)> + 'a> {
         if *self == PageType::Cards {
             return Box::new(entries.iter_type(EntryType::Card));
         }
 
         let (parent, child) = parent_child_types(*self);
+
+        if let UIMode::MoveEntry(ident, parent) = ui_mode {
+
+            let en = entries.get(ident).unwrap();
+            let p = parent.clone();
+            let parent_pos = entries.iter_type(parent.entry_type).position(|(&i, _)| i == p).unwrap();
+            return Box::new(
+                entries
+                    .iter_type(parent.entry_type)
+                    .take(parent_pos + 1)
+                    .chain(iter::once((ident, en)))
+                    .chain(
+                        entries
+                            .iter_type(parent.entry_type)
+                            .skip(parent_pos + 1)
+                            .take_while(|_| true),
+                    ),
+            );
+        }
 
         Box::new(
             entries

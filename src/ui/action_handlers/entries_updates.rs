@@ -7,9 +7,7 @@ use std::collections::HashMap;
 pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     // we only need to update page entries if entries changed
     match msg {
-        Letter::EntryRemoved(_)
-        | Letter::EntryUpdate(_, _)
-        | Letter::ChangePage(_) => {}
+        Letter::Redraw | Letter::EntryRemoved(_) | Letter::EntryUpdate(_, _) | Letter::ChangePage(_) => {}
 
         Letter::Hide => {
             if let Some(selected) = state.page_entries.get(state.selected) {
@@ -27,19 +25,32 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     let entries_changed = state.page_entries.set(
         state
             .current_page
-            .generate_page(&state.entries)
+            .generate_page(&state.entries, &state.ui_mode)
             .map(|x| *x.0)
             .collect::<Vec<EntryIdentifier>>(),
         p,
     );
 
-    if let Some(i) = state
-        .page_entries
-        .iter_entries()
-        .position(|&x| Some(x) == last_sel)
-    {
-        state.selected = i;
-    }
+    match state.ui_mode {
+        UIMode::MoveEntry(ident, _) => {
+            if let Some(i) = state
+                .page_entries
+                .iter_entries()
+                .position(|&x| x == ident)
+            {
+                state.selected = i;
+            }
+        }
+        _ => {
+            if let Some(i) = state
+                .page_entries
+                .iter_entries()
+                .position(|&x| Some(x) == last_sel)
+            {
+                state.selected = i;
+            }
+        }
+    };
 
     if entries_changed {
         DISPATCH
@@ -68,6 +79,8 @@ fn monitor_list(state: &mut UIState) -> HashMap<EntryIdentifier, Option<u32>> {
             );
         }
     });
+
+    log::error!("{:?}", monitors);
 
     monitors
 }

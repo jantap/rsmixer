@@ -5,7 +5,7 @@ use crate::{
 };
 
 pub struct PageEntries {
-    entries: Vec<EntryIdentifier>,
+    pub entries: Vec<EntryIdentifier>,
     pub last_term_h: u16,
     pub lvls: Vec<EntrySpaceLvl>,
     pub visibility: Vec<usize>,
@@ -35,6 +35,13 @@ impl PageEntries {
         } else {
             None
         }
+    }
+
+    pub fn position<P>(&mut self, predicate: P) -> Option<usize>
+    where
+        P: FnMut(&EntryIdentifier) -> bool,
+    {
+        self.entries.iter().position(predicate)
     }
 
     pub fn reflow_scroll(&mut self, h: u16, force: bool) {

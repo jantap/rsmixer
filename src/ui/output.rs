@@ -11,7 +11,10 @@ use crate::{
     Letter, RSError,
 };
 
-use std::{collections::HashSet, io::{self, Write}};
+use std::{
+    collections::HashSet,
+    io::{self, Write},
+};
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
@@ -85,6 +88,7 @@ pub enum UIMode {
     Normal,
     ContextMenu,
     Help,
+    MoveEntry(EntryIdentifier, EntryIdentifier),
 }
 
 pub struct UIState {
@@ -154,6 +158,9 @@ pub async fn ui_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
                 } else {
                     RedrawType::None
                 }
+            }
+            UIMode::MoveEntry(_, _) => {
+               move_entry::action_handler(&msg, &mut state).await
             }
         };
 

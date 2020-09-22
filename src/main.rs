@@ -5,10 +5,10 @@ mod config;
 mod entry;
 mod errors;
 mod events;
+mod helpers;
 mod input;
 mod pa;
 mod ui;
-mod helpers;
 
 pub use errors::RSError;
 pub use events::Letter;
@@ -137,7 +137,7 @@ fn main() -> Result<(), RSError> {
         .threaded_scheduler()
         .enable_time()
         .build()?;
-    threaded_rt.block_on(async { 
+    threaded_rt.block_on(async {
         if let Err(err) = run().await {
             eprintln!("{}", err);
         }

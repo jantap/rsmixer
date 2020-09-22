@@ -1,6 +1,6 @@
-use crate::{Letter, BINDINGS, ui::PageType, helpers::keys, RSError};
+use crate::{helpers::keys, ui::PageType, Letter, RSError, BINDINGS};
 
-use std::{mem::discriminant, collections::HashSet};
+use std::{collections::HashSet, mem::discriminant};
 
 #[derive(Debug)]
 pub struct HelpLine {
@@ -16,12 +16,8 @@ pub enum LetterMatcher {
 impl LetterMatcher {
     fn is_matching(&self, l2: &Letter) -> bool {
         match self {
-            Self::Any(l1) => {
-                discriminant(l1) == discriminant(l2)
-            }
-            Self::Concrete(l1) => {
-                l1 == l2
-            }
+            Self::Any(l1) => discriminant(l1) == discriminant(l2),
+            Self::Concrete(l1) => l1 == l2,
         }
     }
 }
@@ -30,32 +26,58 @@ pub fn generate() -> Vec<HelpLine> {
     let mut categories = Vec::new();
 
     let mut volume_deltas = HashSet::new();
-    
+
     for (k, v) in (*BINDINGS).get().iter() {
         if let Letter::RequstChangeVolume(x) = v {
             volume_deltas.insert(x.abs());
         }
     }
 
-    categories.push(("Navigation".to_string(), vec![
-                      LetterMatcher::Any(Letter::MoveUp(0)), 
-                      LetterMatcher::Any(Letter::MoveDown(0))]));
+    categories.push((
+        "Navigation".to_string(),
+        vec![
+            LetterMatcher::Any(Letter::MoveUp(0)),
+            LetterMatcher::Any(Letter::MoveDown(0)),
+        ],
+    ));
 
     for vd in volume_deltas {
-        categories.push((format!("Change volume by {}", vd), vec![
-                          LetterMatcher::Concrete(Letter::RequstChangeVolume(vd)),
-                          LetterMatcher::Concrete(Letter::RequstChangeVolume(-vd))]))
+        categories.push((
+            format!("Change volume by {}", vd),
+            vec![
+                LetterMatcher::Concrete(Letter::RequstChangeVolume(vd)),
+                LetterMatcher::Concrete(Letter::RequstChangeVolume(-vd)),
+            ],
+        ))
     }
-    categories.push(("Mute/unmute".to_string(), vec![LetterMatcher::Concrete(Letter::RequestMute)]));
-    categories.push(("Change page".to_string(), vec![LetterMatcher::Any(Letter::ChangePage(PageType::Output))]));
-    categories.push(("Cycle pages".to_string(), vec![LetterMatcher::Any(Letter::CyclePages(0))]));
-    categories.push(("Context menu".to_string(), vec![LetterMatcher::Any(Letter::OpenContextMenu)]));
-    categories.push(("Quit".to_string(), vec![LetterMatcher::Any(Letter::ExitSignal)]));
+    categories.push((
+        "Mute/unmute".to_string(),
+        vec![LetterMatcher::Concrete(Letter::RequestMute)],
+    ));
+    categories.push((
+        "Change page".to_string(),
+        vec![LetterMatcher::Any(Letter::ChangePage(PageType::Output))],
+    ));
+    categories.push((
+        "Cycle pages".to_string(),
+        vec![LetterMatcher::Any(Letter::CyclePages(0))],
+    ));
+    categories.push((
+        "Context menu".to_string(),
+        vec![LetterMatcher::Any(Letter::OpenContextMenu)],
+    ));
+    categories.push((
+        "Quit".to_string(),
+        vec![LetterMatcher::Any(Letter::ExitSignal)],
+    ));
 
     let mut help_lines = Vec::new();
 
     for category in categories {
-        let mut hl = HelpLine { key_events: Vec::new(), category: category.0 };
+        let mut hl = HelpLine {
+            key_events: Vec::new(),
+            category: category.0,
+        };
         for (k, v) in (*BINDINGS).get().iter() {
             for matcher in &category.1 {
                 if matcher.is_matching(v) {
@@ -69,23 +91,32 @@ pub fn generate() -> Vec<HelpLine> {
     help_lines
 }
 
-pub fn help_lines_to_strings(hls: &Vec<HelpLine>, width: u16) -> Result<(u16, Vec<String>), RSError> {
+pub fn help_lines_to_strings(
+    hls: &Vec<HelpLine>,
+    width: u16,
+) -> Result<(u16, Vec<String>), RSError> {
     let mut lines = Vec::new();
 
     let longest_name = hls.iter().map(|hl| hl.category.len()).max().unwrap();
-    let longest_first_two = hls.iter().map(|hl| {
-        let mut c = 0;
-        if hl.key_events.len() > 0 {
-            c += hl.key_events[0].len();
-        }
-        if hl.key_events.len() > 1 {
-            c += hl.key_events[1].len();
-        }
-        c
-    }).max().unwrap();
-    let longest_key_ev = hls.iter().map(|hl| {
-        hl.key_events.iter().map(|ev| ev.len()).max().unwrap()
-    }).max().unwrap();
+    let longest_first_two = hls
+        .iter()
+        .map(|hl| {
+            let mut c = 0;
+            if hl.key_events.len() > 0 {
+                c += hl.key_events[0].len();
+            }
+            if hl.key_events.len() > 1 {
+                c += hl.key_events[1].len();
+            }
+            c
+        })
+        .max()
+        .unwrap();
+    let longest_key_ev = hls
+        .iter()
+        .map(|hl| hl.key_events.iter().map(|ev| ev.len()).max().unwrap())
+        .max()
+        .unwrap();
 
     let big_width = longest_name + longest_first_two + 5;
     let small_width = longest_name + longest_key_ev + 3;

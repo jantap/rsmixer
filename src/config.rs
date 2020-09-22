@@ -1,6 +1,10 @@
-use crate::{RSError, ui::PageType, Letter, Styles, helpers::{colors, keys}};
+use crate::{
+    helpers::{colors, keys},
+    ui::PageType,
+    Letter, RSError, Styles,
+};
 
-use std::{convert::TryFrom, collections::HashMap};
+use std::{collections::HashMap, convert::TryFrom};
 
 use crossterm::{
     event::{KeyCode, KeyEvent, KeyModifiers},
@@ -65,7 +69,10 @@ impl RsMixerConfig {
         let mut bindings: HashMap<KeyEvent, Letter> = HashMap::new();
 
         for (k, c) in &self.bindings {
-            bindings.insert(keys::try_string_to_keyevent(&k)?, Letter::try_from(c.clone())?);
+            bindings.insert(
+                keys::try_string_to_keyevent(&k)?,
+                Letter::try_from(c.clone())?,
+            );
         }
 
         let mut styles: Styles = HashMap::new();
@@ -103,7 +110,9 @@ impl TryFrom<String> for Letter {
         if let Some(lparen) = st.chars().position(|c| c == '(') {
             let rparen = match st.chars().position(|c| c == ')') {
                 Some(r) => r,
-                None => { return Err(RSError::ActionBindingError(st.clone())); },
+                None => {
+                    return Err(RSError::ActionBindingError(st.clone()));
+                }
             };
             a = st
                 .chars()
@@ -124,28 +133,36 @@ impl TryFrom<String> for Letter {
             "lower_volume" => {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,
-                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                    Err(_) => {
+                        return Err(RSError::ActionBindingError(st.clone()));
+                    }
                 };
                 Letter::RequstChangeVolume(-a)
             }
             "raise_volume" => {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,
-                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                    Err(_) => {
+                        return Err(RSError::ActionBindingError(st.clone()));
+                    }
                 };
                 Letter::RequstChangeVolume(a)
             }
             "up" => {
                 let a = match a.parse::<u16>() {
                     Ok(x) => x,
-                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                    Err(_) => {
+                        return Err(RSError::ActionBindingError(st.clone()));
+                    }
                 };
                 Letter::MoveUp(a)
             }
             "down" => {
                 let a = match a.parse::<u16>() {
                     Ok(x) => x,
-                    Err(_) => { return Err(RSError::ActionBindingError(st.clone())); },
+                    Err(_) => {
+                        return Err(RSError::ActionBindingError(st.clone()));
+                    }
                 };
                 Letter::MoveDown(a)
             }
@@ -160,4 +177,3 @@ impl TryFrom<String> for Letter {
         Ok(x)
     }
 }
-

@@ -1,6 +1,6 @@
 use crate::{
     draw_at,
-    entry::{Entry, EntrySpaceLvl, EntryType},
+    entry::{HiddenStatus, Entry, EntrySpaceLvl, EntryType},
     ui::{
         util::{get_style, Rect},
         widgets::{VolumeWidgetBorder, Widget},
@@ -12,7 +12,7 @@ use std::{cmp::min, io::Write};
 
 use pulse::volume;
 
-use crossterm::{cursor::MoveTo, execute};
+use crossterm::{style::StyledContent, cursor::MoveTo, execute};
 
 impl<W: Write> Widget<W> for Entry {
     fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
@@ -140,13 +140,21 @@ impl Entry {
 
         let mut v = Vec::new();
         match self.position {
-            EntrySpaceLvl::Parent => {
+             EntrySpaceLvl::Parent => {
                 v.push("▼");
                 v.push("│");
                 v.push("│");
             }
             EntrySpaceLvl::ParentNoChildren => {
-                v.push("▲");
+                match self.hidden {
+                    HiddenStatus::HiddenKids => {
+                        v.push("▲");
+                    }
+                    HiddenStatus::NoKids => {
+                        v.push("▶");
+                    }
+                    _ => {}
+                }
             }
             EntrySpaceLvl::MidChild => {
                 v.push("│");

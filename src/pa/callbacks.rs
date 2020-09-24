@@ -1,7 +1,7 @@
 use super::common::*;
 
 use crate::{
-    entry::{CardEntry, CardProfile, Entry, EntrySpaceLvl, PlayEntry},
+    entry::{HiddenStatus, CardEntry, CardProfile, Entry, EntrySpaceLvl, PlayEntry},
     ui::widgets::VolumeWidget,
     DISPATCH,
 };
@@ -184,7 +184,7 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
         let entry = Entry {
             entry_type: EntryType::Card,
             index: i.index,
-            hidden: false,
+            hidden: HiddenStatus::Show,
             name: n,
             parent: None,
             position: EntrySpaceLvl::Empty,
@@ -210,7 +210,7 @@ pub fn on_sink_info(res: ListResult<&SinkInfo>) {
         let ident = EntryIdentifier::new(EntryType::Sink, i.index);
         let entry = Entry {
             entry_type: EntryType::Sink,
-            hidden: false,
+            hidden: HiddenStatus::Show,
             index: i.index,
             name,
             parent: None,
@@ -248,7 +248,7 @@ pub fn on_sink_input_info(res: ListResult<&SinkInputInfo>) {
         let ident = EntryIdentifier::new(EntryType::SinkInput, i.index);
         let entry = Entry {
             entry_type: EntryType::SinkInput,
-            hidden: false,
+            hidden: HiddenStatus::Show,
             parent: Some(i.sink),
             position: EntrySpaceLvl::Empty,
             name: n,
@@ -286,7 +286,7 @@ pub fn on_source_info(res: ListResult<&SourceInfo>) {
             entry_type: EntryType::Source,
             position: EntrySpaceLvl::Empty,
             index: i.index,
-            hidden: false,
+            hidden: HiddenStatus::Show,
             name,
             parent: None,
             is_selected: false,
@@ -323,7 +323,7 @@ pub fn on_source_output_info(res: ListResult<&SourceOutputInfo>) {
         let entry = Entry {
             entry_type: EntryType::SourceOutput,
             parent: Some(i.source),
-            hidden: false,
+            hidden: HiddenStatus::Show,
             index: i.index,
             name: n,
             position: EntrySpaceLvl::Empty,

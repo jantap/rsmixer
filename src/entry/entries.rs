@@ -1,4 +1,4 @@
-use super::{Entry, EntryIdentifier, EntryType};
+use super::{Entry, EntryIdentifier, EntryType, HiddenStatus};
 
 use std::collections::BTreeMap;
 
@@ -18,6 +18,16 @@ impl Entries {
         Box::new(
             self.0
                 .iter()
+                .filter(move |(ident, _)| ident.entry_type == entry_type),
+        )
+    }
+    pub fn iter_type_mut<'a>(
+        &'a mut self,
+        entry_type: EntryType,
+    ) -> Box<dyn Iterator<Item = (&EntryIdentifier, &mut Entry)> + 'a> {
+        Box::new(
+            self.0
+                .iter_mut()
                 .filter(move |(ident, _)| ident.entry_type == entry_type),
         )
     }
@@ -59,23 +69,34 @@ impl Entries {
                 } else {
                     EntryType::SourceOutput
                 };
+                
                 self.0
                     .iter_mut()
-                    .filter(|(i, _)| i.entry_type == desired)
-                    .filter(|(_, e)| e.parent == Some(index))
-                    .for_each(|(_, e)| e.hidden = !e.hidden);
+                    .filter(|(i, e)| (
+                                i.entry_type == desired 
+                                && e.parent == Some(index)
+                            ) || (
+                                i.entry_type == entry_type 
+                                && e.index == index
+                            ))
+                    .for_each(|(_, e)| e.hidden.negate(e.entry_type));
             }
             EntryType::SinkInput | EntryType::SourceOutput => {
-                let desired = if entry_type == EntryType::SinkInput {
-                    EntryType::SinkInput
+                let (desired, parent_type) = if entry_type == EntryType::SinkInput {
+                    (EntryType::SinkInput, EntryType::Sink)
                 } else {
-                    EntryType::SourceOutput
+                    (EntryType::SourceOutput, EntryType::Source)
                 };
                 self.0
                     .iter_mut()
-                    .filter(|(ident, _)| ident.entry_type == desired)
-                    .filter(|(_, e)| e.parent == parent)
-                    .for_each(|(_, e)| e.hidden = !e.hidden);
+                    .filter(|(ident, e)| (
+                            ident.entry_type == desired
+                            && e.parent == parent
+                        ) || (
+                            ident.entry_type == parent_type
+                            && Some(e.index) == parent
+                        ))
+                    .for_each(|(_, e)| e.hidden.negate(e.entry_type));
             }
             _ => {}
         }

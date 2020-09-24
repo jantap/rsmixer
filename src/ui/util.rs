@@ -1,5 +1,5 @@
 use crate::{
-    entry::{Entries, Entry, EntryIdentifier, EntrySpaceLvl, EntryType},
+    entry::{HiddenStatus, Entries, Entry, EntryIdentifier, EntrySpaceLvl, EntryType},
     ui::output::UIMode,
     STYLES,
 };
@@ -118,7 +118,7 @@ impl PageType {
                     std::iter::once((ident, entry)).chain(
                         entries
                             .iter_type(child)
-                            .filter(move |(_, e)| e.parent == Some(ident.index) && !e.hidden),
+                            .filter(move |(_, e)| e.parent == Some(ident.index) && e.hidden != HiddenStatus::Hidden),
                     )
                 })
                 .flatten(),
@@ -158,8 +158,8 @@ pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
 
 pub fn parent_child_types(page: PageType) -> (EntryType, EntryType) {
     match page {
-        PageType::Input => (EntryType::Sink, EntryType::SinkInput),
-        PageType::Output => (EntryType::Source, EntryType::SourceOutput),
+        PageType::Output => (EntryType::Sink, EntryType::SinkInput),
+        PageType::Input => (EntryType::Source, EntryType::SourceOutput),
         PageType::Cards => (EntryType::Card, EntryType::Card),
     }
 }

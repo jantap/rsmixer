@@ -32,6 +32,39 @@ pub struct CardEntry {
 impl Eq for CardEntry {}
 
 #[derive(PartialEq, Clone, Debug)]
+pub enum HiddenStatus {
+    Show,
+    HiddenKids,
+    Hidden,
+    NoKids,
+}
+impl Eq for HiddenStatus {}
+
+impl HiddenStatus {
+    pub fn negate(&mut self, entry_type: EntryType) {
+        match entry_type {
+            EntryType::Source
+            | EntryType::Sink => {
+                match self {
+                    Self::Show => *self = Self::HiddenKids,
+                    Self::HiddenKids => *self = Self::Show,
+                    _ => {}
+                }
+            }
+            EntryType::SourceOutput
+            | EntryType::SinkInput => {
+                match self {
+                    Self::Show => *self = Self::Hidden,
+                    Self::Hidden => *self = Self::Show,
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
 pub struct Entry {
     pub entry_type: EntryType,
     pub index: u32,
@@ -41,7 +74,7 @@ pub struct Entry {
     pub position: EntrySpaceLvl,
     pub play_entry: Option<PlayEntry>,
     pub card_entry: Option<CardEntry>,
-    pub hidden: bool,
+    pub hidden: HiddenStatus,
 }
 impl Eq for Entry {}
 

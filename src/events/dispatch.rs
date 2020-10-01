@@ -19,22 +19,21 @@ impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
         let mut bis = self.0.write().await;
         *bis = Some(sender);
         self.1.set(sync_sender);
-
-        // unsafe {
-        //     let s = self.1.;
-        //     *s = Some(sync_sender);
-        // };
     }
 
     pub async fn event(&self, ev: T) {
         if let Some(s) = self.0.read().await.as_ref() {
-            let _ = s.send(ev.clone());
+            if let Err(e) = s.send(ev.clone()) {
+                log::error!("{:#?}", e);
+            }
         }
     }
 
     pub fn sync_event(&self, ev: T) {
         if let Some(s) = self.1.try_get() {
-            let _ = s.send(ev);
+            if let Err(e) = s.send(ev) {
+                log::error!("{:#?}", e);
+            }
         }
     }
 }

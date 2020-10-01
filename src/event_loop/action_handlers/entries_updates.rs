@@ -4,7 +4,7 @@ use crate::{entry::{EntryIdentifier, HiddenStatus}, ui::util::parent_child_types
 
 use std::collections::{HashSet, HashMap};
 
-pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
+pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     // we only need to update page entries if entries changed
     match msg {
         Letter::Redraw | Letter::EntryRemoved(_) | Letter::EntryUpdate(_, _) | Letter::ChangePage(_) => {}
@@ -80,7 +80,7 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
     }
 }
 
-fn monitor_list(state: &mut UIState) -> HashMap<EntryIdentifier, Option<u32>> {
+fn monitor_list(state: &mut RSState) -> HashMap<EntryIdentifier, Option<u32>> {
     let mut monitors = HashMap::new();
     state.page_entries.iter_entries().for_each(|ident| {
         if let Some(entry) = state.entries.get(ident) {

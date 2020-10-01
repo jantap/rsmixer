@@ -1,10 +1,6 @@
 use super::common::*;
 
-use crate::{entry::EntryIdentifier, ui::util::parent_child_types};
-
-use std::collections::HashSet;
-
-pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
+pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
         Letter::PeakVolumeUpdate(ident, peak) => {
             if ident.entry_type == EntryType::Card {
@@ -24,7 +20,7 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
         }
         Letter::MoveUp(how_much) => {
             match state.ui_mode {
-                UIMode::MoveEntry(ident, parent) => {
+                UIMode::MoveEntry(_, _) => {
                     if state.page_entries.entries.len() < 2 {
                         return RedrawType::None;
                     }
@@ -42,7 +38,6 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                         j += 1;
                     }
                     
-                    let (parent_type, _) = parent_child_types(state.current_page);
                     let entry_ident = state.page_entries.get(state.selected).unwrap();
                     let new_parent = state.page_entries.get(j as usize).unwrap();
                     state.ui_mode = UIMode::MoveEntry(entry_ident, new_parent);
@@ -56,7 +51,7 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
         }
         Letter::MoveDown(how_much) => {
             match state.ui_mode {
-                UIMode::MoveEntry(ident, parent) => {
+                UIMode::MoveEntry(_, _) => {
                     if state.page_entries.entries.len() < 2 {
                         return RedrawType::None;
                     }
@@ -69,7 +64,6 @@ pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
                         j += 1;
                     }
                     
-                    let (parent_type, _) = parent_child_types(state.current_page);
                     let entry_ident = state.page_entries.get(state.selected).unwrap();
                     let new_parent = state.page_entries.get(j as usize).unwrap();
                     state.ui_mode = UIMode::MoveEntry(entry_ident, new_parent);

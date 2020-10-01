@@ -1,4 +1,4 @@
-use crate::{helpers::keys, ui::PageType, Letter, RSError, BINDINGS};
+use crate::{config::keys, models::PageType, Letter, RSError, BINDINGS};
 
 use std::{collections::HashSet, mem::discriminant};
 
@@ -27,7 +27,7 @@ pub fn generate() -> Vec<HelpLine> {
 
     let mut volume_deltas = HashSet::new();
 
-    for (k, v) in (*BINDINGS).get().iter() {
+    for (_, v) in (*BINDINGS).get().iter() {
         if let Letter::RequstChangeVolume(x) = v {
             volume_deltas.insert(x.abs());
         }

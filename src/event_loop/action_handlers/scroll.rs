@@ -4,7 +4,7 @@ use crate::{ui::util::Y_PADDING, RSError};
 
 use std::cmp::{max, min};
 
-pub async fn scroll_handler(msg: &Letter, state: &mut UIState) -> Result<RedrawType, RSError> {
+pub async fn scroll_handler(msg: &Letter, state: &mut RSState) -> Result<RedrawType, RSError> {
     let (_, term_h) = crossterm::terminal::size()?;
 
     match msg {

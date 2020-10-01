@@ -2,13 +2,11 @@ use super::common::*;
 
 use crate::{
     entry::EntryIdentifier,
-    ui::{
-        models::context_menus::{self, ContextMenuEffect, ContextMenuOption},
-        util::parent_child_types,
-    },
+    models::context_menus::{self, ContextMenuEffect},
+    ui::util::parent_child_types,
 };
 
-pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
+pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
         Letter::EntryRemoved(ident) => {
             if state.page_entries.get(state.selected) == Some(ident) {

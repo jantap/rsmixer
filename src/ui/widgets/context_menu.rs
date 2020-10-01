@@ -1,8 +1,9 @@
-use super::{super::models::ContextMenuOption, BlockWidget, Widget};
+use super::{BlockWidget, Widget};
 
 use crate::{
     draw_at,
     entry::EntryIdentifier,
+    models::ContextMenuOption,
     ui::util::{get_style, Rect},
     RSError,
 };

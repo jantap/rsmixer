@@ -1,6 +1,6 @@
 use super::common::*;
 
-pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
+pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
         Letter::RequestMute => {
             if state.selected < state.page_entries.len() {

@@ -1,3 +1,4 @@
+
 use crossterm::style::Color;
 
 pub fn str_to_color(s: &str) -> Option<Color> {

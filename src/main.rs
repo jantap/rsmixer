@@ -5,23 +5,23 @@ mod config;
 mod entry;
 mod errors;
 mod events;
-mod helpers;
+mod event_loop;
+mod help;
 mod input;
+mod models;
+mod run;
 mod pa;
 mod ui;
 
 pub use errors::RSError;
-pub use events::Letter;
+pub use models::Letter;
 
 use config::RsMixerConfig;
 use events::{Dispatch, Message, Senders};
-use pa::INFO_SX;
 
-use std::{collections::HashMap, io::Write};
+use std::collections::HashMap;
 
 use tokio::runtime;
-use tokio::sync::{broadcast::channel, mpsc};
-use tokio::task;
 
 use crossterm::{event::KeyEvent, style::ContentStyle};
 
@@ -54,7 +54,7 @@ struct CliOptions {
     help: bool,
 }
 
-async fn run() -> Result<(), RSError> {
+async fn launch() -> Result<(), RSError> {
     let opts = CliOptions::parse_args_default_or_exit();
 
     if opts.help {
@@ -78,58 +78,7 @@ async fn run() -> Result<(), RSError> {
     STYLES.set(styles);
     BINDINGS.set(bindings);
 
-    let hl = helpers::help_text::generate();
-
-    let (event_sx, event_rx) = channel(32);
-    let (r, s) = cb_channel::unbounded();
-    let event2 = event_sx.clone();
-    DISPATCH.register(event_sx, r.clone()).await;
-
-    task::spawn(async move { events::start(event2, event_rx, s, r, SENDERS.clone()).await });
-
-    let ui = async move {
-        match task::spawn(async move { ui::start().await }).await {
-            Ok(r) => r,
-            Err(e) => Err(RSError::TaskHandleError(e)),
-        }
-    };
-
-    let (pa_sx, pa_rx) = cb_channel::unbounded();
-
-    let (info_sx, info_rx) = mpsc::unbounded_channel();
-    (*INFO_SX).set(info_sx);
-
-    let pa = async move {
-        match task::spawn_blocking(move || pa::start(pa_rx)).await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(RSError::TaskHandleError(e)),
-        }
-    };
-
-    let pa_async = async move {
-        match task::spawn(async move { pa::start_async(pa_sx, info_rx).await }).await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(RSError::TaskHandleError(e)),
-        }
-    };
-
-    let r = tokio::try_join!(ui, pa, pa_async);
-
-    DISPATCH.event(Letter::ExitSignal).await;
-
-    let mut stdout = std::io::stdout();
-    crossterm::execute!(
-        stdout,
-        crossterm::cursor::Show,
-        crossterm::terminal::LeaveAlternateScreen
-    )
-    .unwrap();
-    crossterm::terminal::disable_raw_mode().unwrap();
-
-    match r {
-        Ok(_) => Ok(()),
-        Err(err) => Err(err),
-    }
+    run::run().await
 }
 
 fn main() -> Result<(), RSError> {
@@ -138,7 +87,7 @@ fn main() -> Result<(), RSError> {
         .enable_time()
         .build()?;
     threaded_rt.block_on(async {
-        if let Err(err) = run().await {
+        if let Err(err) = launch().await {
             eprintln!("{}", err);
         }
     });

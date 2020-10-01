@@ -2,7 +2,7 @@ use super::common::*;
 
 use std::ops::Deref;
 
-pub async fn action_handler(msg: &Letter, state: &mut UIState) -> RedrawType {
+pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
         Letter::ExitSignal => return RedrawType::Exit,
         Letter::Redraw => {

@@ -1,4 +1,4 @@
-use super::{Entry, EntryIdentifier, EntryType, HiddenStatus};
+use super::{Entry, EntryIdentifier, EntryType};
 
 use std::collections::BTreeMap;
 

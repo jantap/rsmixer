@@ -3,7 +3,7 @@ pub use super::Message;
 pub use std::{collections::HashMap, sync::Arc};
 
 pub use tokio::sync::{
-    broadcast::{Receiver, Sender},
+    broadcast::{channel, Receiver, Sender},
     RwLock,
 };
 

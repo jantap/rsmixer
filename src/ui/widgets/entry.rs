@@ -12,7 +12,7 @@ use std::{cmp::min, io::Write};
 
 use pulse::volume;
 
-use crossterm::{style::StyledContent, cursor::MoveTo, execute};
+use crossterm::{cursor::MoveTo, execute};
 
 impl<W: Write> Widget<W> for Entry {
     fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {

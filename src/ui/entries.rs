@@ -5,16 +5,14 @@ use std::collections::HashSet;
 pub async fn draw_entries<W: Write>(
     stdout: &mut W,
     state: &mut RSState,
+    area: Rect,
     affected: Option<HashSet<usize>>,
 ) -> Result<(), RSError> {
-    let (w, h) = crossterm::terminal::size()?;
-    let mut entry_size = Rect::new(2, 2, w - 4, 3);
 
-    let mut bg = entry_size;
-    bg.height = h - *Y_PADDING;
+    let mut entry_size = area.h(3);
 
     if affected.is_none() {
-        draw_rect!(stdout, " ", bg, get_style("normal"));
+        draw_rect!(stdout, " ", area, get_style("normal"));
     }
 
     for (i, lvl) in state.page_entries.visible_range_with_lvl(state.scroll) {

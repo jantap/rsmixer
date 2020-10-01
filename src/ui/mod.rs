@@ -1,5 +1,5 @@
 pub mod util;
-mod page;
+pub mod page;
 mod entries;
 mod common;
 mod help;
@@ -20,6 +20,14 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
     if w < 20 || h < 5 {
         return terminal_too_small(stdout).await;
     }
+
+    if state.redraw == RedrawType::Full {
+        let (w, h) = crossterm::terminal::size()?;
+
+        let area = state.ui_page.inner_area.clone();
+        state.ui_page.inner_area = area.w(w - area.x * 2).h(h - area.y * 2);
+    }
+
 
     if state.ui_mode == UIMode::Help && state.redraw != RedrawType::Help {
         return Ok(());
@@ -76,6 +84,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
             return draw_entries(
                 stdout,
                 state,
+                state.ui_page.inner_area,
                 Some(a),
             )
             .await;
@@ -84,6 +93,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
             return draw_entries(
                 stdout,
                 state,
+                state.ui_page.inner_area,
                 None,
             )
             .await;

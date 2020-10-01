@@ -42,6 +42,18 @@ impl Rect {
             height: 0,
         }
     }
+    pub fn x(&self, x: u16) -> Self {
+        Self::new(x, self.y, self.width, self.height)
+    }
+    pub fn y(&self, y: u16) -> Self {
+        Self::new(self.x, y, self.width, self.height)
+    }
+    pub fn w(&self, w: u16) -> Self {
+        Self::new(self.x, self.y, w, self.height)
+    }
+    pub fn h(&self, h: u16) -> Self {
+        Self::new(self.x, self.y, self.width, h)
+    }
 }
 
 

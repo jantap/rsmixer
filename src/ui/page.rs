@@ -4,6 +4,10 @@ use super::{
     draw_entries,
 };
 
+pub struct UIPage {
+    pub inner_area: Rect,
+}
+
 pub async fn draw_page<W: Write>(
     stdout: &mut W,
     state: &mut RSState,
@@ -18,6 +22,7 @@ pub async fn draw_page<W: Write>(
     draw_entries(
         stdout,
         state,
+        state.ui_page.inner_area,
         None,
     )
     .await?;

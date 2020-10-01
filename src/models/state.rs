@@ -1,6 +1,12 @@
 use super::{PageEntries, PageType, ContextMenuOption, RedrawType, UIMode};
 
-use crate::entry::Entries;
+use crate::{
+    entry::Entries,
+    ui::{
+        page::UIPage,
+        util::Rect,
+    },
+};
 
 pub struct RSState {
     pub current_page: PageType,
@@ -12,6 +18,7 @@ pub struct RSState {
     pub scroll: usize,
     pub redraw: RedrawType,
     pub ui_mode: UIMode,
+    pub ui_page: UIPage,
 }
 
 impl Default for RSState {
@@ -26,6 +33,9 @@ impl Default for RSState {
             scroll: 0,
             redraw: RedrawType::None,
             ui_mode: UIMode::Normal,
+            ui_page: UIPage {
+                inner_area: Rect::new(2, 2, 0, 0),
+            },
         }
     }
 }

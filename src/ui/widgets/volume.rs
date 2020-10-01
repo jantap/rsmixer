@@ -55,51 +55,28 @@ impl VolumeWidget {
         self.mute = mute;
         self
     }
+
+    fn get_segments(&self, width: u16) -> (u16, u16, u16) {
+        let third = (0.34 * (width - 2) as f32).floor() as u16;
+        let last = width - 2 - third * 2;
+
+        (third, third * 2, last)
+    }
 }
 
 impl<W: Write> Widget<W> for VolumeWidget {
     fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
-        // draw_rect!(buf, " ", area, get_style("normal"));
-        if self.border != VolumeWidgetBorder::None {
-            let ch1 = match self.border {
-                VolumeWidgetBorder::Single => "[",
-                VolumeWidgetBorder::Upper => "┌",
-                VolumeWidgetBorder::Lower => "└",
-                _ => "",
-            };
-            let ch2 = match self.border {
-                VolumeWidgetBorder::Single => "]",
-                VolumeWidgetBorder::Upper => "┐",
-                VolumeWidgetBorder::Lower => "┘",
-                _ => "",
-            };
-            draw_at!(buf, ch1, area.x, area.y, get_style("normal"));
-            draw_at!(
-                buf,
-                ch2,
-                area.x + area.width - 1,
-                area.y,
-                get_style("normal")
-            );
-        }
+        self.border.render(area, buf)?;
 
         let filled = (self.percent * (area.width - 2) as f32).floor() as u16;
-        let third = (0.34 * (area.width - 2) as f32).floor() as u16;
-        let last = area.width - 2 - third * 2;
-        let g_style = if self.mute {
-            get_style("muted")
+
+        let segments = self.get_segments(area.width);
+        let third = segments.0;
+
+        let styles = if self.mute { 
+            (get_style("muted"), get_style("muted"), get_style("muted"))
         } else {
-            get_style("green")
-        };
-        let o_style = if self.mute {
-            get_style("muted")
-        } else {
-            get_style("orange")
-        };
-        let r_style = if self.mute {
-            get_style("muted")
-        } else {
-            get_style("red")
+            (get_style("green"), get_style("orange"), get_style("red"))
         };
 
         if self.last_area != area {
@@ -109,20 +86,20 @@ impl<W: Write> Widget<W> for VolumeWidget {
 
             let s = format!(
                 "{}{}{}",
-                g_style.apply(format!(
+                styles.0.apply(format!(
                     "{}{}",
                     repeat_string!("▮", green_filled),
-                    repeat_string!("-", third - green_filled),
+                    repeat_string!("-", segments.0 - green_filled),
                 )),
-                o_style.apply(format!(
+                styles.1.apply(format!(
                     "{}{}",
                     repeat_string!("▮", orange_filled),
-                    repeat_string!("-", third - orange_filled),
+                    repeat_string!("-", segments.1 - orange_filled),
                 )),
-                r_style.apply(format!(
+                styles.2.apply(format!(
                     "{}{}",
                     repeat_string!("▮", red_filled),
-                    repeat_string!("-", last - red_filled),
+                    repeat_string!("-", segments.2 - red_filled),
                 ))
             );
             execute!(buf, MoveTo(area.x + 1, area.y))?;
@@ -149,9 +126,9 @@ impl<W: Write> Widget<W> for VolumeWidget {
 
             let s = format!(
                 "{}{}{}",
-                g_style.apply(repeat_string!(ch, g)),
-                o_style.apply(repeat_string!(ch, r)),
-                r_style.apply(repeat_string!(ch, o)),
+                styles.0.apply(repeat_string!(ch, g)),
+                styles.1.apply(repeat_string!(ch, r)),
+                styles.2.apply(repeat_string!(ch, o)),
             );
             execute!(
                 buf,
@@ -161,6 +138,37 @@ impl<W: Write> Widget<W> for VolumeWidget {
         }
 
         buf.flush()?;
+
+        Ok(())
+    }
+}
+
+impl<W: Write> Widget<W> for VolumeWidgetBorder {
+    fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+        if *self == VolumeWidgetBorder::None {
+            return Ok(());
+        }
+
+        let ch1 = match self {
+            VolumeWidgetBorder::Single => "[",
+            VolumeWidgetBorder::Upper => "┌",
+            VolumeWidgetBorder::Lower => "└",
+            _ => "",
+        };
+        let ch2 = match self {
+            VolumeWidgetBorder::Single => "]",
+            VolumeWidgetBorder::Upper => "┐",
+            VolumeWidgetBorder::Lower => "┘",
+            _ => "",
+        };
+        draw_at!(buf, ch1, area.x, area.y, get_style("normal"));
+        draw_at!(
+            buf,
+            ch2,
+            area.x + area.width - 1,
+            area.y,
+            get_style("normal")
+        );
 
         Ok(())
     }

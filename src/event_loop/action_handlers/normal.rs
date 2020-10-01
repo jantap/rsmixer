@@ -1,8 +1,18 @@
-use super::common::*;
+use super::{play_entries, common::*};
 
 use std::collections::HashSet;
 
 pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+    let mut redraw = normal_handler(msg, state).await;
+
+    if state.current_page != PageType::Cards {
+        play_entries::action_handler(msg, state).await.apply(&mut redraw);
+    }
+
+    redraw
+}
+
+async fn normal_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
         Letter::EntryUpdate(ident, _) => {
             if state.page_entries.iter_entries().any(|&i| i == ident) {

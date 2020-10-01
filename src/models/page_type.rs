@@ -53,6 +53,7 @@ impl PageType {
         entries: &'a Entries,
         ui_mode: &'a UIMode,
     ) -> Box<dyn Iterator<Item = (&EntryIdentifier, &Entry)> + 'a> {
+
         if *self == PageType::Cards {
             return Box::new(entries.iter_type(EntryType::Card));
         }

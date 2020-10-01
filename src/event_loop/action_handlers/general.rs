@@ -4,7 +4,6 @@ use std::ops::Deref;
 
 pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
-        Letter::ExitSignal => return RedrawType::Exit,
         Letter::Redraw => {
             return RedrawType::Full;
         }

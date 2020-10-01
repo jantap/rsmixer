@@ -11,7 +11,6 @@ pub enum RedrawType {
     PeakVolume(EntryIdentifier),
     ContextMenu,
     None,
-    Exit,
 }
 impl Eq for RedrawType {}
 
@@ -25,7 +24,6 @@ impl From<RedrawType> for u32 {
             RedrawType::PartialEntries(_) => 400,
             RedrawType::PeakVolume(_) => 100,
             RedrawType::None => 1,
-            RedrawType::Exit => 10000,
         }
     }
 }

@@ -46,7 +46,7 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                     state.ui_mode = UIMode::Normal;
                     return RedrawType::Full;
                 }
-                ContextMenuEffect::PresentParents => {
+                ContextMenuEffect::MoveEntry => {
                     let (parent_type, _) = parent_child_types(state.current_page);
                     let entry_ident = state.page_entries.get(state.selected).unwrap();
                     let entry_parent = EntryIdentifier::new(

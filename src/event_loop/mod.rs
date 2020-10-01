@@ -4,7 +4,7 @@ use action_handlers::*;
 
 use crate::{
     ui,
-    models::{RedrawType, UIMode, RSState, PageType},
+    models::{RedrawType, UIMode, RSState},
     Letter, RSError,
 };
 
@@ -23,22 +23,18 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
 
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw
-        state.redraw = RedrawType::None;
 
-        state.redraw = general::action_handler(&msg, &mut state).await;
-
-        if state.redraw == RedrawType::Exit {
+        if msg == Letter::ExitSignal {
             break;
         }
+
+        state.redraw = general::action_handler(&msg, &mut state).await;
 
         entries_updates::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
 
         match state.ui_mode {
             UIMode::Normal => {
                 normal::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
-                if state.current_page != PageType::Cards {
-                    play_entries::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
-                }
             }
             UIMode::ContextMenu => {
                 context_menu::action_handler(&msg, &mut state).await.apply(&mut state.redraw);

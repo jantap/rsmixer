@@ -53,13 +53,12 @@ impl From<ContextMenuOption> for String {
 
 pub enum ContextMenuEffect {
     None,
-    // NextOptions(Vec<ContextMenuOption>),
-    PresentParents,
+    MoveEntry,
 }
 
 pub async fn resolve(ident: EntryIdentifier, answer: ContextMenuOption) -> ContextMenuEffect {
     match answer {
-        ContextMenuOption::Move => ContextMenuEffect::PresentParents,
+        ContextMenuOption::Move => ContextMenuEffect::MoveEntry,
         ContextMenuOption::MoveToEntry(entry, _) => {
             DISPATCH
                 .event(Letter::MoveEntryToParent(ident, entry))

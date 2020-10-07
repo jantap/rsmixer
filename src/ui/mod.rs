@@ -21,12 +21,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
         return terminal_too_small(stdout).await;
     }
 
-    if state.redraw == RedrawType::Full {
-        let (w, h) = crossterm::terminal::size()?;
-
-        let area = state.ui_page.inner_area.clone();
-        state.ui_page.inner_area = area.w(w - area.x * 2).h(h - area.y * 2);
-    }
+    state.ui_page.inner_area = Rect::new(2, 2, w - 4, h - 4);
 
 
     if state.ui_mode == UIMode::Help && state.redraw != RedrawType::Help {

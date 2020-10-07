@@ -115,7 +115,7 @@ impl Entry {
         let short_name = self
             .name
             .chars()
-            .take(area1.width as usize - 2)
+            .take(if area1.width > 2 { area1.width as usize - 2 } else { 0 })
             .collect::<String>();
 
         execute!(buf, MoveTo(area1.x, area1.y))?;
@@ -191,7 +191,11 @@ impl Entry {
 
         area_a.y += 2;
         area_a.height = 1;
-        area_a.width -= 1;
+        if area_a.width > 1 {
+            area_a.width -= 1;
+        } else {
+            area_a.width = 0;
+        }
         play.peak_volume_bar.render(area_a, buf)?;
 
         buf.flush()?;

@@ -23,11 +23,18 @@ use tokio::{
 pub async fn run() -> Result<(), RSError> {
     let events = run_events().await;
 
+    task::spawn(events);
+
     let event_loop = run_event_loop().await;
     let input_loop = run_input_loop();
     let (pa, pa_async) = run_pa().await;
 
-    let r = tokio::try_join!(event_loop, input_loop, pa, pa_async, events);
+    let pa_async = task::spawn(pa_async);
+    let pa = task::spawn(pa);
+    let input_loop = task::spawn(input_loop);
+    let event_loop = task::spawn(event_loop);
+
+    let r = tokio::try_join!(input_loop, pa, pa_async, event_loop);
 
     DISPATCH.event(Letter::ExitSignal).await;
 
@@ -35,7 +42,7 @@ pub async fn run() -> Result<(), RSError> {
 
     match r {
         Ok(_) => Ok(()),
-        Err(err) => Err(err),
+        Err(err) => Ok(()),
     }
 }
 
@@ -77,15 +84,15 @@ async fn run_pa() -> (impl Future<Output=Result<(), RSError>>, impl Future<Outpu
     let (info_sx, info_rx) = mpsc::unbounded_channel();
     (*pa::INFO_SX).set(info_sx);
 
-    let pa = async move {
-        match task::spawn_blocking(move || pa::start(pa_rx)).await {
+    let pa_async = async move {
+        match task::spawn(async move { pa::start_async(pa_sx, info_rx).await }).await {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
         }
     };
 
-    let pa_async = async move {
-        match task::spawn(async move { pa::start_async(pa_sx, info_rx).await }).await {
+    let pa = async move {
+        match task::spawn_blocking(move || pa::start(pa_rx)).await {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
         }

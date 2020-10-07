@@ -36,17 +36,15 @@ pub fn subscribe(context: &Rc<RefCell<Context>>) -> Result<(), RSError> {
                 match operation {
                     Some(Operation::New) => {
                         info!("[PAInterface] New {:?}", entry_type);
-                        (*INFO_SX)
+                        let _ = (*INFO_SX)
                             .get()
-                            .send(EntryIdentifier::new(entry_type, index))
-                            .unwrap();
+                            .send(EntryIdentifier::new(entry_type, index));
                     }
                     Some(Operation::Changed) => {
                         info!("[PAInterface] {:?} changed", entry_type);
-                        (*INFO_SX)
+                        let _ = (*INFO_SX)
                             .get()
-                            .send(EntryIdentifier::new(entry_type, index))
-                            .unwrap();
+                            .send(EntryIdentifier::new(entry_type, index));
                     }
                     Some(Operation::Removed) => {
                         info!("[PAInterface] {:?} removed", entry_type);
@@ -70,46 +68,41 @@ pub fn request_current_state(context: Rc<RefCell<Context>>) -> Result<(), RSErro
 
     introspector.get_sink_info_list(|x: ListResult<&SinkInfo>| {
         if let ListResult::Item(e) = x {
-            (*INFO_SX)
+            let _ = (*INFO_SX)
                 .get()
-                .send(EntryIdentifier::new(EntryType::Sink, e.index))
-                .unwrap();
+                .send(EntryIdentifier::new(EntryType::Sink, e.index));
         }
     });
 
     introspector.get_sink_input_info_list(|x: ListResult<&SinkInputInfo>| {
         if let ListResult::Item(e) = x {
-            (*INFO_SX)
+            let _ = (*INFO_SX)
                 .get()
-                .send(EntryIdentifier::new(EntryType::SinkInput, e.index))
-                .unwrap();
+                .send(EntryIdentifier::new(EntryType::SinkInput, e.index));
         }
     });
 
     introspector.get_source_info_list(|x: ListResult<&SourceInfo>| {
         if let ListResult::Item(e) = x {
-            (*INFO_SX)
+            let _ = (*INFO_SX)
                 .get()
-                .send(EntryIdentifier::new(EntryType::Source, e.index))
-                .unwrap();
+                .send(EntryIdentifier::new(EntryType::Source, e.index));
         }
     });
 
     introspector.get_source_output_info_list(|x: ListResult<&SourceOutputInfo>| {
         if let ListResult::Item(e) = x {
-            (*INFO_SX)
+            let _ = (*INFO_SX)
                 .get()
-                .send(EntryIdentifier::new(EntryType::SourceOutput, e.index))
-                .unwrap();
+                .send(EntryIdentifier::new(EntryType::SourceOutput, e.index));
         }
     });
 
     introspector.get_card_info_list(|x: ListResult<&CardInfo>| {
         if let ListResult::Item(e) = x {
-            (*INFO_SX)
+            let _ = (*INFO_SX)
                 .get()
-                .send(EntryIdentifier::new(EntryType::Card, e.index))
-                .unwrap();
+                .send(EntryIdentifier::new(EntryType::Card, e.index));
         }
     });
 
@@ -267,10 +260,9 @@ pub fn on_sink_input_info(res: ListResult<&SinkInputInfo>) {
             }),
         };
         DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
-        (*INFO_SX)
+        let _ = (*INFO_SX)
             .get()
-            .send(EntryIdentifier::new(EntryType::Sink, i.sink))
-            .unwrap();
+            .send(EntryIdentifier::new(EntryType::Sink, i.sink));
     }
 }
 
@@ -341,9 +333,8 @@ pub fn on_source_output_info(res: ListResult<&SourceOutputInfo>) {
             }),
         };
         DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
-        (*INFO_SX)
+        let _ = (*INFO_SX)
             .get()
-            .send(EntryIdentifier::new(EntryType::Source, i.index))
-            .unwrap();
+            .send(EntryIdentifier::new(EntryType::Source, i.index));
     }
 }

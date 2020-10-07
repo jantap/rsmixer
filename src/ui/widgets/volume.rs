@@ -66,6 +66,9 @@ impl VolumeWidget {
 
 impl<W: Write> Widget<W> for VolumeWidget {
     fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+        if area.width < 2 {
+            return Ok(());
+        }
         self.border.render(area, buf)?;
 
         let filled = (self.percent * (area.width - 2) as f32).floor() as u16;
@@ -94,7 +97,7 @@ impl<W: Write> Widget<W> for VolumeWidget {
                 styles.1.apply(format!(
                     "{}{}",
                     repeat_string!("▮", orange_filled),
-                    repeat_string!("-", segments.1 - orange_filled),
+                    repeat_string!("-", segments.0 - orange_filled),
                 )),
                 styles.2.apply(format!(
                     "{}{}",

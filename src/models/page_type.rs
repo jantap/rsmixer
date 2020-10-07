@@ -2,7 +2,7 @@ use super::UIMode;
 
 use crate::{
     entry::{HiddenStatus, Entries, Entry, EntryIdentifier, EntryType},
-    ui::util::parent_child_types,
+    ui::util::{get_style, parent_child_types},
 };
 
 use std::{fmt::Display, iter};
@@ -47,6 +47,24 @@ impl PageType {
             PageType::Input => "Input",
             PageType::Cards => "Cards",
         }
+    }
+    pub fn as_styled_string(&self) -> String {
+        let styled_name = |pt: PageType| { 
+            if pt == *self {
+                get_style("bold").clone().apply(pt.as_str())
+            } else {
+                get_style("muted").clone().apply(pt.as_str())
+            }
+        };
+
+        let divider = get_style("muted").clone().apply(" / ");
+
+        format!("{}{}{}{}{}",
+                styled_name(PageType::Input),
+                divider.clone(),
+                styled_name(PageType::Output),
+                divider.clone(),
+                styled_name(PageType::Cards))
     }
     pub fn generate_page<'a>(
         &'a self,

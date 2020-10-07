@@ -88,7 +88,11 @@ impl Entry {
         };
 
         area.x += amount;
-        area.width -= amount;
+        if amount < area.width {
+            area.width -= amount;
+        }else{
+            area.width = 0;
+        }
 
         area
     }

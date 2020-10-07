@@ -88,7 +88,7 @@ fn main() -> Result<(), RSError> {
         .build()?;
     threaded_rt.block_on(async {
         if let Err(err) = launch().await {
-            eprintln!("{}", err);
+            eprintln!("{:#}", err);
         }
     });
 

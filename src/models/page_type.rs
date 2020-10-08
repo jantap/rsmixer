@@ -51,7 +51,7 @@ impl PageType {
     pub fn as_styled_string(&self) -> String {
         let styled_name = |pt: PageType| { 
             if pt == *self {
-                get_style("bold").clone().apply(pt.as_str())
+                get_style("normal.bold").clone().apply(pt.as_str())
             } else {
                 get_style("muted").clone().apply(pt.as_str())
             }
@@ -60,9 +60,9 @@ impl PageType {
         let divider = get_style("muted").clone().apply(" / ");
 
         format!("{}{}{}{}{}",
-                styled_name(PageType::Input),
-                divider.clone(),
                 styled_name(PageType::Output),
+                divider.clone(),
+                styled_name(PageType::Input),
                 divider.clone(),
                 styled_name(PageType::Cards))
     }

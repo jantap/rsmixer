@@ -13,6 +13,7 @@ use crossterm::{cursor::MoveTo, execute};
 #[derive(Clone)]
 pub struct BlockWidget {
     pub title: String,
+    pub title_len: u16,
     pub clean_inside: bool,
 }
 
@@ -20,12 +21,18 @@ impl BlockWidget {
     pub fn default() -> Self {
         Self {
             title: String::from(""),
+            title_len: 0,
             clean_inside: false,
         }
     }
 
     pub fn title(mut self, title: String) -> Self {
         self.title = title;
+        self
+    }
+
+    pub fn title_len(mut self, len: u16) -> Self {
+        self.title_len = len;
         self
     }
 
@@ -41,13 +48,15 @@ impl<W: Write> Widget<W> for BlockWidget {
             return Err(RSError::TerminalTooSmall);
         }
 
-        let top = if (area.width as usize) < 2 + self.title.len() {
+        let l = if self.title_len > 0 { self.title_len } else { self.title.len() as u16 };
+
+        let top = if area.width < 2 + l {
             (&self.title[0..area.width as usize - 2]).to_string()
         } else {
             format!(
                 "{}{}",
                 self.title,
-                repeat_string!("─", area.width - 2 - self.title.len() as u16)
+                get_style("normal").clone().apply(repeat_string!("─", area.width - 2 - l))
             )
         };
 

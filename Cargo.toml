@@ -16,23 +16,34 @@ default = ["libpulse_latest"]
 libpulse8 = ["libpulse-binding/pa_v8"]
 libpulse_latest = ["libpulse-binding/pa_latest"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-libpulse-binding = { version = "2.16.0", default-features = false }
+
+# logging
+log = "0.4.8"
 simple-logging = "2.0.2"
 env_logger = "0.7.1"
-log = "0.4.8"
+
+# general
+linked-hash-map = { version = "0.5.3", features = ["serde_impl"] }
 lazy_static = "1.4.0"
 unicode-width = "0.1.8"
-crossterm = { version = "0.17.5", features = ["serde", "event-stream"] }
-tokio = { version = "0.2.21", features = ["full"] }
 state = { version = "0.4.1", features = ["tls"] }
-toml = "0.5.6"
-thiserror = "1.0.20"
-futures = "0.3.5"
-send_wrapper = "0.4.0"
+crossterm = { version = "0.17.5", features = ["serde", "event-stream"] }
 crossbeam-channel = "0.4.2"
-confy = "0.4.0"
+
+# error handling
+thiserror = "1.0.20"
+anyhow = "1.0.35"
+
+# config and cli options
 serde = { version = "1.0.114", features = ["derive"] }
+toml = "0.5.6"
+confy = "0.4.0"
 gumdrop = "0.8.0"
+
+# async
+tokio = { version = "0.2.21", features = ["full"] }
+futures = "0.3.5"
+
+# pulseaudio
+libpulse-binding = { version = "2.16.0", default-features = false }

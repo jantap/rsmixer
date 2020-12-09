@@ -19,8 +19,6 @@ pub use models::Letter;
 use config::RsMixerConfig;
 use events::{Dispatch, Message, Senders};
 
-use std::collections::HashMap;
-
 use tokio::runtime;
 
 use crossterm::{event::KeyEvent, style::ContentStyle};
@@ -33,14 +31,16 @@ use state::Storage;
 
 use gumdrop::Options;
 
+use linked_hash_map::LinkedHashMap;
+
 lazy_static! {
     pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
     pub static ref SENDERS: Senders<Letter> = Senders::default();
     pub static ref STYLES: Storage<Styles> = Storage::new();
-    pub static ref BINDINGS: Storage<HashMap<KeyEvent, Letter>> = Storage::new();
+    pub static ref BINDINGS: Storage<LinkedHashMap<KeyEvent, Letter>> = Storage::new();
 }
 
-pub type Styles = HashMap<String, ContentStyle>;
+pub type Styles = LinkedHashMap<String, ContentStyle>;
 
 #[derive(Debug, Options)]
 struct CliOptions {

@@ -33,7 +33,6 @@ crossbeam-channel = "0.4.2"
 
 # error handling
 thiserror = "1.0.20"
-anyhow = "1.0.35"
 
 # config and cli options
 serde = { version = "1.0.114", features = ["derive"] }

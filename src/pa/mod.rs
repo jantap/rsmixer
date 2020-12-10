@@ -24,7 +24,6 @@ pub enum PAInternal {
 }
 
 lazy_static! {
-    pub static ref INFO_SX: Storage<mpsc::UnboundedSender<EntryIdentifier>> = Storage::new();
     pub static ref SPEC: pulse::sample::Spec = pulse::sample::Spec {
         format: pulse::sample::SAMPLE_FLOAT32,
         channels: 1,

@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use pulse::proplist::Proplist;
 
-pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSError> {
+pub fn start(internal_rx: cb_channel::Receiver<PAInternal>, info_sx: mpsc::UnboundedSender<EntryIdentifier>) -> Result<(), RSError> {
     // Create new mainloop and context
     let mut proplist = Proplist::new().unwrap();
     proplist
@@ -102,8 +102,8 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
 
     context.borrow_mut().set_state_callback(None);
 
-    callbacks::subscribe(&context)?;
-    callbacks::request_current_state(Rc::clone(&context))?;
+    callbacks::subscribe(&context, info_sx.clone())?;
+    callbacks::request_current_state(Rc::clone(&context), info_sx.clone())?;
 
     mainloop.borrow_mut().unlock();
 
@@ -116,7 +116,7 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>) -> Result<(), RSErro
         mainloop.borrow_mut().lock();
         match msg {
             PAInternal::AskInfo(ident) => {
-                callbacks::request_info(ident, &context);
+                callbacks::request_info(ident, &context, info_sx.clone());
             }
             PAInternal::Tick => {
                 // remove failed monitors

@@ -69,29 +69,29 @@ fn move_entry_to_parent(
 ) {
     let mut introspector = context.borrow_mut().introspect();
 
-    match ident.entry_type {
-        EntryType::SinkInput => {
-            introspector.move_sink_input_by_index(
-                ident.index,
-                parent.index,
-                Some(Box::new(move |_| {
-                    (*INFO_SX).get().send(parent).unwrap();
-                    (*INFO_SX).get().send(ident).unwrap();
-                })),
-            );
-        }
-        EntryType::SourceOutput => {
-            introspector.move_source_output_by_index(
-                ident.index,
-                parent.index,
-                Some(Box::new(move |_| {
-                    (*INFO_SX).get().send(parent).unwrap();
-                    (*INFO_SX).get().send(ident).unwrap();
-                })),
-            );
-        }
-        _ => {}
-    };
+    // match ident.entry_type {
+    //     EntryType::SinkInput => {
+    //         introspector.move_sink_input_by_index(
+    //             ident.index,
+    //             parent.index,
+    //             Some(Box::new(move |_| {
+    //                 (*INFO_SX).get().send(parent).unwrap();
+    //                 (*INFO_SX).get().send(ident).unwrap();
+    //             })),
+    //         );
+    //     }
+    //     EntryType::SourceOutput => {
+    //         introspector.move_source_output_by_index(
+    //             ident.index,
+    //             parent.index,
+    //             Some(Box::new(move |_| {
+    //                 (*INFO_SX).get().send(parent).unwrap();
+    //                 (*INFO_SX).get().send(ident).unwrap();
+    //             })),
+    //         );
+    //     }
+    //     _ => {}
+    // };
 }
 
 fn set_suspend(ident: EntryIdentifier, suspend: bool, context: &Rc<RefCell<Context>>) {

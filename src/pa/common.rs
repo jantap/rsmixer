@@ -1,4 +1,4 @@
-pub use super::{monitor::Monitors, PAInternal, INFO_SX, SPEC};
+pub use super::{monitor::Monitors, PAInternal, SPEC};
 
 pub use crate::{
     entry::{EntryIdentifier, EntryType},
@@ -6,6 +6,8 @@ pub use crate::{
 };
 
 pub use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
+pub use tokio::sync::mpsc;
 
 pub use pulse::stream::Stream;
 pub use pulse::{

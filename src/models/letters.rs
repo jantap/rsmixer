@@ -27,6 +27,7 @@ messages!(Letter,
     CyclePages(i8) => MAIN_MESSAGE,
     ShowHelp => MAIN_MESSAGE,
     Hide => MAIN_MESSAGE,
+    PADisconnected => MAIN_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,
@@ -35,4 +36,5 @@ messages!(Letter,
     CreateMonitors(HashMap<EntryIdentifier, Option<u32>>) => PA_MESSAGE,
     SetSuspend(EntryIdentifier, bool) => PA_MESSAGE,
     KillEntry(EntryIdentifier) => PA_MESSAGE,
+    PADisconnected2 => PA_MESSAGE,
 );

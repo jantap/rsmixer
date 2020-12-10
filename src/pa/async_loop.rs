@@ -28,14 +28,17 @@ pub async fn start_async(
     loop {
         let res = command_receiver.next();
         let info = info_rx.next();
-        let inter = interval.next();
+        let timeout = interval.next();
 
         tokio::select! {
             r = res => {
                 if let Some(Ok(cmd)) = r {
-                    if cmd == Letter::ExitSignal {
-                        break;
-                    }
+                    match cmd {
+                        Letter::ExitSignal => {
+                            break;
+                        }
+                        _ => {}
+                    };
                     internal_sx.send(PAInternal::Command(Box::new(cmd)))?;
                 }
             }
@@ -44,7 +47,7 @@ pub async fn start_async(
                     send(&internal_sx, PAInternal::AskInfo(ident))?;
                 }
             }
-            _ = inter => {
+            _ = timeout => {
                 send(&internal_sx, PAInternal::Tick)?;
             }
         };

@@ -24,6 +24,7 @@ pub enum RSError {
     StreamCreateError,
     ChannelError(cb_channel::SendError<PAInternal>),
     NoEntryError,
+    PulseAudioDisconnected,
 }
 
 impl Error for RSError {}
@@ -41,6 +42,7 @@ impl fmt::Display for RSError {
             Self::MainloopCreateError => write!(f, "Error while creating context and mainloop"),
             Self::MainloopConnectError => write!(f, "Error while connecting to pulseaudio"),
             Self::StreamCreateError => write!(f, "Error while creating monitor stream"),
+            Self::PulseAudioDisconnected => write!(f, "PulseAudio disconnected"),
             Self::ChannelError(_) => write!(
                 f,
                 "Error in internal communication between pulseaudio threads"

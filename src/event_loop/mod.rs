@@ -6,7 +6,10 @@ use crate::{
     ui,
     models::{RedrawType, UIMode, RSState},
     Letter, RSError,
+    DISPATCH,
 };
+
+use std::collections::HashMap;
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
@@ -29,6 +32,7 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
         }
 
         if msg == Letter::PADisconnected {
+            DISPATCH.event(Letter::CreateMonitors(HashMap::new())).await;
             state = RSState::default();
             state.redraw = RedrawType::Full;
         }

@@ -1,5 +1,7 @@
 use super::common::*;
 
+use crate::DISPATCH;
+
 use std::convert::TryInto;
 
 use pulse::stream::PeekResult;
@@ -9,11 +11,14 @@ pub struct Monitor {
     exit_sender: cb_channel::Sender<u32>,
 }
 
-pub struct Monitors(HashMap<EntryIdentifier, Monitor>);
+pub struct Monitors {
+    monitors: HashMap<EntryIdentifier, Monitor>,
+    errors: HashMap<EntryIdentifier, usize>,
+}
 
 impl Default for Monitors {
     fn default() -> Self {
-        Self { 0: HashMap::new() }
+        Self { monitors: HashMap::new(), errors: HashMap::new() }
     }
 }
 
@@ -26,7 +31,7 @@ impl Monitors {
     ) {
         // remove failed streams
         // then send exit signal if stream is unwanted
-        self.0.retain(|ident, monitor| {
+        self.monitors.retain(|ident, monitor| {
             match monitor.stream.borrow_mut().get_state() {
                 pulse::stream::State::Terminated | pulse::stream::State::Failed => {
                     info!(
@@ -46,7 +51,7 @@ impl Monitors {
         });
 
         targets.iter().for_each(|(ident, monitor_src)| {
-            if self.0.get(ident).is_none() {
+            if self.monitors.get(ident).is_none() {
                 self.create_monitor(mainloop, context, *ident, *monitor_src);
             }
         });
@@ -59,19 +64,36 @@ impl Monitors {
         ident: EntryIdentifier,
         monitor_src: Option<u32>,
     ) {
-        if self.0.contains_key(&ident) {
+        if let Some(count) = self.errors.get(&ident) {
+            if *count >= 5 {
+                self.errors.remove(&ident);
+                DISPATCH.sync_event(Letter::EntryRemoved(ident));
+            }
+        }
+        if self.monitors.contains_key(&ident) {
             return;
         }
         let (sx, rx) = cb_channel::unbounded();
         if let Ok(stream) = create(&mainloop, &context, &*SPEC, ident, monitor_src, rx) {
-            self.0.insert(
+            self.monitors.insert(
                 ident,
                 Monitor {
                     stream,
                     exit_sender: sx,
                 },
             );
+            self.errors.remove(&ident);
+        } else {
+            self.error(&ident);
         }
+    }
+
+    fn error(&mut self, ident:&EntryIdentifier) {
+        let count = match self.errors.get(&ident) {
+            Some(x) => *x,
+            None => 0,
+        };
+        self.errors.insert(*ident, count + 1);
     }
 }
 

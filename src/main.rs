@@ -16,7 +16,7 @@ mod ui;
 pub use errors::RSError;
 pub use models::Letter;
 
-use config::RsMixerConfig;
+use config::{Variables, RsMixerConfig, VarType};
 use events::{Dispatch, Message, Senders};
 
 use tokio::runtime;
@@ -37,6 +37,7 @@ lazy_static! {
     pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
     pub static ref SENDERS: Senders<Letter> = Senders::default();
     pub static ref STYLES: Storage<Styles> = Storage::new();
+    pub static ref VARIABLES: Storage<Variables> = Storage::new();
     pub static ref BINDINGS: Storage<LinkedHashMap<KeyEvent, Letter>> = Storage::new();
 }
 
@@ -71,12 +72,13 @@ async fn launch() -> Result<(), RSError> {
         simple_logging::log_to_file(file, lvl).unwrap();
     }
 
-    let config: RsMixerConfig = confy::load("rsmixer")?;
+    let config = RsMixerConfig::load()?;
 
-    let (styles, bindings) = config.load()?;
+    let (styles, bindings, variables) = config.interpret()?;
 
     STYLES.set(styles);
     BINDINGS.set(bindings);
+    VARIABLES.set(variables);
 
     run::run().await
 }

@@ -101,6 +101,22 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>, info_sx: mpsc::Unbou
     debug!("[PAInterface] Context ready");
 
     context.borrow_mut().set_state_callback(None);
+    // {
+    //     debug!("[PAInterface] Registering state change callback");
+    //     let ml_ref = Rc::clone(&mainloop);
+    //     let context_ref = Rc::clone(&context);
+    //     context
+    //         .borrow_mut()
+    //         .set_state_callback(Some(Box::new(move || {
+    //             let state = unsafe { (*context_ref.as_ptr()).get_state() };
+    //             match state {
+    //                 pulse::context::State::Failed
+    //                 | pulse::context::State::Terminated => {
+    //                 }
+    //                 _ => {}
+    //             }
+    //         })));
+    // }
 
     callbacks::subscribe(&context, info_sx.clone())?;
     callbacks::request_current_state(Rc::clone(&context), info_sx.clone())?;
@@ -114,6 +130,15 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>, info_sx: mpsc::Unbou
 
     while let Ok(msg) = internal_rx.recv() {
         mainloop.borrow_mut().lock();
+
+        match context.borrow_mut().get_state() {
+            pulse::context::State::Ready => {},
+            _ => {
+                mainloop.borrow_mut().unlock();
+                return Err(RSError::PulseAudioDisconnected);
+            },
+        }
+
         match msg {
             PAInternal::AskInfo(ident) => {
                 callbacks::request_info(ident, &context, info_sx.clone());

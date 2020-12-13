@@ -1,6 +1,9 @@
 pub mod keys;
 mod letters;
 mod colors;
+mod variables;
+
+pub use variables::{VarType, Variables};
 
 use crate::{
     Letter, RSError, Styles,
@@ -21,10 +24,17 @@ use serde::{Deserialize, Serialize};
 pub struct RsMixerConfig {
     bindings: LinkedHashMap<String, String>,
     colors: LinkedHashMap<String, LinkedHashMap<String, String>>,
+    pa_retry_time: Option<u64>,
 }
 
 impl RsMixerConfig {
-    pub fn load(&self) -> Result<(Styles, LinkedHashMap<KeyEvent, Letter>), RSError> {
+
+    pub fn load() -> Result<Self, RSError> {
+        let config: RsMixerConfig = confy::load("rsmixer")?;
+        Ok(config)
+    }
+
+    pub fn interpret(&self) -> Result<(Styles, LinkedHashMap<KeyEvent, Letter>, Variables), RSError> {
         let mut bindings: LinkedHashMap<KeyEvent, Letter> = LinkedHashMap::new();
 
         for (k, c) in &self.bindings {
@@ -56,7 +66,7 @@ impl RsMixerConfig {
             styles.insert(k.clone(), c);
         }
 
-        Ok((styles, bindings))
+        Ok((styles, bindings, Variables::new(self)))
     }
 }
 
@@ -111,6 +121,7 @@ impl std::default::Default for RsMixerConfig {
         Self {
             bindings,
             colors: styles,
+            pa_retry_time: None,
         }
     }
 }

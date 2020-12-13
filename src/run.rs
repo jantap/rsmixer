@@ -7,6 +7,7 @@ use crate::{
     Letter,
     pa,
     events, input, SENDERS,
+    VARIABLES, VarType,
 };
 
 use std::future::Future;
@@ -33,21 +34,16 @@ pub async fn run() -> Result<(), RSError> {
     let input_loop = task::spawn(input_loop);
     let event_loop = task::spawn(event_loop);
 
-    let r = tokio::select! {
-        res = input_loop => log::error!("KURWA SELECT1 {:?}", res), 
-        res = pa => log::error!("KURWA SELECT2 {:?}", res), 
-        res = event_loop => log::error!("KURWA SELECT3 {:?}", res), 
-    };
+    let r = tokio::try_join!(input_loop, pa, event_loop);
 
     DISPATCH.event(Letter::ExitSignal).await;
 
     ui::clean_terminal()?;
 
-    Ok(())
-    // match r {
-    //     Ok(_) => Ok(()),
-    //     Err(err) => Ok(()),
-    // }
+    match r {
+        Ok(_) => Ok(()),
+        Err(err) => Ok(()),
+    }
 }
 
 async fn run_events() -> impl Future<Output=Result<(), RSError>> {
@@ -58,9 +54,7 @@ async fn run_events() -> impl Future<Output=Result<(), RSError>> {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
         };
-        log::error!("ENDENDEND events loop end");
         r
-        
     }
 }
 
@@ -73,7 +67,6 @@ async fn run_event_loop() -> impl Future<Output=Result<(), RSError>> {
             Ok(r) => r,
             Err(e) => Err(RSError::TaskHandleError(e)),
         };
-        log::error!("ENDENDEND eventslooploooplopy loop end");
         r
     }
 }
@@ -84,15 +77,12 @@ fn run_input_loop() -> impl Future<Output=Result<(), RSError>> {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
         };
-        log::error!("ENDENDEND input loop end");
         r
     }
 }
 async fn run_pa() -> impl Future<Output=Result<(), RSError>> {
     async move {
         let r = run_pa_internal().await;
-        
-        log::error!("ENDENDEND papapa");
         r
     }
 }
@@ -111,24 +101,28 @@ async fn run_pa_internal() -> Result<(), RSError> {
                 Ok(r) => r,
                 Err(e) => { return Err(RSError::TaskHandleError(e)); },
             },
-            res = sync_pa => match res {
-                Ok(r) => r,
-                Err(e) => { return Err(RSError::TaskHandleError(e)); },
+            res = sync_pa => {
+                match res {
+                    Ok(r) => r,
+                    Err(e) => { return Err(RSError::TaskHandleError(e)); },
+                }
             },
         };
 
-        log::error!("BROKEN DOWN {:?}", result);
 
         match result {
             Ok(value) => { break; },
             Err(_) => {} // retry
         }
+        log::error!("BROKEN CONNECTIONDSADASDSA");
+
 
 
         DISPATCH.event(Letter::PADisconnected).await;
         DISPATCH.event(Letter::PADisconnected2).await;
 
-        tokio::time::delay_for(std::time::Duration::from_secs(5)).await;
+        tokio::time::delay_for(std::time::Duration::from_millis((*VARIABLES).get().pa_retry_time)).await;
+        log::error!("RETRY CONNECTIONDSADASDSA");
     }
 
     Ok::<(), RSError>(())

@@ -22,6 +22,7 @@ impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
     }
 
     pub async fn event(&self, ev: T) {
+        log::debug!("EVENT {:?}", ev);
         if let Some(s) = self.0.read().await.as_ref() {
             if let Err(e) = s.send(ev.clone()) {
                 log::error!("{:#?}", e);
@@ -30,6 +31,7 @@ impl<T: Send + Message + Clone + std::fmt::Debug + 'static> Dispatch<T> {
     }
 
     pub fn sync_event(&self, ev: T) {
+        log::debug!("SYNCEVENT {:?}", ev);
         if let Some(s) = self.1.try_get() {
             if let Err(e) = s.send(ev) {
                 log::error!("{:#?}", e);

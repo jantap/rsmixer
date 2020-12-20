@@ -170,7 +170,7 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
                             Some(s) => s.to_string(),
                             None => n.to_string(),
                         },
-                        #[cfg(any(feature = "libpulse_latest", feature = "libpulse8"))]
+                        #[cfg(any(feature = "pa_v13"))]
                         available: p.available,
                     })
                 } else {

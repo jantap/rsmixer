@@ -88,6 +88,7 @@ async fn run_pa() -> impl Future<Output=Result<(), RSError>> {
 }
 
 async fn run_pa_internal() -> Result<(), RSError> {
+    let retry_time = (*VARIABLES).get().pa_retry_time;
     loop {
         let (pa_sx, pa_rx) = cb_channel::unbounded();
         let (info_sx, info_rx) = mpsc::unbounded_channel();
@@ -114,15 +115,16 @@ async fn run_pa_internal() -> Result<(), RSError> {
             Ok(value) => { break; },
             Err(_) => {} // retry
         }
-        log::error!("BROKEN CONNECTIONDSADASDSA");
 
 
 
         DISPATCH.event(Letter::PADisconnected).await;
         DISPATCH.event(Letter::PADisconnected2).await;
 
-        tokio::time::delay_for(std::time::Duration::from_millis((*VARIABLES).get().pa_retry_time)).await;
-        log::error!("RETRY CONNECTIONDSADASDSA");
+        for i in 0..retry_time {
+            DISPATCH.event(Letter::RetryIn(retry_time - i)).await;
+            tokio::time::delay_for(std::time::Duration::from_secs(1)).await;
+        }
     }
 
     Ok::<(), RSError>(())

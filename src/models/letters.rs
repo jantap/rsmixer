@@ -28,6 +28,7 @@ messages!(Letter,
     ShowHelp => MAIN_MESSAGE,
     Hide => MAIN_MESSAGE,
     PADisconnected => MAIN_MESSAGE,
+    RetryIn(u64) => MAIN_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,

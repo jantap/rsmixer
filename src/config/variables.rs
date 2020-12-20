@@ -17,7 +17,7 @@ impl Variables {
         Self {
             pa_retry_time: match config.pa_retry_time {
                 Some(x) => x,
-                None => 5000,
+                None => 5,
             }
         }
     }

@@ -37,6 +37,11 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
             state.redraw = RedrawType::Full;
         }
 
+        if let Letter::RetryIn(time) = msg {
+            state.redraw = RedrawType::Full;
+            state.ui_mode = UIMode::RetryIn(time);
+        }
+
         state.redraw = general::action_handler(&msg, &mut state).await;
 
         entries_updates::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
@@ -56,6 +61,7 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
             UIMode::MoveEntry(_, _) => {
                move_entry::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
             }
+            _ => {}
         };
 
         scroll::scroll_handler(&msg, &mut state).await?.apply(&mut state.redraw);

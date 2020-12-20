@@ -81,4 +81,3 @@ impl RedrawType {
         }
     }
 }
-

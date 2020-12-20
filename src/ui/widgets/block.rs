@@ -48,7 +48,11 @@ impl<W: Write> Widget<W> for BlockWidget {
             return Err(RSError::TerminalTooSmall);
         }
 
-        let l = if self.title_len > 0 { self.title_len } else { self.title.len() as u16 };
+        let l = if self.title_len > 0 {
+            self.title_len
+        } else {
+            self.title.len() as u16
+        };
 
         let top = if area.width < 2 + l {
             (&self.title[0..area.width as usize - 2]).to_string()
@@ -56,7 +60,7 @@ impl<W: Write> Widget<W> for BlockWidget {
             format!(
                 "{}{}",
                 self.title,
-                get_style("normal").clone().apply(repeat_string!("─", area.width - 2 - l))
+                get_style("normal").apply(repeat_string!("─", area.width - 2 - l))
             )
         };
 

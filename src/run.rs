@@ -1,25 +1,14 @@
 use crate::{
-    events::EventsManager,
-    event_loop::event_loop,
-    ui,
-    RSError,
-    DISPATCH,
-    Letter,
-    pa,
-    events, input, SENDERS,
-    VARIABLES, VarType,
+    event_loop::event_loop, events, events::EventsManager, input, pa, ui, Letter, RSError,
+    DISPATCH, SENDERS, VARIABLES,
 };
 
 use std::future::Future;
 
 use tokio::{
-    sync::{
-        mpsc,
-        broadcast::channel,
-    },
+    sync::{broadcast::channel, mpsc},
     task,
 };
-
 
 pub async fn run() -> Result<(), RSError> {
     let events = run_events().await;
@@ -42,49 +31,41 @@ pub async fn run() -> Result<(), RSError> {
 
     match r {
         Ok(_) => Ok(()),
-        Err(err) => Ok(()),
+        Err(_) => Ok(()),
     }
 }
 
-async fn run_events() -> impl Future<Output=Result<(), RSError>> {
+async fn run_events() -> impl Future<Output = Result<(), RSError>> {
     let ev_manager = EventsManager::prepare(&DISPATCH).await;
 
-    async move { 
-        let r = match task::spawn(events::start(ev_manager, SENDERS.clone())).await {
+    async move {
+        match task::spawn(events::start(ev_manager, SENDERS.clone())).await {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
-        };
-        r
+        }
     }
 }
 
-async fn run_event_loop() -> impl Future<Output=Result<(), RSError>> {
+async fn run_event_loop() -> impl Future<Output = Result<(), RSError>> {
     let (sx, rx) = channel(events::CHANNEL_CAPACITY);
     SENDERS.register(events::MAIN_MESSAGE, sx).await;
 
     async move {
-        let r = match task::spawn(event_loop(rx)).await {
+        match task::spawn(event_loop(rx)).await {
             Ok(r) => r,
             Err(e) => Err(RSError::TaskHandleError(e)),
-        };
-        r
+        }
     }
 }
 
-fn run_input_loop() -> impl Future<Output=Result<(), RSError>> {
-    async move {
-        let r = match task::spawn(input::start()).await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(RSError::TaskHandleError(e)),
-        };
-        r
+async fn run_input_loop() -> Result<(), RSError> {
+    match task::spawn(input::start()).await {
+        Ok(_) => Ok(()),
+        Err(e) => Err(RSError::TaskHandleError(e)),
     }
 }
-async fn run_pa() -> impl Future<Output=Result<(), RSError>> {
-    async move {
-        let r = run_pa_internal().await;
-        r
-    }
+async fn run_pa() -> impl Future<Output = Result<(), RSError>> {
+    async move { run_pa_internal().await }
 }
 
 async fn run_pa_internal() -> Result<(), RSError> {
@@ -92,7 +73,6 @@ async fn run_pa_internal() -> Result<(), RSError> {
     loop {
         let (pa_sx, pa_rx) = cb_channel::unbounded();
         let (info_sx, info_rx) = mpsc::unbounded_channel();
-
 
         let async_pa = task::spawn(async move { pa::start_async(pa_sx.clone(), info_rx).await });
         let sync_pa = task::spawn_blocking(move || pa::start(pa_rx, info_sx));
@@ -110,13 +90,9 @@ async fn run_pa_internal() -> Result<(), RSError> {
             },
         };
 
-
-        match result {
-            Ok(value) => { break; },
-            Err(_) => {} // retry
+        if result.is_ok() {
+            break;
         }
-
-
 
         DISPATCH.event(Letter::PADisconnected).await;
         DISPATCH.event(Letter::PADisconnected2).await;

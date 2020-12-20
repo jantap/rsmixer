@@ -1,15 +1,14 @@
 use crate::{
     entry::{EntrySpaceLvl, EntryType},
     models::PageType,
-    STYLES,
-    RSError,
+    RSError, STYLES,
 };
 
 use crossterm::style::{Attribute, ContentStyle};
 
 use lazy_static::lazy_static;
 
-use std::{io::Write, io};
+use std::{io, io::Write};
 
 use crossterm::{cursor::Hide, execute};
 
@@ -55,7 +54,6 @@ impl Rect {
         Self::new(self.x, self.y, self.width, h)
     }
 }
-
 
 pub fn get_style(name: &'static str) -> ContentStyle {
     let mut n = name.to_string();
@@ -115,7 +113,6 @@ pub fn clean_terminal() -> Result<(), RSError> {
 
     Ok(())
 }
-
 
 pub async fn terminal_too_small<W: Write>(stdout: &mut W) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;

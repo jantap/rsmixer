@@ -1,13 +1,19 @@
 use super::common::*;
 
-use crate::{entry::{EntryIdentifier, HiddenStatus}, ui::util::parent_child_types};
+use crate::{
+    entry::{EntryIdentifier, HiddenStatus},
+    ui::util::parent_child_types,
+};
 
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 
 pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     // we only need to update page entries if entries changed
     match msg {
-        Letter::Redraw | Letter::EntryRemoved(_) | Letter::EntryUpdate(_, _) | Letter::ChangePage(_) => {}
+        Letter::Redraw
+        | Letter::EntryRemoved(_)
+        | Letter::EntryUpdate(_, _)
+        | Letter::ChangePage(_) => {}
 
         Letter::Hide => {
             if let Some(selected) = state.page_entries.get(state.selected) {
@@ -24,7 +30,9 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     let (p, c) = parent_child_types(state.current_page);
 
     let mut parents = HashSet::new();
-    state.entries.iter_type(c).for_each(|(_, e)| {parents.insert(e.parent);});
+    state.entries.iter_type(c).for_each(|(_, e)| {
+        parents.insert(e.parent);
+    });
 
     for (_, p_e) in state.entries.iter_type_mut(p) {
         p_e.hidden = match parents.get(&Some(p_e.index)) {
@@ -44,11 +52,7 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
 
     match state.ui_mode {
         UIMode::MoveEntry(ident, _) => {
-            if let Some(i) = state
-                .page_entries
-                .iter_entries()
-                .position(|&x| x == ident)
-            {
+            if let Some(i) = state.page_entries.iter_entries().position(|&x| x == ident) {
                 state.selected = i;
             }
         }

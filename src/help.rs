@@ -91,10 +91,7 @@ pub fn generate() -> Vec<HelpLine> {
     help_lines
 }
 
-pub fn help_lines_to_strings(
-    hls: &Vec<HelpLine>,
-    width: u16,
-) -> Result<(u16, Vec<String>), RSError> {
+pub fn help_lines_to_strings(hls: &[HelpLine], width: u16) -> Result<(u16, Vec<String>), RSError> {
     let mut lines = Vec::new();
 
     let longest_name = hls.iter().map(|hl| hl.category.len()).max().unwrap();
@@ -102,7 +99,7 @@ pub fn help_lines_to_strings(
         .iter()
         .map(|hl| {
             let mut c = 0;
-            if hl.key_events.len() > 0 {
+            if !hl.key_events.is_empty() {
                 c += hl.key_events[0].len();
             }
             if hl.key_events.len() > 1 {

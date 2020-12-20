@@ -1,4 +1,4 @@
-use super::{play_entries, common::*};
+use super::{common::*, play_entries};
 
 use std::collections::HashSet;
 
@@ -6,7 +6,9 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     let mut redraw = normal_handler(msg, state).await;
 
     if state.current_page != PageType::Cards {
-        play_entries::action_handler(msg, state).await.apply(&mut redraw);
+        play_entries::action_handler(msg, state)
+            .await
+            .apply(&mut redraw);
     }
 
     redraw

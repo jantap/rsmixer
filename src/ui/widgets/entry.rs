@@ -1,6 +1,6 @@
 use crate::{
     draw_at,
-    entry::{HiddenStatus, Entry, EntrySpaceLvl, EntryType},
+    entry::{Entry, EntrySpaceLvl, EntryType, HiddenStatus},
     ui::{
         util::{get_style, Rect},
         widgets::{VolumeWidgetBorder, Widget},
@@ -115,7 +115,11 @@ impl Entry {
         let short_name = self
             .name
             .chars()
-            .take(if area1.width > 2 { area1.width as usize - 2 } else { 0 })
+            .take(if area1.width > 2 {
+                area1.width as usize - 2
+            } else {
+                0
+            })
             .collect::<String>();
 
         execute!(buf, MoveTo(area1.x, area1.y))?;
@@ -140,22 +144,20 @@ impl Entry {
 
         let mut v = Vec::new();
         match self.position {
-             EntrySpaceLvl::Parent => {
+            EntrySpaceLvl::Parent => {
                 v.push("▼");
                 v.push("│");
                 v.push("│");
             }
-            EntrySpaceLvl::ParentNoChildren => {
-                match self.hidden {
-                    HiddenStatus::HiddenKids => {
-                        v.push("▲");
-                    }
-                    HiddenStatus::NoKids => {
-                        v.push("▶");
-                    }
-                    _ => {}
+            EntrySpaceLvl::ParentNoChildren => match self.hidden {
+                HiddenStatus::HiddenKids => {
+                    v.push("▲");
                 }
-            }
+                HiddenStatus::NoKids => {
+                    v.push("▶");
+                }
+                _ => {}
+            },
             EntrySpaceLvl::MidChild => {
                 v.push("│");
                 v.push("│");

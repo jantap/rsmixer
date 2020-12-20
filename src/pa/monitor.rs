@@ -18,7 +18,10 @@ pub struct Monitors {
 
 impl Default for Monitors {
     fn default() -> Self {
-        Self { monitors: HashMap::new(), errors: HashMap::new() }
+        Self {
+            monitors: HashMap::new(),
+            errors: HashMap::new(),
+        }
     }
 }
 
@@ -88,7 +91,7 @@ impl Monitors {
         }
     }
 
-    fn error(&mut self, ident:&EntryIdentifier) {
+    fn error(&mut self, ident: &EntryIdentifier) {
         let count = match self.errors.get(&ident) {
             Some(x) => *x,
             None => 0,
@@ -175,7 +178,6 @@ fn create(
             return Err(RSError::StreamCreateError);
         }
     };
-
 
     debug!("[PADataInterface] Waiting for stream to be ready");
     loop {

@@ -6,13 +6,13 @@ pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
     let s = String::from(key).to_lowercase();
     let mut modifiers = KeyModifiers::empty();
 
-    let parts = s.split("+").collect::<Vec<_>>();
+    let parts = s.split('+').collect::<Vec<_>>();
 
     for &p in parts.iter().take(parts.len() - 1) {
         match p {
-            "shift" => modifiers = modifiers | KeyModifiers::SHIFT,
-            "ctrl" => modifiers = modifiers | KeyModifiers::CONTROL,
-            "alt" => modifiers = modifiers | KeyModifiers::ALT,
+            "shift" => modifiers |= KeyModifiers::SHIFT,
+            "ctrl" => modifiers |= KeyModifiers::CONTROL,
+            "alt" => modifiers |= KeyModifiers::ALT,
             _ => return Err(RSError::KeyCodeError(String::from(key))),
         };
     }
@@ -69,16 +69,16 @@ pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
 }
 
 pub fn keyevent_to_string(key_ev: &KeyEvent) -> String {
-    let mut key_ev = key_ev.clone();
+    let mut key_ev = *key_ev;
 
     if key_ev.code == KeyCode::BackTab {
         key_ev.code = KeyCode::Tab;
-        key_ev.modifiers = key_ev.modifiers | KeyModifiers::SHIFT;
+        key_ev.modifiers |= KeyModifiers::SHIFT;
     }
 
     let mut s = "".to_string();
     if key_ev.modifiers.contains(KeyModifiers::CONTROL) {
-        s = format!("Ctrl+");
+        s = String::from("Ctrl+");
     }
     if key_ev.modifiers.contains(KeyModifiers::SHIFT) {
         s = format!("{}Shift+", s);

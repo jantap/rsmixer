@@ -1,6 +1,6 @@
 use crate::{
-    events::{MAIN_MESSAGE, PA_MESSAGE},
     entry::{Entry, EntryIdentifier},
+    events::{MAIN_MESSAGE, PA_MESSAGE},
     messages,
     models::PageType,
     Message,

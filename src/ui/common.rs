@@ -11,4 +11,3 @@ pub use crate::{
 pub use std::io::Write;
 
 pub use crossterm::execute;
-

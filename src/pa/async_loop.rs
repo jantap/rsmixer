@@ -33,12 +33,9 @@ pub async fn start_async(
         tokio::select! {
             r = res => {
                 if let Some(Ok(cmd)) = r {
-                    match cmd {
-                        Letter::ExitSignal => {
-                            break;
-                        }
-                        _ => {}
-                    };
+                    if let Letter::ExitSignal = cmd {
+                        break;
+                    }
                     internal_sx.send(PAInternal::Command(Box::new(cmd)))?;
                 }
             }

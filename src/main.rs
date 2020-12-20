@@ -4,19 +4,19 @@ extern crate libpulse_binding as pulse;
 mod config;
 mod entry;
 mod errors;
-mod events;
 mod event_loop;
+mod events;
 mod help;
 mod input;
 mod models;
-mod run;
 mod pa;
+mod run;
 mod ui;
 
 pub use errors::RSError;
 pub use models::Letter;
 
-use config::{Variables, RsMixerConfig, VarType};
+use config::{RsMixerConfig, Variables};
 use events::{Dispatch, Message, Senders};
 
 use tokio::runtime;

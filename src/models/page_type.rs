@@ -1,12 +1,11 @@
 use super::UIMode;
 
 use crate::{
-    entry::{HiddenStatus, Entries, Entry, EntryIdentifier, EntryType},
+    entry::{Entries, Entry, EntryIdentifier, EntryType, HiddenStatus},
     ui::util::{get_style, parent_child_types},
 };
 
 use std::{fmt::Display, iter};
-
 
 #[derive(PartialEq, Clone, Hash, Copy, Debug)]
 pub enum PageType {
@@ -49,29 +48,30 @@ impl PageType {
         }
     }
     pub fn as_styled_string(&self) -> String {
-        let styled_name = |pt: PageType| { 
+        let styled_name = |pt: PageType| {
             if pt == *self {
-                get_style("normal.bold").clone().apply(pt.as_str())
+                get_style("normal.bold").apply(pt.as_str())
             } else {
-                get_style("muted").clone().apply(pt.as_str())
+                get_style("muted").apply(pt.as_str())
             }
         };
 
-        let divider = get_style("muted").clone().apply(" / ");
+        let divider = get_style("muted").apply(" / ");
 
-        format!("{}{}{}{}{}",
-                styled_name(PageType::Output),
-                divider.clone(),
-                styled_name(PageType::Input),
-                divider.clone(),
-                styled_name(PageType::Cards))
+        format!(
+            "{}{}{}{}{}",
+            styled_name(PageType::Output),
+            divider.clone(),
+            styled_name(PageType::Input),
+            divider.clone(),
+            styled_name(PageType::Cards)
+        )
     }
     pub fn generate_page<'a>(
         &'a self,
         entries: &'a Entries,
         ui_mode: &'a UIMode,
     ) -> Box<dyn Iterator<Item = (&EntryIdentifier, &Entry)> + 'a> {
-
         if *self == PageType::Cards {
             return Box::new(entries.iter_type(EntryType::Card));
         }
@@ -79,10 +79,12 @@ impl PageType {
         let (parent, child) = parent_child_types(*self);
 
         if let UIMode::MoveEntry(ident, parent) = ui_mode {
-
             let en = entries.get(ident).unwrap();
-            let p = parent.clone();
-            let parent_pos = entries.iter_type(parent.entry_type).position(|(&i, _)| i == p).unwrap();
+            let p = *parent;
+            let parent_pos = entries
+                .iter_type(parent.entry_type)
+                .position(|(&i, _)| i == p)
+                .unwrap();
             return Box::new(
                 entries
                     .iter_type(parent.entry_type)
@@ -101,11 +103,11 @@ impl PageType {
             entries
                 .iter_type(parent)
                 .map(move |(ident, entry)| {
-                    std::iter::once((ident, entry)).chain(
-                        entries
-                            .iter_type(child)
-                            .filter(move |(_, e)| e.parent == Some(ident.index) && e.hidden != HiddenStatus::Hidden),
-                    )
+                    std::iter::once((ident, entry)).chain(entries.iter_type(child).filter(
+                        move |(_, e)| {
+                            e.parent == Some(ident.index) && e.hidden != HiddenStatus::Hidden
+                        },
+                    ))
                 })
                 .flatten(),
         )

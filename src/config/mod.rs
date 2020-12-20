@@ -1,20 +1,15 @@
+mod colors;
 pub mod keys;
 mod letters;
-mod colors;
 mod variables;
 
-pub use variables::{VarType, Variables};
+pub use variables::Variables;
 
-use crate::{
-    Letter, RSError, Styles,
-};
+use crate::{Letter, RSError, Styles};
 
 use std::convert::TryFrom;
 
-use crossterm::{
-    event::KeyEvent,
-    style::ContentStyle,
-};
+use crossterm::{event::KeyEvent, style::ContentStyle};
 
 use linked_hash_map::LinkedHashMap;
 
@@ -28,13 +23,14 @@ pub struct RsMixerConfig {
 }
 
 impl RsMixerConfig {
-
     pub fn load() -> Result<Self, RSError> {
         let config: RsMixerConfig = confy::load("rsmixer")?;
         Ok(config)
     }
 
-    pub fn interpret(&self) -> Result<(Styles, LinkedHashMap<KeyEvent, Letter>, Variables), RSError> {
+    pub fn interpret(
+        &self,
+    ) -> Result<(Styles, LinkedHashMap<KeyEvent, Letter>, Variables), RSError> {
         let mut bindings: LinkedHashMap<KeyEvent, Letter> = LinkedHashMap::new();
 
         for (k, c) in &self.bindings {

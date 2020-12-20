@@ -43,22 +43,16 @@ impl Eq for HiddenStatus {}
 impl HiddenStatus {
     pub fn negate(&mut self, entry_type: EntryType) {
         match entry_type {
-            EntryType::Source
-            | EntryType::Sink => {
-                match self {
-                    Self::Show => *self = Self::HiddenKids,
-                    Self::HiddenKids => *self = Self::Show,
-                    _ => {}
-                }
-            }
-            EntryType::SourceOutput
-            | EntryType::SinkInput => {
-                match self {
-                    Self::Show => *self = Self::Hidden,
-                    Self::Hidden => *self = Self::Show,
-                    _ => {}
-                }
-            }
+            EntryType::Source | EntryType::Sink => match self {
+                Self::Show => *self = Self::HiddenKids,
+                Self::HiddenKids => *self = Self::Show,
+                _ => {}
+            },
+            EntryType::SourceOutput | EntryType::SinkInput => match self {
+                Self::Show => *self = Self::Hidden,
+                Self::Hidden => *self = Self::Show,
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -90,7 +84,7 @@ impl Entry {
         area.x += amount;
         if amount < area.width {
             area.width -= amount;
-        }else{
+        } else {
             area.width = 0;
         }
 

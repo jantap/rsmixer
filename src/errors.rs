@@ -33,7 +33,7 @@ impl fmt::Display for RSError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::TaskHandleError(e) => {
-        log::error!("{:#}", e);
+                log::error!("{:#}", e);
                 write!(f, "Join handle error\n{:#}", e)
             }
             Self::TerminalError(_) => write!(f, "Terminal error"),

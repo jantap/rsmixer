@@ -32,8 +32,10 @@ impl<T: Send + std::fmt::Debug + Clone + Message + 'static> EventsManager<T> {
         dispatch.register(sx.clone(), sync_sx.clone()).await;
 
         Self {
-            sx, rx,
-            sync_rx, sync_sx
+            sx,
+            rx,
+            sync_rx,
+            sync_sx,
         }
     }
 }

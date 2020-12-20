@@ -1,16 +1,16 @@
-pub mod util;
-pub mod page;
-mod entries;
 mod common;
+mod entries;
 mod help;
+pub mod page;
+pub mod util;
 pub mod widgets;
 
-pub use util::{clean_terminal, prepare_terminal, Rect};
 use common::*;
-use util::terminal_too_small;
 use entries::draw_entries;
-pub use page::draw_page;
 use help::draw_help;
+pub use page::draw_page;
+use util::terminal_too_small;
+pub use util::{clean_terminal, prepare_terminal, Rect};
 use widgets::{ContextMenuWidget, VolumeWidget};
 
 use crate::models::{RedrawType, UIMode};
@@ -23,18 +23,13 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
 
     state.ui_page.inner_area = Rect::new(2, 2, w - 4, h - 4);
 
-
     if state.ui_mode == UIMode::Help && state.redraw != RedrawType::Help {
         return Ok(());
     }
 
     match &state.redraw {
         RedrawType::Help => {
-            draw_page(
-                stdout,
-                state,
-            )
-            .await?;
+            draw_page(stdout, state).await?;
             match draw_help(stdout).await {
                 Err(RSError::TerminalTooSmall) => {
                     return terminal_too_small(stdout).await;
@@ -43,11 +38,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
             };
         }
         RedrawType::Full => {
-            return draw_page(
-                stdout,
-                state,
-            )
-            .await;
+            return draw_page(stdout, state).await;
         }
         RedrawType::PeakVolume(ident) => {
             if ident.entry_type == EntryType::Card {
@@ -76,22 +67,10 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
         }
         RedrawType::PartialEntries(affected) => {
             let a = affected.clone();
-            return draw_entries(
-                stdout,
-                state,
-                state.ui_page.inner_area,
-                Some(a),
-            )
-            .await;
+            return draw_entries(stdout, state, state.ui_page.inner_area, Some(a)).await;
         }
         RedrawType::Entries => {
-            return draw_entries(
-                stdout,
-                state,
-                state.ui_page.inner_area,
-                None,
-            )
-            .await;
+            return draw_entries(stdout, state, state.ui_page.inner_area, None).await;
         }
         RedrawType::ContextMenu => {
             let (w, h) = crossterm::terminal::size()?;

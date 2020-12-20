@@ -3,10 +3,8 @@ mod action_handlers;
 use action_handlers::*;
 
 use crate::{
-    ui,
-    models::{RedrawType, UIMode, RSState},
-    Letter, RSError,
-    DISPATCH,
+    models::{RSState, RedrawType, UIMode},
+    ui, Letter, RSError, DISPATCH,
 };
 
 use std::collections::HashMap;
@@ -18,11 +16,7 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
 
     let mut state = RSState::default();
 
-    ui::draw_page(
-        &mut stdout,
-        &mut state,
-    )
-    .await?;
+    ui::draw_page(&mut stdout, &mut state).await?;
 
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw
@@ -44,14 +38,20 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
 
         state.redraw = general::action_handler(&msg, &mut state).await;
 
-        entries_updates::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
+        entries_updates::action_handler(&msg, &mut state)
+            .await
+            .apply(&mut state.redraw);
 
         match state.ui_mode {
             UIMode::Normal => {
-                normal::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
+                normal::action_handler(&msg, &mut state)
+                    .await
+                    .apply(&mut state.redraw);
             }
             UIMode::ContextMenu => {
-                context_menu::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
+                context_menu::action_handler(&msg, &mut state)
+                    .await
+                    .apply(&mut state.redraw);
             }
             UIMode::Help => {
                 if msg == Letter::Redraw {
@@ -59,12 +59,16 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
                 }
             }
             UIMode::MoveEntry(_, _) => {
-               move_entry::action_handler(&msg, &mut state).await.apply(&mut state.redraw);
+                move_entry::action_handler(&msg, &mut state)
+                    .await
+                    .apply(&mut state.redraw);
             }
             _ => {}
         };
 
-        scroll::scroll_handler(&msg, &mut state).await?.apply(&mut state.redraw);
+        scroll::scroll_handler(&msg, &mut state)
+            .await?
+            .apply(&mut state.redraw);
 
         ui::redraw(&mut stdout, &mut state).await?;
     }

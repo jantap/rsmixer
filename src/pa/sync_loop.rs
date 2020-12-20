@@ -4,7 +4,10 @@ use std::ops::Deref;
 
 use pulse::proplist::Proplist;
 
-pub fn start(internal_rx: cb_channel::Receiver<PAInternal>, info_sx: mpsc::UnboundedSender<EntryIdentifier>) -> Result<(), RSError> {
+pub fn start(
+    internal_rx: cb_channel::Receiver<PAInternal>,
+    info_sx: mpsc::UnboundedSender<EntryIdentifier>,
+) -> Result<(), RSError> {
     // Create new mainloop and context
     let mut proplist = Proplist::new().unwrap();
     proplist
@@ -132,11 +135,11 @@ pub fn start(internal_rx: cb_channel::Receiver<PAInternal>, info_sx: mpsc::Unbou
         mainloop.borrow_mut().lock();
 
         match context.borrow_mut().get_state() {
-            pulse::context::State::Ready => {},
+            pulse::context::State::Ready => {}
             _ => {
                 mainloop.borrow_mut().unlock();
                 return Err(RSError::PulseAudioDisconnected);
-            },
+            }
         }
 
         match msg {

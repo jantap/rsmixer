@@ -69,16 +69,13 @@ impl Entries {
                 } else {
                     EntryType::SourceOutput
                 };
-                
+
                 self.0
                     .iter_mut()
-                    .filter(|(i, e)| (
-                                i.entry_type == desired 
-                                && e.parent == Some(index)
-                            ) || (
-                                i.entry_type == entry_type 
-                                && e.index == index
-                            ))
+                    .filter(|(i, e)| {
+                        (i.entry_type == desired && e.parent == Some(index))
+                            || (i.entry_type == entry_type && e.index == index)
+                    })
                     .for_each(|(_, e)| e.hidden.negate(e.entry_type));
             }
             EntryType::SinkInput | EntryType::SourceOutput => {
@@ -89,13 +86,10 @@ impl Entries {
                 };
                 self.0
                     .iter_mut()
-                    .filter(|(ident, e)| (
-                            ident.entry_type == desired
-                            && e.parent == parent
-                        ) || (
-                            ident.entry_type == parent_type
-                            && Some(e.index) == parent
-                        ))
+                    .filter(|(ident, e)| {
+                        (ident.entry_type == desired && e.parent == parent)
+                            || (ident.entry_type == parent_type && Some(e.index) == parent)
+                    })
                     .for_each(|(_, e)| e.hidden.negate(e.entry_type));
             }
             _ => {}

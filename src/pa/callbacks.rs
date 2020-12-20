@@ -1,7 +1,7 @@
 use super::common::*;
 
 use crate::{
-    entry::{HiddenStatus, CardEntry, CardProfile, Entry, EntrySpaceLvl, PlayEntry},
+    entry::{CardEntry, CardProfile, Entry, EntrySpaceLvl, HiddenStatus, PlayEntry},
     ui::widgets::VolumeWidget,
     DISPATCH,
 };
@@ -15,7 +15,10 @@ use pulse::{
     def::{SinkState, SourceState},
 };
 
-pub fn subscribe(context: &Rc<RefCell<Context>>, info_sx: mpsc::UnboundedSender<EntryIdentifier>) -> Result<(), RSError> {
+pub fn subscribe(
+    context: &Rc<RefCell<Context>>,
+    info_sx: mpsc::UnboundedSender<EntryIdentifier>,
+) -> Result<(), RSError> {
     info!("[PAInterface] Registering pulseaudio callbacks");
 
     context.borrow_mut().subscribe(
@@ -31,31 +34,31 @@ pub fn subscribe(context: &Rc<RefCell<Context>>, info_sx: mpsc::UnboundedSender<
         },
     );
 
-    let info_sx = info_sx.clone();
     context.borrow_mut().set_subscribe_callback(Some(Box::new(
         move |facility, operation, index| {
             if let Some(facility) = facility {
                 match facility {
-                    Facility::Server
-                    | Facility::Client => {
+                    Facility::Server | Facility::Client => {
                         log::error!("{:?} {:?}", facility, operation);
                         return;
                     }
-                    _ => {},
+                    _ => {}
                 };
 
                 let entry_type: EntryType = facility.into();
                 match operation {
                     Some(Operation::New) => {
                         info!("[PAInterface] New {:?}", entry_type);
-                        
+
                         info_sx
-                            .send(EntryIdentifier::new(entry_type, index)).unwrap();
+                            .send(EntryIdentifier::new(entry_type, index))
+                            .unwrap();
                     }
                     Some(Operation::Changed) => {
                         info!("[PAInterface] {:?} changed", entry_type);
                         info_sx
-                            .send(EntryIdentifier::new(entry_type, index)).unwrap();
+                            .send(EntryIdentifier::new(entry_type, index))
+                            .unwrap();
                     }
                     Some(Operation::Removed) => {
                         info!("[PAInterface] {:?} removed", entry_type);
@@ -72,7 +75,10 @@ pub fn subscribe(context: &Rc<RefCell<Context>>, info_sx: mpsc::UnboundedSender<
     Ok(())
 }
 
-pub fn request_current_state(context: Rc<RefCell<Context>>, info_sxx: mpsc::UnboundedSender<EntryIdentifier>) -> Result<(), RSError> {
+pub fn request_current_state(
+    context: Rc<RefCell<Context>>,
+    info_sxx: mpsc::UnboundedSender<EntryIdentifier>,
+) -> Result<(), RSError> {
     info!("[PAInterface] Requesting starting state");
 
     let introspector = context.borrow_mut().introspect();
@@ -80,7 +86,8 @@ pub fn request_current_state(context: Rc<RefCell<Context>>, info_sxx: mpsc::Unbo
     let info_sx = info_sxx.clone();
     introspector.get_sink_info_list(move |x: ListResult<&SinkInfo>| {
         if let ListResult::Item(e) = x {
-            let _ = info_sx.clone()
+            let _ = info_sx
+                .clone()
                 .send(EntryIdentifier::new(EntryType::Sink, e.index));
         }
     });
@@ -88,39 +95,38 @@ pub fn request_current_state(context: Rc<RefCell<Context>>, info_sxx: mpsc::Unbo
     let info_sx = info_sxx.clone();
     introspector.get_sink_input_info_list(move |x: ListResult<&SinkInputInfo>| {
         if let ListResult::Item(e) = x {
-            let _ = info_sx
-                .send(EntryIdentifier::new(EntryType::SinkInput, e.index));
+            let _ = info_sx.send(EntryIdentifier::new(EntryType::SinkInput, e.index));
         }
     });
 
     let info_sx = info_sxx.clone();
     introspector.get_source_info_list(move |x: ListResult<&SourceInfo>| {
         if let ListResult::Item(e) = x {
-            let _ = info_sx
-                .send(EntryIdentifier::new(EntryType::Source, e.index));
+            let _ = info_sx.send(EntryIdentifier::new(EntryType::Source, e.index));
         }
     });
 
     let info_sx = info_sxx.clone();
     introspector.get_source_output_info_list(move |x: ListResult<&SourceOutputInfo>| {
         if let ListResult::Item(e) = x {
-            let _ = info_sx
-                .send(EntryIdentifier::new(EntryType::SourceOutput, e.index));
+            let _ = info_sx.send(EntryIdentifier::new(EntryType::SourceOutput, e.index));
         }
     });
 
-    let info_sx = info_sxx.clone();
     introspector.get_card_info_list(move |x: ListResult<&CardInfo>| {
         if let ListResult::Item(e) = x {
-            let _ = info_sx
-                .send(EntryIdentifier::new(EntryType::Card, e.index));
+            let _ = info_sxx.send(EntryIdentifier::new(EntryType::Card, e.index));
         }
     });
 
     Ok(())
 }
 
-pub fn request_info(ident: EntryIdentifier, context: &Rc<RefCell<Context>>, info_sx: mpsc::UnboundedSender<EntryIdentifier>) {
+pub fn request_info(
+    ident: EntryIdentifier,
+    context: &Rc<RefCell<Context>>,
+    info_sx: mpsc::UnboundedSender<EntryIdentifier>,
+) {
     let introspector = context.borrow_mut().introspect();
     debug!(
         "[PAInterface] Requesting info for {:?} {}",
@@ -204,7 +210,9 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
     }
 }
 
-pub fn on_sink_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl Fn(ListResult<&SinkInfo>) -> () {
+pub fn on_sink_info(
+    _sx: &mpsc::UnboundedSender<EntryIdentifier>,
+) -> impl Fn(ListResult<&SinkInfo>) {
     |res: ListResult<&SinkInfo>| {
         if let ListResult::Item(i) = res {
             debug!("[PADataInterface] Update {} sink info", i.index);
@@ -238,7 +246,9 @@ pub fn on_sink_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl Fn(List
     }
 }
 
-pub fn on_sink_input_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl Fn(ListResult<&SinkInputInfo>) -> () {
+pub fn on_sink_input_info(
+    sx: &mpsc::UnboundedSender<EntryIdentifier>,
+) -> impl Fn(ListResult<&SinkInputInfo>) {
     let info_sx = sx.clone();
     move |res: ListResult<&SinkInputInfo>| {
         if let ListResult::Item(i) = res {
@@ -275,13 +285,14 @@ pub fn on_sink_input_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl F
                 }),
             };
             DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
-            let _ = info_sx
-                .send(EntryIdentifier::new(EntryType::Sink, i.sink));
+            let _ = info_sx.send(EntryIdentifier::new(EntryType::Sink, i.sink));
         }
     }
 }
 
-pub fn on_source_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl Fn(ListResult<&SourceInfo>) -> () {
+pub fn on_source_info(
+    _sx: &mpsc::UnboundedSender<EntryIdentifier>,
+) -> impl Fn(ListResult<&SourceInfo>) {
     move |res: ListResult<&SourceInfo>| {
         if let ListResult::Item(i) = res {
             debug!("[PADataInterface] Update {} source info", i.index);
@@ -315,7 +326,9 @@ pub fn on_source_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl Fn(Li
     }
 }
 
-pub fn on_source_output_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> impl Fn(ListResult<&SourceOutputInfo>) -> () {
+pub fn on_source_output_info(
+    sx: &mpsc::UnboundedSender<EntryIdentifier>,
+) -> impl Fn(ListResult<&SourceOutputInfo>) {
     let info_sx = sx.clone();
     move |res: ListResult<&SourceOutputInfo>| {
         if let ListResult::Item(i) = res {
@@ -352,8 +365,7 @@ pub fn on_source_output_info(sx: &mpsc::UnboundedSender<EntryIdentifier>) -> imp
                 }),
             };
             DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
-            let _ = info_sx
-                .send(EntryIdentifier::new(EntryType::Source, i.index));
+            let _ = info_sx.send(EntryIdentifier::new(EntryType::Source, i.index));
         }
     }
 }

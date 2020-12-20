@@ -1,7 +1,4 @@
-use crate::{
-    models::PageType,
-    Letter, RSError,
-};
+use crate::{models::PageType, Letter, RSError};
 
 use std::convert::TryFrom;
 

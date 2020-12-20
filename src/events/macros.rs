@@ -3,7 +3,9 @@
 
 #[macro_export]
 macro_rules! messages_internal {
-    ($i:ty) => { _ }
+    ($i:ty) => {
+        _
+    };
 }
 
 #[macro_export]

@@ -54,7 +54,7 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                         state.entries.get(&entry_ident).unwrap().parent.unwrap(),
                     );
                     let parent_ident = match state.entries.find(|(&i, _)| i == entry_parent) {
-                        Some((i, _)) => i.clone(),
+                        Some((i, _)) => *i,
                         None => EntryIdentifier::new(parent_type, 0),
                     };
                     state.ui_mode = UIMode::MoveEntry(entry_ident, parent_ident);

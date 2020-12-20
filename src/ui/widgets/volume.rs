@@ -76,7 +76,7 @@ impl<W: Write> Widget<W> for VolumeWidget {
         let segments = self.get_segments(area.width);
         let third = segments.0;
 
-        let styles = if self.mute { 
+        let styles = if self.mute {
             (get_style("muted"), get_style("muted"), get_style("muted"))
         } else {
             (get_style("green"), get_style("orange"), get_style("red"))

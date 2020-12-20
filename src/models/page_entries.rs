@@ -91,10 +91,11 @@ impl PageEntries {
         &'a self,
         scroll: usize,
     ) -> Box<dyn Iterator<Item = (usize, EntrySpaceLvl)> + 'a> {
-        let start = match self.visibility.iter().position(|&x| x == scroll) {
-            Some(s) => s,
-            None => 0,
-        };
+        let start = self
+            .visibility
+            .iter()
+            .position(|&x| x == scroll)
+            .unwrap_or(0);
         let end = match self.visibility.iter().rposition(|&x| x == scroll) {
             Some(s) => s + 1,
             None => 0,

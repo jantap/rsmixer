@@ -1,11 +1,8 @@
-use super::{PageEntries, PageType, ContextMenuOption, RedrawType, UIMode};
+use super::{ContextMenuOption, PageEntries, PageType, RedrawType, UIMode};
 
 use crate::{
     entry::Entries,
-    ui::{
-        page::UIPage,
-        util::Rect,
-    },
+    ui::{page::UIPage, util::Rect},
 };
 
 pub struct RSState {

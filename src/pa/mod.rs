@@ -10,11 +10,7 @@ pub use sync_loop::start;
 
 use common::*;
 
-use tokio::sync::mpsc;
-
 use lazy_static::lazy_static;
-
-use state::Storage;
 
 #[derive(Debug)]
 pub enum PAInternal {

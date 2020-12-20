@@ -8,7 +8,6 @@ pub async fn draw_entries<W: Write>(
     area: Rect,
     affected: Option<HashSet<usize>>,
 ) -> Result<(), RSError> {
-
     let mut entry_size = area.h(3);
 
     if affected.is_none() {
@@ -40,4 +39,3 @@ pub async fn draw_entries<W: Write>(
 
     Ok(())
 }
-

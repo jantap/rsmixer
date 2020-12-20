@@ -31,11 +31,6 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
             state.redraw = RedrawType::Full;
         }
 
-        if let Letter::RetryIn(time) = msg {
-            state.redraw = RedrawType::Full;
-            state.ui_mode = UIMode::RetryIn(time);
-        }
-
         state.redraw = general::action_handler(&msg, &mut state).await;
 
         entries_updates::action_handler(&msg, &mut state)

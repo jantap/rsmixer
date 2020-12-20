@@ -8,7 +8,7 @@ pub mod widgets;
 use common::*;
 use entries::draw_entries;
 use help::draw_help;
-pub use page::draw_page;
+pub use page::{draw_disconnected_page, draw_page};
 use util::terminal_too_small;
 pub use util::{clean_terminal, prepare_terminal, Rect};
 use widgets::{ContextMenuWidget, VolumeWidget};
@@ -38,7 +38,12 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
             };
         }
         RedrawType::Full => {
-            return draw_page(stdout, state).await;
+            log::error!("REDRAW FULL");
+            if let UIMode::RetryIn(time) = state.ui_mode {
+                return draw_disconnected_page(stdout, state, time).await;
+            } else {
+                return draw_page(stdout, state).await;
+            }
         }
         RedrawType::PeakVolume(ident) => {
             if ident.entry_type == EntryType::Card {

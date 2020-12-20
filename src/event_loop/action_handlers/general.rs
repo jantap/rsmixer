@@ -24,6 +24,10 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                 return RedrawType::Full;
             }
         }
+        Letter::RetryIn(time) => {
+            state.ui_mode = UIMode::RetryIn(time);
+            return RedrawType::Full;
+        }
         _ => {}
     };
 

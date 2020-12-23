@@ -12,7 +12,7 @@ authors = ["Jan Wojcicki <janwojcicki45@gmail.com>"]
 edition = "2018"
 
 [features]
-default = ["libpulse-binding/pa_v8]
+default = []
 pa_v13 = ["libpulse-binding/pa_v13"]
 
 [dependencies]

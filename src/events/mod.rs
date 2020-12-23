@@ -12,6 +12,7 @@ pub static CHANNEL_CAPACITY: usize = 32;
 
 pub static MAIN_MESSAGE: u32 = 1;
 pub static PA_MESSAGE: u32 = 2;
+pub static RUN_PA_MESSAGE: u32 = 3;
 
 pub trait Message {
     fn id(&self) -> u32;

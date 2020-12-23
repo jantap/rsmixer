@@ -7,6 +7,7 @@ use std::future::Future;
 
 use tokio::{
     sync::{broadcast::channel, mpsc},
+    stream::StreamExt,
     task,
 };
 
@@ -69,13 +70,18 @@ async fn run_pa() -> impl Future<Output = Result<(), RSError>> {
 }
 
 async fn run_pa_internal() -> Result<(), RSError> {
+    let (sx, mut rx) = channel(32);
+    SENDERS.register(events::RUN_PA_MESSAGE, sx).await;
+
     let retry_time = (*VARIABLES).get().pa_retry_time;
+
     loop {
         let (pa_sx, pa_rx) = cb_channel::unbounded();
         let (info_sx, info_rx) = mpsc::unbounded_channel();
 
         let async_pa = task::spawn(async move { pa::start_async(pa_sx.clone(), info_rx).await });
         let sync_pa = task::spawn_blocking(move || pa::start(pa_rx, info_sx));
+        DISPATCH.event(Letter::ConnectToPA).await;
 
         let result = tokio::select! {
             res = async_pa => match res {
@@ -99,7 +105,17 @@ async fn run_pa_internal() -> Result<(), RSError> {
 
         for i in 0..retry_time {
             DISPATCH.event(Letter::RetryIn(retry_time - i)).await;
-            tokio::time::delay_for(std::time::Duration::from_secs(1)).await;
+
+            let timeout_part = tokio::time::delay_for(std::time::Duration::from_secs(1));
+            let event = rx.next();
+            tokio::select! {
+                _ = timeout_part => {},
+                ev = event => {
+                    if let Some(Ok(Letter::ExitSignal)) = ev {
+                        return Ok(());
+                    }
+                }
+            };
         }
     }
 

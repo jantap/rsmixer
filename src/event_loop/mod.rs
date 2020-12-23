@@ -25,12 +25,6 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
             break;
         }
 
-        if msg == Letter::PADisconnected {
-            DISPATCH.event(Letter::CreateMonitors(HashMap::new())).await;
-            state = RSState::default();
-            state.redraw = RedrawType::Full;
-        }
-
         state.redraw = general::action_handler(&msg, &mut state).await;
 
         entries_updates::action_handler(&msg, &mut state)

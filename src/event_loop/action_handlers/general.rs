@@ -1,6 +1,9 @@
 use super::common::*;
 
-use std::ops::Deref;
+use std::{
+    collections::HashMap,
+    ops::Deref,
+};
 
 pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {
@@ -24,8 +27,17 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                 return RedrawType::Full;
             }
         }
+        Letter::PADisconnected => {
+            DISPATCH.event(Letter::CreateMonitors(HashMap::new())).await;
+            *state = RSState::default();
+            return RedrawType::Full;
+        }
         Letter::RetryIn(time) => {
             state.ui_mode = UIMode::RetryIn(time);
+            return RedrawType::Full;
+        }
+        Letter::ConnectToPA => {
+            state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
         _ => {}

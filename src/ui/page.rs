@@ -22,11 +22,17 @@ pub async fn draw_page<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<
     Ok(())
 }
 
-pub async fn draw_disconnected_page<W: Write>(stdout: &mut W, state: &mut RSState, time: u64) -> Result<(), RSError> {
+pub async fn draw_disconnected_page<W: Write>(stdout: &mut W, time: u64) -> Result<(), RSError> {
     let (w, h) = crossterm::terminal::size()?;
 
     draw_rect!(stdout, " ", Rect::new(0, 0, w, h), get_style("normal"));
-    draw_at!(stdout, format!("PulseAudio disconnected. Retrying in {}s", time), 0, 0, get_style("normal"));
+    draw_at!(
+        stdout,
+        format!("PulseAudio disconnected. Retrying in {}s", time),
+        0,
+        0,
+        get_style("normal")
+    );
 
     stdout.flush()?;
 

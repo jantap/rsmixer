@@ -1,12 +1,16 @@
 use super::common::*;
 
-pub fn handle_command(cmd: Letter, context: &Rc<RefCell<Context>>) -> Option<()> {
+pub fn handle_command(
+    cmd: Letter,
+    context: &Rc<RefCell<Context>>,
+    info_sx: &mpsc::UnboundedSender<EntryIdentifier>,
+) -> Option<()> {
     match cmd {
         Letter::MuteEntry(ident, mute) => {
             set_mute(ident, mute, &context);
         }
         Letter::MoveEntryToParent(ident, parent) => {
-            move_entry_to_parent(ident, parent, &context);
+            move_entry_to_parent(ident, parent, &context, info_sx.clone());
         }
         Letter::ChangeCardProfile(ident, profile) => {
             change_card_profile(ident, profile, &context);
@@ -66,32 +70,33 @@ fn move_entry_to_parent(
     ident: EntryIdentifier,
     parent: EntryIdentifier,
     context: &Rc<RefCell<Context>>,
+    info_sx: mpsc::UnboundedSender<EntryIdentifier>,
 ) {
     let mut introspector = context.borrow_mut().introspect();
 
-    // match ident.entry_type {
-    //     EntryType::SinkInput => {
-    //         introspector.move_sink_input_by_index(
-    //             ident.index,
-    //             parent.index,
-    //             Some(Box::new(move |_| {
-    //                 (*INFO_SX).get().send(parent).unwrap();
-    //                 (*INFO_SX).get().send(ident).unwrap();
-    //             })),
-    //         );
-    //     }
-    //     EntryType::SourceOutput => {
-    //         introspector.move_source_output_by_index(
-    //             ident.index,
-    //             parent.index,
-    //             Some(Box::new(move |_| {
-    //                 (*INFO_SX).get().send(parent).unwrap();
-    //                 (*INFO_SX).get().send(ident).unwrap();
-    //             })),
-    //         );
-    //     }
-    //     _ => {}
-    // };
+    match ident.entry_type {
+        EntryType::SinkInput => {
+            introspector.move_sink_input_by_index(
+                ident.index,
+                parent.index,
+                Some(Box::new(move |_| {
+                    info_sx.send(parent).unwrap();
+                    info_sx.send(ident).unwrap();
+                })),
+            );
+        }
+        EntryType::SourceOutput => {
+            introspector.move_source_output_by_index(
+                ident.index,
+                parent.index,
+                Some(Box::new(move |_| {
+                    info_sx.send(parent).unwrap();
+                    info_sx.send(ident).unwrap();
+                })),
+            );
+        }
+        _ => {}
+    };
 }
 
 fn set_suspend(ident: EntryIdentifier, suspend: bool, context: &Rc<RefCell<Context>>) {

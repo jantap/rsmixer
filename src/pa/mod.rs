@@ -21,7 +21,7 @@ pub enum PAInternal {
 
 lazy_static! {
     pub static ref SPEC: pulse::sample::Spec = pulse::sample::Spec {
-        format: pulse::sample::SAMPLE_FLOAT32,
+        format: pulse::sample::Format::FLOAT32NE,
         channels: 1,
         rate: 15,
     };

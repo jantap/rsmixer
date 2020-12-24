@@ -6,8 +6,8 @@ use crate::{
 use std::future::Future;
 
 use tokio::{
-    sync::{broadcast::channel, mpsc},
     stream::StreamExt,
+    sync::{broadcast::channel, mpsc},
     task,
 };
 

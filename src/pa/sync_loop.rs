@@ -63,7 +63,7 @@ pub fn start(
 
     match context
         .borrow_mut()
-        .connect(None, pulse::context::flags::NOFLAGS, None)
+        .connect(None, pulse::context::FlagSet::NOFLAGS, None)
     {
         Ok(_) => {}
         Err(_) => {
@@ -152,7 +152,7 @@ pub fn start(
             }
             PAInternal::Command(cmd) => {
                 let cmd = cmd.deref();
-                if pa_actions::handle_command(cmd.clone(), &context).is_none() {
+                if pa_actions::handle_command(cmd.clone(), &context, &info_sx).is_none() {
                     break;
                 }
 

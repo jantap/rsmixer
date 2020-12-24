@@ -4,10 +4,8 @@ use action_handlers::*;
 
 use crate::{
     models::{RSState, RedrawType, UIMode},
-    ui, Letter, RSError, DISPATCH,
+    ui, Letter, RSError,
 };
-
-use std::collections::HashMap;
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 

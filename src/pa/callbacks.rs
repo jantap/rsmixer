@@ -10,7 +10,7 @@ use pulse::{
     callbacks::ListResult,
     context::{
         introspect::{CardInfo, SinkInfo, SinkInputInfo, SourceInfo, SourceOutputInfo},
-        subscribe::{subscription_masks, Operation},
+        subscribe::{InterestMaskSet, Operation},
     },
     def::{SinkState, SourceState},
 };
@@ -22,13 +22,13 @@ pub fn subscribe(
     info!("[PAInterface] Registering pulseaudio callbacks");
 
     context.borrow_mut().subscribe(
-        subscription_masks::SINK
-            | subscription_masks::SINK_INPUT
-            | subscription_masks::SOURCE
-            | subscription_masks::MASK_CARD
-            | subscription_masks::SOURCE_OUTPUT
-            | subscription_masks::CLIENT
-            | subscription_masks::SERVER,
+        InterestMaskSet::SINK
+            | InterestMaskSet::SINK_INPUT
+            | InterestMaskSet::SOURCE
+            | InterestMaskSet::CARD
+            | InterestMaskSet::SOURCE_OUTPUT
+            | InterestMaskSet::CLIENT
+            | InterestMaskSet::SERVER,
         |success: bool| {
             assert!(success, "subscription failed");
         },

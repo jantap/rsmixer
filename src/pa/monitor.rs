@@ -171,7 +171,7 @@ fn create(
             minreq: 0,
             fragsize: 4,
         }),
-        pulse::stream::flags::PEAK_DETECT | pulse::stream::flags::ADJUST_LATENCY,
+        pulse::stream::FlagSet::PEAK_DETECT | pulse::stream::FlagSet::ADJUST_LATENCY,
     ) {
         Ok(_) => {}
         Err(_) => {

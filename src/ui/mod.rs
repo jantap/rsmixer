@@ -39,7 +39,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
         }
         RedrawType::Full => {
             if let UIMode::RetryIn(time) = state.ui_mode {
-                return draw_disconnected_page(stdout, state, time).await;
+                return draw_disconnected_page(stdout, time).await;
             } else {
                 return draw_page(stdout, state).await;
             }

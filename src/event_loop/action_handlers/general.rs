@@ -1,9 +1,6 @@
 use super::common::*;
 
-use std::{
-    collections::HashMap,
-    ops::Deref,
-};
+use std::{collections::HashMap, ops::Deref};
 
 pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     match msg.clone() {

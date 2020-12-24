@@ -104,7 +104,7 @@ impl Entry {
             area2 = Rect::new(0, 0, 0, 0);
         }
 
-        let main_vol = (play.volume.avg().0 as f32) / (volume::VOLUME_NORM.0 as f32 * 1.5);
+        let main_vol = (play.volume.avg().0 as f32) / (volume::Volume::NORMAL.0 as f32 * 1.5);
         play.volume_bar = play
             .volume_bar
             .volume(main_vol)

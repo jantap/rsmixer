@@ -1,0 +1,16 @@
+- backspace => Backspace,
+- enter => Enter
+- left => Left
+- right => Right
+- up => Up
+- down => Down
+- home => Home
+- end => End
+- pageup => PageUp
+- pagedown => PageDown
+- tab => Tab
+- delete => Delete
+- insert => Insert
+- null => Null
+- esc => Esc
+- F1-F12

@@ -1,8 +1,8 @@
-use crate::{Letter, DISPATCH};
+use crate::{Action, DISPATCH};
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
-pub async fn start(mut rx: Receiver<Letter>) {
+pub async fn start(mut rx: Receiver<Action>) {
     let mut reader = crossterm::event::EventStream::new();
 
     loop {
@@ -16,10 +16,10 @@ pub async fn start(mut rx: Receiver<Letter>) {
 
                 match ev {
                     crossterm::event::Event::Key(event) => {
-                        DISPATCH.event(Letter::KeyPress(event.clone())).await;
+                        DISPATCH.event(Action::KeyPress(event.clone())).await;
                     }
                     crossterm::event::Event::Resize(_, _) => {
-                        DISPATCH.event(Letter::Redraw).await;
+                        DISPATCH.event(Action::Redraw).await;
                     }
                     _ => {}
                 };
@@ -27,7 +27,7 @@ pub async fn start(mut rx: Receiver<Letter>) {
             ev = recv_event => {
                 let ev = if let Some(ev) = ev { ev } else { continue; };
                 let ev = if let Ok(ev) = ev { ev } else { continue; };
-                if ev == Letter::ExitSignal {
+                if ev == Action::ExitSignal {
                     break;
                 }
             }

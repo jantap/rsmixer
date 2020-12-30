@@ -16,18 +16,18 @@ pub async fn action_handler(key_event: KeyEvent, state: &mut RSState) {
     }
 }
 
-fn handle_conflicting_bindings(actions: &mut Vec<Letter>, state: &mut RSState) {
+fn handle_conflicting_bindings(actions: &mut Vec<Action>, state: &mut RSState) {
     if actions.len() == 1 {
         return;
     }
 
-    if actions.contains(&Letter::ExitSignal) 
-        && actions.contains(&Letter::CloseContextMenu) {
+    if actions.contains(&Action::ExitSignal) 
+        && actions.contains(&Action::CloseContextMenu) {
 
         if state.ui_mode == UIMode::ContextMenu {
-            actions.retain(|action| *action != Letter::ExitSignal);
+            actions.retain(|action| *action != Action::ExitSignal);
         } else {
-            actions.retain(|action| *action != Letter::CloseContextMenu);
+            actions.retain(|action| *action != Action::CloseContextMenu);
         }
     }
 }

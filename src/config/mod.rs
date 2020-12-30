@@ -1,11 +1,11 @@
 mod colors;
 pub mod keys;
-mod letters;
+mod actions;
 mod variables;
 
 pub use variables::Variables;
 
-use crate::{Letter, RSError, Styles};
+use crate::{Action, RSError, Styles};
 
 use std::convert::TryFrom;
 
@@ -32,14 +32,14 @@ impl RsMixerConfig {
 
     pub fn interpret(
         &self,
-    ) -> Result<(Styles, MultiMap<KeyEvent, Letter>, Variables), RSError> {
-        let mut bindings: MultiMap<KeyEvent, Letter> = MultiMap::new();
+    ) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
+        let mut bindings: MultiMap<KeyEvent, Action> = MultiMap::new();
 
         for (k, cs) in &self.bindings {
             for c in cs {
                 bindings.insert(
                     keys::try_string_to_keyevent(&k)?,
-                    Letter::try_from(c.clone())?,
+                    Action::try_from(c.clone())?,
                 );
             }
         }

@@ -6,31 +6,31 @@ use crate::{
     ui::util::parent_child_types,
 };
 
-pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     match msg.clone() {
-        Letter::EntryRemoved(ident) => {
+        Action::EntryRemoved(ident) => {
             if state.page_entries.get(state.selected) == Some(ident) {
                 state.ui_mode = UIMode::Normal;
                 return RedrawType::Full;
             }
         }
-        Letter::MoveUp(how_much) => {
+        Action::MoveUp(how_much) => {
             state.selected_context =
                 max(state.selected_context as i32 - how_much as i32, 0) as usize;
             return RedrawType::ContextMenu;
         }
-        Letter::MoveDown(how_much) => {
+        Action::MoveDown(how_much) => {
             state.selected_context = min(
                 state.selected_context + how_much as usize,
                 state.context_options.len() - 1,
             );
             return RedrawType::ContextMenu;
         }
-        Letter::CloseContextMenu => {
+        Action::CloseContextMenu => {
             state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
-        Letter::OpenContextMenu => {
+        Action::OpenContextMenu => {
             if state.selected >= state.page_entries.len() {
                 return RedrawType::None;
             }

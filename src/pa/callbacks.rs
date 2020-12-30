@@ -62,7 +62,7 @@ pub fn subscribe(
                     }
                     Some(Operation::Removed) => {
                         info!("[PAInterface] {:?} removed", entry_type);
-                        DISPATCH.sync_event(Letter::EntryRemoved(EntryIdentifier::new(
+                        DISPATCH.sync_event(Action::EntryRemoved(EntryIdentifier::new(
                             entry_type, index,
                         )));
                     }
@@ -206,7 +206,7 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
             play_entry: None,
         };
 
-        DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+        DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
     }
 }
 
@@ -241,7 +241,7 @@ pub fn on_sink_info(
                     suspended: i.state == SinkState::Suspended,
                 }),
             };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
         }
     }
 }
@@ -284,7 +284,7 @@ pub fn on_sink_input_info(
                     suspended: false,
                 }),
             };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Sink, i.sink));
         }
     }
@@ -321,7 +321,7 @@ pub fn on_source_info(
                     suspended: i.state == SourceState::Suspended,
                 }),
             };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
         }
     }
 }
@@ -364,7 +364,7 @@ pub fn on_source_output_info(
                     suspended: false,
                 }),
             };
-            DISPATCH.sync_event(Letter::EntryUpdate(ident, Box::new(entry)));
+            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Source, i.index));
         }
     }

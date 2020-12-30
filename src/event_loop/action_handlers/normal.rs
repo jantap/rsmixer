@@ -2,7 +2,7 @@ use super::{common::*, play_entries};
 
 use std::collections::HashSet;
 
-pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     let mut redraw = normal_handler(msg, state).await;
 
     if state.current_page != PageType::Cards {
@@ -14,14 +14,14 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
     redraw
 }
 
-async fn normal_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+async fn normal_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     match msg.clone() {
-        Letter::EntryUpdate(ident, _) => {
+        Action::EntryUpdate(ident, _) => {
             if state.page_entries.iter_entries().any(|&i| i == ident) {
                 return RedrawType::Entries;
             }
         }
-        Letter::PeakVolumeUpdate(ident, peak) => {
+        Action::PeakVolumeUpdate(ident, peak) => {
             if ident.entry_type == EntryType::Card {
                 return RedrawType::None;
             }
@@ -36,7 +36,7 @@ async fn normal_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                 return RedrawType::PeakVolume(ident);
             }
         }
-        Letter::MoveUp(how_much) => {
+        Action::MoveUp(how_much) => {
             let mut affected = HashSet::new();
             affected.insert(state.selected);
             state.selected = max(state.selected as i32 - how_much as i32, 0) as usize;
@@ -44,7 +44,7 @@ async fn normal_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
 
             return RedrawType::PartialEntries(affected);
         }
-        Letter::MoveDown(how_much) => {
+        Action::MoveDown(how_much) => {
             let mut affected = HashSet::new();
             affected.insert(state.selected);
             state.selected = min(state.selected + how_much as usize, state.page_entries.len());
@@ -52,15 +52,15 @@ async fn normal_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
 
             return RedrawType::PartialEntries(affected);
         }
-        Letter::CyclePages(which_way) => {
+        Action::CyclePages(which_way) => {
             DISPATCH
-                .event(Letter::ChangePage(PageType::from(
+                .event(Action::ChangePage(PageType::from(
                     i8::from(state.current_page) + which_way,
                 )))
                 .await;
             return RedrawType::None;
         }
-        Letter::OpenContextMenu => {
+        Action::OpenContextMenu => {
             if state.selected < state.page_entries.len() {
                 if let Some(entry) = state
                     .entries
@@ -81,7 +81,7 @@ async fn normal_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                 }
             }
         }
-        Letter::ShowHelp => {
+        Action::ShowHelp => {
             state.ui_mode = UIMode::Help;
             return RedrawType::Help;
         }

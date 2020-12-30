@@ -70,7 +70,7 @@ impl Monitors {
         if let Some(count) = self.errors.get(&ident) {
             if *count >= 5 {
                 self.errors.remove(&ident);
-                DISPATCH.sync_event(Letter::EntryRemoved(ident));
+                DISPATCH.sync_event(Action::EntryRemoved(ident));
             }
         }
         if self.monitors.contains_key(&ident) {
@@ -233,7 +233,7 @@ fn create(
                                 let data_slice = slice_to_4_bytes(&data[(size-4) .. size]);
                                 let peak = f32::from_ne_bytes(data_slice).abs();
 
-                                DISPATCH.sync_event(Letter::PeakVolumeUpdate(ident, peak));
+                                DISPATCH.sync_event(Action::PeakVolumeUpdate(ident, peak));
 
                                 unsafe { (*(*stream_ref.as_ptr()).as_ptr()).discard().unwrap(); };
                             },

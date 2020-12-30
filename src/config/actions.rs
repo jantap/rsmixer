@@ -1,11 +1,11 @@
-use crate::{models::PageType, Letter, RSError};
+use crate::{models::PageType, Action, RSError};
 
 use std::convert::TryFrom;
 
-impl TryFrom<String> for Letter {
+impl TryFrom<String> for Action {
     type Error = RSError;
 
-    fn try_from(st: String) -> Result<Letter, Self::Error> {
+    fn try_from(st: String) -> Result<Action, Self::Error> {
         let mut s = &st[..];
         let mut a = String::new();
 
@@ -25,14 +25,14 @@ impl TryFrom<String> for Letter {
         }
 
         let x = match s {
-            "exit" => Letter::ExitSignal,
-            "mute" => Letter::RequestMute,
-            "show_output" => Letter::ChangePage(PageType::Output),
-            "show_input" => Letter::ChangePage(PageType::Input),
-            "show_cards" => Letter::ChangePage(PageType::Cards),
-            "context_menu" => Letter::OpenContextMenu,
-            "help" => Letter::ShowHelp,
-            "input_volume_value" => Letter::InputVolumeValue,
+            "exit" => Action::ExitSignal,
+            "mute" => Action::RequestMute,
+            "show_output" => Action::ChangePage(PageType::Output),
+            "show_input" => Action::ChangePage(PageType::Input),
+            "show_cards" => Action::ChangePage(PageType::Cards),
+            "context_menu" => Action::OpenContextMenu,
+            "help" => Action::ShowHelp,
+            "input_volume_value" => Action::InputVolumeValue,
             "lower_volume" => {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,
@@ -40,7 +40,7 @@ impl TryFrom<String> for Letter {
                         return Err(RSError::ActionBindingError(st.clone()));
                     }
                 };
-                Letter::RequstChangeVolume(-a)
+                Action::RequstChangeVolume(-a)
             }
             "raise_volume" => {
                 let a = match a.parse::<i16>() {
@@ -49,7 +49,7 @@ impl TryFrom<String> for Letter {
                         return Err(RSError::ActionBindingError(st.clone()));
                     }
                 };
-                Letter::RequstChangeVolume(a)
+                Action::RequstChangeVolume(a)
             }
             "up" => {
                 let a = match a.parse::<u16>() {
@@ -58,7 +58,7 @@ impl TryFrom<String> for Letter {
                         return Err(RSError::ActionBindingError(st.clone()));
                     }
                 };
-                Letter::MoveUp(a)
+                Action::MoveUp(a)
             }
             "down" => {
                 let a = match a.parse::<u16>() {
@@ -67,12 +67,12 @@ impl TryFrom<String> for Letter {
                         return Err(RSError::ActionBindingError(st.clone()));
                     }
                 };
-                Letter::MoveDown(a)
+                Action::MoveDown(a)
             }
-            "cycle_pages_forward" => Letter::CyclePages(1),
-            "cycle_pages_backward" => Letter::CyclePages(-1),
-            "close_context_menu" => Letter::CloseContextMenu,
-            "hide" => Letter::Hide,
+            "cycle_pages_forward" => Action::CyclePages(1),
+            "cycle_pages_backward" => Action::CyclePages(-1),
+            "close_context_menu" => Action::CloseContextMenu,
+            "hide" => Action::Hide,
             _ => {
                 return Err(RSError::ActionBindingError(st.clone()));
             }

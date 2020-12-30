@@ -2,42 +2,42 @@ use super::common::*;
 
 use std::{collections::HashMap, ops::Deref};
 
-pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     match msg.clone() {
-        Letter::Redraw => {
+        Action::Redraw => {
             return RedrawType::Full;
         }
-        Letter::EntryRemoved(ident) => {
+        Action::EntryRemoved(ident) => {
             state.entries.remove(&ident);
         }
-        Letter::EntryUpdate(ident, entry) => {
+        Action::EntryUpdate(ident, entry) => {
             state.entries.insert(ident, entry.deref().to_owned());
         }
-        Letter::ChangePage(page) => {
+        Action::ChangePage(page) => {
             state.current_page = page;
             state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
-        Letter::CloseContextMenu => {
+        Action::CloseContextMenu => {
             if state.ui_mode == UIMode::Help {
                 state.ui_mode = UIMode::Normal;
                 return RedrawType::Full;
             }
         }
-        Letter::PADisconnected => {
-            DISPATCH.event(Letter::CreateMonitors(HashMap::new())).await;
+        Action::PADisconnected => {
+            DISPATCH.event(Action::CreateMonitors(HashMap::new())).await;
             *state = RSState::default();
             return RedrawType::Full;
         }
-        Letter::RetryIn(time) => {
+        Action::RetryIn(time) => {
             state.ui_mode = UIMode::RetryIn(time);
             return RedrawType::Full;
         }
-        Letter::ConnectToPA => {
+        Action::ConnectToPA => {
             state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
-        Letter::InputVolumeValue => {
+        Action::InputVolumeValue => {
             state.ui_mode = UIMode::InputVolumeValue;
             return RedrawType::Entries;
         }

@@ -156,7 +156,7 @@ pub fn start(
                     break;
                 }
 
-                if let Letter::CreateMonitors(mons) = cmd.clone() {
+                if let Action::CreateMonitors(mons) = cmd.clone() {
                     last_targets = mons;
                     monitors.filter(&mainloop, &context, &last_targets);
                 }

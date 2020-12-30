@@ -14,7 +14,7 @@ mod run;
 mod ui;
 
 pub use errors::RSError;
-pub use models::Letter;
+pub use models::Action;
 
 use config::{RsMixerConfig, Variables};
 use events::{Dispatch, Message, Senders};
@@ -35,11 +35,11 @@ use linked_hash_map::LinkedHashMap;
 use multimap::MultiMap;
 
 lazy_static! {
-    pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
-    pub static ref SENDERS: Senders<Letter> = Senders::default();
+    pub static ref DISPATCH: Dispatch<Action> = Dispatch::default();
+    pub static ref SENDERS: Senders<Action> = Senders::default();
     pub static ref STYLES: Storage<Styles> = Storage::new();
     pub static ref VARIABLES: Storage<Variables> = Storage::new();
-    pub static ref BINDINGS: Storage<MultiMap<KeyEvent, Letter>> = Storage::new();
+    pub static ref BINDINGS: Storage<MultiMap<KeyEvent, Action>> = Storage::new();
 }
 
 pub type Styles = LinkedHashMap<String, ContentStyle>;

@@ -12,7 +12,7 @@ use pulse::volume::ChannelVolumes;
 
 use crossterm::event::KeyEvent;
 
-messages!(Letter,
+messages!(Action,
     ExitSignal => 0,
 
     Redraw => MAIN_MESSAGE,

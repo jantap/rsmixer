@@ -2,7 +2,7 @@ pub use super::{monitor::Monitors, PAInternal, SPEC};
 
 pub use crate::{
     entry::{EntryIdentifier, EntryType},
-    Letter, RSError, DISPATCH,
+    Action, RSError, DISPATCH,
 };
 
 pub use std::{cell::RefCell, collections::HashMap, rc::Rc};

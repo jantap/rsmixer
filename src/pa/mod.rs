@@ -15,7 +15,7 @@ use lazy_static::lazy_static;
 #[derive(Debug)]
 pub enum PAInternal {
     Tick,
-    Command(Box<Letter>),
+    Command(Box<Action>),
     AskInfo(EntryIdentifier),
 }
 

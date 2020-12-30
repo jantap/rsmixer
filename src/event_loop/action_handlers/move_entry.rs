@@ -1,8 +1,8 @@
 use super::common::*;
 
-pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     match msg.clone() {
-        Letter::PeakVolumeUpdate(ident, peak) => {
+        Action::PeakVolumeUpdate(ident, peak) => {
             if ident.entry_type == EntryType::Card {
                 return RedrawType::None;
             }
@@ -18,7 +18,7 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
             }
             RedrawType::None
         }
-        Letter::MoveUp(how_much) => {
+        Action::MoveUp(how_much) => {
             if let UIMode::MoveEntry(_, _) = state.ui_mode {
                 if state.page_entries.entries.len() < 2 {
                     return RedrawType::None;
@@ -41,12 +41,12 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                 let new_parent = state.page_entries.get(j as usize).unwrap();
                 state.ui_mode = UIMode::MoveEntry(entry_ident, new_parent);
 
-                DISPATCH.event(Letter::Redraw).await;
+                DISPATCH.event(Action::Redraw).await;
             }
 
             RedrawType::None
         }
-        Letter::MoveDown(how_much) => {
+        Action::MoveDown(how_much) => {
             if let UIMode::MoveEntry(_, _) = state.ui_mode {
                 if state.page_entries.entries.len() < 2 {
                     return RedrawType::None;
@@ -64,16 +64,16 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                 let new_parent = state.page_entries.get(j as usize).unwrap();
                 state.ui_mode = UIMode::MoveEntry(entry_ident, new_parent);
 
-                DISPATCH.event(Letter::Redraw).await;
+                DISPATCH.event(Action::Redraw).await;
             }
 
             RedrawType::None
         }
-        Letter::OpenContextMenu => match state.ui_mode {
+        Action::OpenContextMenu => match state.ui_mode {
             UIMode::MoveEntry(ident, parent) => {
                 state.ui_mode = UIMode::Normal;
                 DISPATCH
-                    .event(Letter::MoveEntryToParent(ident, parent))
+                    .event(Action::MoveEntryToParent(ident, parent))
                     .await;
                 RedrawType::Full
             }

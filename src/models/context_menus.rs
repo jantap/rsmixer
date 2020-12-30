@@ -1,6 +1,6 @@
 use crate::{
     entry::{Entry, EntryIdentifier, EntryType},
-    Letter, DISPATCH,
+    Action, DISPATCH,
 };
 
 pub fn context_menu(entry: &Entry) -> Vec<ContextMenuOption> {
@@ -61,24 +61,24 @@ pub async fn resolve(ident: EntryIdentifier, answer: ContextMenuOption) -> Conte
         ContextMenuOption::Move => ContextMenuEffect::MoveEntry,
         ContextMenuOption::MoveToEntry(entry, _) => {
             DISPATCH
-                .event(Letter::MoveEntryToParent(ident, entry))
+                .event(Action::MoveEntryToParent(ident, entry))
                 .await;
             ContextMenuEffect::None
         }
         ContextMenuOption::ChangeCardProfile(name, _) => {
-            DISPATCH.event(Letter::ChangeCardProfile(ident, name)).await;
+            DISPATCH.event(Action::ChangeCardProfile(ident, name)).await;
             ContextMenuEffect::None
         }
         ContextMenuOption::Suspend => {
-            DISPATCH.event(Letter::SetSuspend(ident, true)).await;
+            DISPATCH.event(Action::SetSuspend(ident, true)).await;
             ContextMenuEffect::None
         }
         ContextMenuOption::Resume => {
-            DISPATCH.event(Letter::SetSuspend(ident, false)).await;
+            DISPATCH.event(Action::SetSuspend(ident, false)).await;
             ContextMenuEffect::None
         }
         ContextMenuOption::Kill => {
-            DISPATCH.event(Letter::KillEntry(ident)).await;
+            DISPATCH.event(Action::KillEntry(ident)).await;
             ContextMenuEffect::None
         }
         _ => ContextMenuEffect::None,

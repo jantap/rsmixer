@@ -1,4 +1,4 @@
-use crate::{config::keys, models::PageType, Letter, RSError, BINDINGS};
+use crate::{config::keys, models::PageType, Action, RSError, BINDINGS};
 
 use std::{collections::HashSet, mem::discriminant};
 
@@ -8,13 +8,13 @@ pub struct HelpLine {
     category: String,
 }
 
-pub enum LetterMatcher {
-    Any(Letter),
-    Concrete(Letter),
+pub enum ActionMatcher {
+    Any(Action),
+    Concrete(Action),
 }
 
-impl LetterMatcher {
-    fn is_matching(&self, l2: &Letter) -> bool {
+impl ActionMatcher {
+    fn is_matching(&self, l2: &Action) -> bool {
         match self {
             Self::Any(l1) => discriminant(l1) == discriminant(l2),
             Self::Concrete(l1) => l1 == l2,
@@ -28,7 +28,7 @@ pub fn generate() -> Vec<HelpLine> {
     let mut volume_deltas = HashSet::new();
 
     for (_, v) in (*BINDINGS).get().iter() {
-        if let Letter::RequstChangeVolume(x) = v {
+        if let Action::RequstChangeVolume(x) = v {
             volume_deltas.insert(x.abs());
         }
     }
@@ -36,8 +36,8 @@ pub fn generate() -> Vec<HelpLine> {
     categories.push((
         "Navigation".to_string(),
         vec![
-            LetterMatcher::Any(Letter::MoveUp(0)),
-            LetterMatcher::Any(Letter::MoveDown(0)),
+            ActionMatcher::Any(Action::MoveUp(0)),
+            ActionMatcher::Any(Action::MoveDown(0)),
         ],
     ));
 
@@ -45,30 +45,30 @@ pub fn generate() -> Vec<HelpLine> {
         categories.push((
             format!("Change volume by {}", vd),
             vec![
-                LetterMatcher::Concrete(Letter::RequstChangeVolume(vd)),
-                LetterMatcher::Concrete(Letter::RequstChangeVolume(-vd)),
+                ActionMatcher::Concrete(Action::RequstChangeVolume(vd)),
+                ActionMatcher::Concrete(Action::RequstChangeVolume(-vd)),
             ],
         ))
     }
     categories.push((
         "Mute/unmute".to_string(),
-        vec![LetterMatcher::Concrete(Letter::RequestMute)],
+        vec![ActionMatcher::Concrete(Action::RequestMute)],
     ));
     categories.push((
         "Change page".to_string(),
-        vec![LetterMatcher::Any(Letter::ChangePage(PageType::Output))],
+        vec![ActionMatcher::Any(Action::ChangePage(PageType::Output))],
     ));
     categories.push((
         "Cycle pages".to_string(),
-        vec![LetterMatcher::Any(Letter::CyclePages(0))],
+        vec![ActionMatcher::Any(Action::CyclePages(0))],
     ));
     categories.push((
         "Context menu".to_string(),
-        vec![LetterMatcher::Any(Letter::OpenContextMenu)],
+        vec![ActionMatcher::Any(Action::OpenContextMenu)],
     ));
     categories.push((
         "Quit".to_string(),
-        vec![LetterMatcher::Any(Letter::ExitSignal)],
+        vec![ActionMatcher::Any(Action::ExitSignal)],
     ));
 
     let mut help_lines = Vec::new();

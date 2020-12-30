@@ -1,8 +1,8 @@
 use super::common::*;
 
-pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     match msg.clone() {
-        Letter::RequestMute => {
+        Action::RequestMute => {
             if state.selected < state.page_entries.len() {
                 let mute = match state
                     .entries
@@ -14,14 +14,14 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                     }
                 };
                 DISPATCH
-                    .event(Letter::MuteEntry(
+                    .event(Action::MuteEntry(
                         state.page_entries.get(state.selected).unwrap(),
                         !mute,
                     ))
                     .await;
             }
         }
-        Letter::RequstChangeVolume(how_much) => {
+        Action::RequstChangeVolume(how_much) => {
             if state.selected < state.page_entries.len() {
                 if let Some(entry) = state
                     .entries
@@ -44,7 +44,7 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
                         }
                     }
                     DISPATCH
-                        .event(Letter::SetVolume(
+                        .event(Action::SetVolume(
                             state.page_entries.get(state.selected).unwrap(),
                             vols,
                         ))

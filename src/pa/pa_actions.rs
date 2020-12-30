@@ -1,30 +1,30 @@
 use super::common::*;
 
 pub fn handle_command(
-    cmd: Letter,
+    cmd: Action,
     context: &Rc<RefCell<Context>>,
     info_sx: &mpsc::UnboundedSender<EntryIdentifier>,
 ) -> Option<()> {
     match cmd {
-        Letter::MuteEntry(ident, mute) => {
+        Action::MuteEntry(ident, mute) => {
             set_mute(ident, mute, &context);
         }
-        Letter::MoveEntryToParent(ident, parent) => {
+        Action::MoveEntryToParent(ident, parent) => {
             move_entry_to_parent(ident, parent, &context, info_sx.clone());
         }
-        Letter::ChangeCardProfile(ident, profile) => {
+        Action::ChangeCardProfile(ident, profile) => {
             change_card_profile(ident, profile, &context);
         }
-        Letter::SetVolume(ident, vol) => {
+        Action::SetVolume(ident, vol) => {
             set_volume(ident, vol, &context);
         }
-        Letter::SetSuspend(ident, suspend) => {
+        Action::SetSuspend(ident, suspend) => {
             set_suspend(ident, suspend, &context);
         }
-        Letter::KillEntry(ident) => {
+        Action::KillEntry(ident) => {
             kill_entry(ident, &context);
         }
-        Letter::ExitSignal => {
+        Action::ExitSignal => {
             //@TODO disconnect monitors
             return None;
         }

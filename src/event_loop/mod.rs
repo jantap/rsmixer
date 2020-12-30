@@ -4,12 +4,12 @@ use action_handlers::*;
 
 use crate::{
     models::{RSState, RedrawType, UIMode},
-    ui, Letter, RSError,
+    ui, Action, RSError,
 };
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
-pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
+pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
     let mut stdout = ui::prepare_terminal()?;
 
     let mut state = RSState::default();
@@ -20,8 +20,8 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
         // run action handlers which will decide what to redraw
 
         match msg {
-            Letter::ExitSignal => { break; },
-            Letter::KeyPress(key_event) => {
+            Action::ExitSignal => { break; },
+            Action::KeyPress(key_event) => {
                 key_press::action_handler(key_event, &mut state).await;
                 continue;
             },
@@ -46,7 +46,7 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
                     .apply(&mut state.redraw);
             }
             UIMode::Help => {
-                if msg == Letter::Redraw {
+                if msg == Action::Redraw {
                     state.redraw.take_bigger(RedrawType::Help);
                 }
             }

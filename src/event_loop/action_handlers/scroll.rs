@@ -4,17 +4,17 @@ use crate::{ui::util::Y_PADDING, RSError};
 
 use std::cmp::{max, min};
 
-pub async fn scroll_handler(msg: &Letter, state: &mut RSState) -> Result<RedrawType, RSError> {
+pub async fn scroll_handler(msg: &Action, state: &mut RSState) -> Result<RedrawType, RSError> {
     let (_, term_h) = crossterm::terminal::size()?;
 
     match msg {
-        Letter::EntryRemoved(_)
-        | Letter::EntryUpdate(_, _)
-        | Letter::Redraw
-        | Letter::ChangePage(_) => {
+        Action::EntryRemoved(_)
+        | Action::EntryUpdate(_, _)
+        | Action::Redraw
+        | Action::ChangePage(_) => {
             state.page_entries.reflow_scroll(term_h - *Y_PADDING, true);
         }
-        Letter::MoveUp(_) | Letter::MoveDown(_) => {}
+        Action::MoveUp(_) | Action::MoveDown(_) => {}
         _ => {
             return Ok(RedrawType::None);
         }

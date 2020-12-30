@@ -1,5 +1,5 @@
 use crate::{
-    event_loop::event_loop, events, events::EventsManager, input, pa, ui, Letter, RSError,
+    event_loop::event_loop, events, events::EventsManager, input, pa, ui, Action, RSError,
     DISPATCH, SENDERS, VARIABLES,
 };
 
@@ -26,7 +26,7 @@ pub async fn run() -> Result<(), RSError> {
 
     let r = tokio::try_join!(input_loop, pa, event_loop);
 
-    DISPATCH.event(Letter::ExitSignal).await;
+    DISPATCH.event(Action::ExitSignal).await;
 
     ui::clean_terminal()?;
 
@@ -84,7 +84,7 @@ async fn run_pa_internal() -> Result<(), RSError> {
 
         let async_pa = task::spawn(async move { pa::start_async(pa_sx.clone(), info_rx).await });
         let sync_pa = task::spawn_blocking(move || pa::start(pa_rx, info_sx));
-        DISPATCH.event(Letter::ConnectToPA).await;
+        DISPATCH.event(Action::ConnectToPA).await;
 
         let result = tokio::select! {
             res = async_pa => match res {
@@ -103,18 +103,18 @@ async fn run_pa_internal() -> Result<(), RSError> {
             break;
         }
 
-        DISPATCH.event(Letter::PADisconnected).await;
-        DISPATCH.event(Letter::PADisconnected2).await;
+        DISPATCH.event(Action::PADisconnected).await;
+        DISPATCH.event(Action::PADisconnected2).await;
 
         for i in 0..retry_time {
-            DISPATCH.event(Letter::RetryIn(retry_time - i)).await;
+            DISPATCH.event(Action::RetryIn(retry_time - i)).await;
 
             let timeout_part = tokio::time::delay_for(std::time::Duration::from_secs(1));
             let event = rx.next();
             tokio::select! {
                 _ = timeout_part => {},
                 ev = event => {
-                    if let Some(Ok(Letter::ExitSignal)) = ev {
+                    if let Some(Ok(Action::ExitSignal)) = ev {
                         return Ok(());
                     }
                 }

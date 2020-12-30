@@ -7,15 +7,15 @@ use crate::{
 
 use std::collections::{HashMap, HashSet};
 
-pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     // we only need to update page entries if entries changed
     match msg {
-        Letter::Redraw
-        | Letter::EntryRemoved(_)
-        | Letter::EntryUpdate(_, _)
-        | Letter::ChangePage(_) => {}
+        Action::Redraw
+        | Action::EntryRemoved(_)
+        | Action::EntryUpdate(_, _)
+        | Action::ChangePage(_) => {}
 
-        Letter::Hide => {
+        Action::Hide => {
             if let Some(selected) = state.page_entries.get(state.selected) {
                 state.entries.hide(selected);
             }
@@ -69,7 +69,7 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
 
     if entries_changed {
         DISPATCH
-            .event(Letter::CreateMonitors(
+            .event(Action::CreateMonitors(
                 if state.current_page != PageType::Cards {
                     monitor_list(state)
                 } else {

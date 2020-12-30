@@ -11,13 +11,15 @@ use std::convert::TryFrom;
 
 use crossterm::{event::KeyEvent, style::ContentStyle};
 
+use multimap::MultiMap;
+
 use linked_hash_map::LinkedHashMap;
 
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct RsMixerConfig {
-    bindings: LinkedHashMap<String, String>,
+    bindings: MultiMap<String, String>,
     colors: LinkedHashMap<String, LinkedHashMap<String, String>>,
     pa_retry_time: Option<u64>,
 }
@@ -30,14 +32,16 @@ impl RsMixerConfig {
 
     pub fn interpret(
         &self,
-    ) -> Result<(Styles, LinkedHashMap<KeyEvent, Letter>, Variables), RSError> {
-        let mut bindings: LinkedHashMap<KeyEvent, Letter> = LinkedHashMap::new();
+    ) -> Result<(Styles, MultiMap<KeyEvent, Letter>, Variables), RSError> {
+        let mut bindings: MultiMap<KeyEvent, Letter> = MultiMap::new();
 
-        for (k, c) in &self.bindings {
-            bindings.insert(
-                keys::try_string_to_keyevent(&k)?,
-                Letter::try_from(c.clone())?,
-            );
+        for (k, cs) in &self.bindings {
+            for c in cs {
+                bindings.insert(
+                    keys::try_string_to_keyevent(&k)?,
+                    Letter::try_from(c.clone())?,
+                );
+            }
         }
 
         let mut styles: Styles = LinkedHashMap::new();
@@ -68,7 +72,7 @@ impl RsMixerConfig {
 
 impl std::default::Default for RsMixerConfig {
     fn default() -> Self {
-        let mut bindings = LinkedHashMap::new();
+        let mut bindings = MultiMap::new();
         bindings.insert("q".to_string(), "exit".to_string());
 
         bindings.insert("j".to_string(), "down(1)".to_string());
@@ -85,6 +89,8 @@ impl std::default::Default for RsMixerConfig {
 
         bindings.insert("m".to_string(), "mute".to_string());
 
+        bindings.insert("e".to_string(), "input_volume_value".to_string());
+
         bindings.insert("1".to_string(), "show_output".to_string());
         bindings.insert("2".to_string(), "show_input".to_string());
         bindings.insert("3".to_string(), "show_cards".to_string());
@@ -93,6 +99,7 @@ impl std::default::Default for RsMixerConfig {
 
         bindings.insert("enter".to_string(), "context_menu".to_string());
         bindings.insert("esc".to_string(), "close_context_menu".to_string());
+        bindings.insert("q".to_string(), "close_context_menu".to_string());
 
         let mut styles = LinkedHashMap::new();
         let mut c = LinkedHashMap::new();

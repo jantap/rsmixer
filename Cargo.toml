@@ -24,6 +24,7 @@ env_logger = "0.7.1"
 
 # general
 linked-hash-map = { version = "0.5.3", features = ["serde_impl"] }
+multimap = "0.8.2"
 lazy_static = "1.4.0"
 unicode-width = "0.1.8"
 state = { version = "0.4.1", features = ["tls"] }

@@ -37,6 +37,10 @@ pub async fn action_handler(msg: &Letter, state: &mut RSState) -> RedrawType {
             state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
+        Letter::InputVolumeValue => {
+            state.ui_mode = UIMode::InputVolumeValue;
+            return RedrawType::Entries;
+        }
         _ => {}
     };
 

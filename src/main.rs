@@ -32,13 +32,14 @@ use state::Storage;
 use gumdrop::Options;
 
 use linked_hash_map::LinkedHashMap;
+use multimap::MultiMap;
 
 lazy_static! {
     pub static ref DISPATCH: Dispatch<Letter> = Dispatch::default();
     pub static ref SENDERS: Senders<Letter> = Senders::default();
     pub static ref STYLES: Storage<Styles> = Storage::new();
     pub static ref VARIABLES: Storage<Variables> = Storage::new();
-    pub static ref BINDINGS: Storage<LinkedHashMap<KeyEvent, Letter>> = Storage::new();
+    pub static ref BINDINGS: Storage<MultiMap<KeyEvent, Letter>> = Storage::new();
 }
 
 pub type Styles = LinkedHashMap<String, ContentStyle>;

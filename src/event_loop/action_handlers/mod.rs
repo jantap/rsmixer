@@ -6,3 +6,5 @@ pub mod move_entry;
 pub mod normal;
 pub mod play_entries;
 pub mod scroll;
+pub mod input_volume;
+pub mod key_press;

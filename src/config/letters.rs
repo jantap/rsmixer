@@ -32,6 +32,7 @@ impl TryFrom<String> for Letter {
             "show_cards" => Letter::ChangePage(PageType::Cards),
             "context_menu" => Letter::OpenContextMenu,
             "help" => Letter::ShowHelp,
+            "input_volume_value" => Letter::InputVolumeValue,
             "lower_volume" => {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,

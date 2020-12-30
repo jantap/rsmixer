@@ -19,8 +19,13 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw
 
-        if msg == Letter::ExitSignal {
-            break;
+        match msg {
+            Letter::ExitSignal => { break; },
+            Letter::KeyPress(key_event) => {
+                key_press::action_handler(key_event, &mut state).await;
+                continue;
+            },
+            _ => {},
         }
 
         state.redraw = general::action_handler(&msg, &mut state).await;
@@ -47,6 +52,11 @@ pub async fn event_loop(mut rx: Receiver<Letter>) -> Result<(), RSError> {
             }
             UIMode::MoveEntry(_, _) => {
                 move_entry::action_handler(&msg, &mut state)
+                    .await
+                    .apply(&mut state.redraw);
+            }
+            UIMode::InputVolumeValue => {
+                input_volume::action_handler(&msg, &mut state)
                     .await
                     .apply(&mut state.redraw);
             }

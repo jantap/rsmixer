@@ -6,5 +6,6 @@ pub enum UIMode {
     ContextMenu,
     Help,
     MoveEntry(EntryIdentifier, EntryIdentifier),
+    InputVolumeValue,
     RetryIn(u64),
 }

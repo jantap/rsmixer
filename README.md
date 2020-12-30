@@ -1,6 +1,7 @@
 # RsMixer
 
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/jantap/rsmixer)
+![Crates.io tag](https://img.shields.io/crates/v/rsmixer)
 
 RsMixer is a PulseAudio volume mixer written in rust
 
@@ -24,6 +25,14 @@ or by manually building it:
 ```
 git clone https://github.com/jantap/rsmixer.git
 cargo install --path ./rsmixer
+```
+
+or if you're an Arch user, you can install it from AUR:
+
+```
+git clone https://aur.archlinux.org/rsmixer.git
+cd rsmixer
+makepkg -si
 ```
 
 ## Usage

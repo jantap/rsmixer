@@ -60,7 +60,10 @@ async fn run_event_loop() -> impl Future<Output = Result<(), RSError>> {
 }
 
 async fn run_input_loop() -> Result<(), RSError> {
-    match task::spawn(input::start()).await {
+    let (sx, rx) = channel(events::CHANNEL_CAPACITY);
+    SENDERS.register(events::INPUT_MESSAGE, sx).await;
+
+    match task::spawn(input::start(rx)).await {
         Ok(_) => Ok(()),
         Err(e) => Err(RSError::TaskHandleError(e)),
     }

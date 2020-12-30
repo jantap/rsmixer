@@ -10,6 +10,8 @@ use std::collections::HashMap;
 
 use pulse::volume::ChannelVolumes;
 
+use crossterm::event::KeyEvent;
+
 messages!(Letter,
     ExitSignal => 0,
 
@@ -18,6 +20,7 @@ messages!(Letter,
     EntryUpdate(EntryIdentifier, Box<Entry>) => MAIN_MESSAGE,
     PeakVolumeUpdate(EntryIdentifier, f32) => MAIN_MESSAGE,
     RequstChangeVolume(i16) => MAIN_MESSAGE,
+    InputVolumeValue => MAIN_MESSAGE,
     MoveUp(u16) => MAIN_MESSAGE,
     MoveDown(u16) => MAIN_MESSAGE,
     ChangePage(PageType) => MAIN_MESSAGE,
@@ -30,6 +33,7 @@ messages!(Letter,
     PADisconnected => MAIN_MESSAGE,
     RetryIn(u64) => MAIN_MESSAGE,
     ConnectToPA => MAIN_MESSAGE,
+    KeyPress(KeyEvent) => MAIN_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,

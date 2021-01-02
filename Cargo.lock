@@ -197,6 +197,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ev-apple"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23828b1fcf1270de203993aa0230600e380e30646ee357eca384e781709e6a4c"
+dependencies = [
+ "crossbeam-channel",
+ "futures",
+ "log",
+ "state",
+ "tokio",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -745,6 +758,7 @@ dependencies = [
  "crossbeam-channel",
  "crossterm",
  "env_logger",
+ "ev-apple",
  "futures",
  "gumdrop",
  "lazy_static",

@@ -1,6 +1,6 @@
 use super::common::*;
 
-use crate::{events, SENDERS};
+use crate::{SENDERS, models::actions::statics::{CHANNEL_CAPACITY, PA_MESSAGE}};
 
 use std::time::Duration;
 
@@ -13,8 +13,8 @@ pub async fn start_async(
     internal_sx: cb_channel::Sender<PAInternal>,
     mut info_rx: mpsc::UnboundedReceiver<EntryIdentifier>,
 ) -> Result<(), RSError> {
-    let (sx, mut command_receiver) = channel(events::CHANNEL_CAPACITY);
-    SENDERS.register(events::PA_MESSAGE, sx).await;
+    let (sx, mut command_receiver) = channel(CHANNEL_CAPACITY);
+    SENDERS.register(PA_MESSAGE, sx).await;
 
     let mut interval = tokio::time::interval(Duration::from_millis(50));
 

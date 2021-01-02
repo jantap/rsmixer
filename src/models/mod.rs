@@ -1,5 +1,5 @@
 pub mod context_menus;
-mod actions;
+pub mod actions;
 mod page_entries;
 mod page_type;
 mod redraw_type;

@@ -1,10 +1,9 @@
 use crate::{
     entry::{Entry, EntryIdentifier},
-    events::{MAIN_MESSAGE, PA_MESSAGE},
-    messages,
     models::PageType,
-    Message,
 };
+
+use ev_apple::{Message, messages};
 
 use std::collections::HashMap;
 
@@ -12,8 +11,10 @@ use pulse::volume::ChannelVolumes;
 
 use crossterm::event::KeyEvent;
 
+use statics::*;
+
 messages!(Action,
-    ExitSignal => 0,
+    ExitSignal => EXIT_MESSAGE_ID,
 
     Redraw => MAIN_MESSAGE,
     EntryRemoved(EntryIdentifier) => MAIN_MESSAGE,
@@ -44,3 +45,14 @@ messages!(Action,
     KillEntry(EntryIdentifier) => PA_MESSAGE,
     PADisconnected2 => PA_MESSAGE,
 );
+
+pub mod statics {
+    pub static CHANNEL_CAPACITY: usize = 32;
+
+    pub static MAIN_MESSAGE: u32 = 1;
+    pub static PA_MESSAGE: u32 = 2;
+    pub static RUN_PA_MESSAGE: u32 = 3;
+    pub static INPUT_MESSAGE: u32 = 4;
+
+    pub static EXIT_MESSAGE_ID: u32 = 0;
+}

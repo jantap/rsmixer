@@ -30,6 +30,7 @@ unicode-width = "0.1.8"
 state = { version = "0.4.1", features = ["tls"] }
 crossterm = { version = "0.17.5", features = ["serde", "event-stream"] }
 crossbeam-channel = "0.4.2"
+ev-apple = "0.1.1"
 
 # error handling
 thiserror = "1.0.20"

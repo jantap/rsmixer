@@ -5,7 +5,6 @@ mod config;
 mod entry;
 mod errors;
 mod event_loop;
-mod events;
 mod help;
 mod input;
 mod models;
@@ -17,7 +16,7 @@ pub use errors::RSError;
 pub use models::Action;
 
 use config::{RsMixerConfig, Variables};
-use events::{Dispatch, Message, Senders};
+use ev_apple::{Dispatch, Senders};
 
 use tokio::runtime;
 

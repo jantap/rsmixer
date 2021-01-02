@@ -1,7 +1,10 @@
 use crate::{
-    event_loop::event_loop, events, events::EventsManager, input, pa, ui, Action, RSError,
+    event_loop::event_loop, input, pa, ui, Action, RSError,
     DISPATCH, SENDERS, VARIABLES,
+    models::actions::statics::*,
 };
+
+use ev_apple::EventsManager;
 
 use std::future::Future;
 
@@ -37,10 +40,10 @@ pub async fn run() -> Result<(), RSError> {
 }
 
 async fn run_events() -> impl Future<Output = Result<(), RSError>> {
-    let ev_manager = EventsManager::prepare(&DISPATCH).await;
+    let ev_manager = EventsManager::prepare(&DISPATCH, EXIT_MESSAGE_ID).await;
 
     async move {
-        match task::spawn(events::start(ev_manager, SENDERS.clone())).await {
+        match task::spawn(ev_apple::start(ev_manager, SENDERS.clone())).await {
             Ok(_) => Ok(()),
             Err(e) => Err(RSError::TaskHandleError(e)),
         }
@@ -48,8 +51,8 @@ async fn run_events() -> impl Future<Output = Result<(), RSError>> {
 }
 
 async fn run_event_loop() -> impl Future<Output = Result<(), RSError>> {
-    let (sx, rx) = channel(events::CHANNEL_CAPACITY);
-    SENDERS.register(events::MAIN_MESSAGE, sx).await;
+    let (sx, rx) = channel(CHANNEL_CAPACITY);
+    SENDERS.register(MAIN_MESSAGE, sx).await;
 
     async move {
         match task::spawn(event_loop(rx)).await {
@@ -60,8 +63,8 @@ async fn run_event_loop() -> impl Future<Output = Result<(), RSError>> {
 }
 
 async fn run_input_loop() -> Result<(), RSError> {
-    let (sx, rx) = channel(events::CHANNEL_CAPACITY);
-    SENDERS.register(events::INPUT_MESSAGE, sx).await;
+    let (sx, rx) = channel(CHANNEL_CAPACITY);
+    SENDERS.register(INPUT_MESSAGE, sx).await;
 
     match task::spawn(input::start(rx)).await {
         Ok(_) => Ok(()),
@@ -74,7 +77,7 @@ async fn run_pa() -> impl Future<Output = Result<(), RSError>> {
 
 async fn run_pa_internal() -> Result<(), RSError> {
     let (sx, mut rx) = channel(32);
-    SENDERS.register(events::RUN_PA_MESSAGE, sx).await;
+    SENDERS.register(RUN_PA_MESSAGE, sx).await;
 
     let retry_time = (*VARIABLES).get().pa_retry_time;
 

@@ -1,6 +1,6 @@
+mod actions;
 mod colors;
 pub mod keys;
-mod actions;
 mod variables;
 
 pub use variables::Variables;
@@ -30,9 +30,7 @@ impl RsMixerConfig {
         Ok(config)
     }
 
-    pub fn interpret(
-        &self,
-    ) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
+    pub fn interpret(&self) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
         let mut bindings: MultiMap<KeyEvent, Action> = MultiMap::new();
 
         for (k, cs) in &self.bindings {

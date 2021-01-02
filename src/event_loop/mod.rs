@@ -20,12 +20,14 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
         // run action handlers which will decide what to redraw
 
         match msg {
-            Action::ExitSignal => { break; },
+            Action::ExitSignal => {
+                break;
+            }
             Action::KeyPress(key_event) => {
                 key_press::action_handler(key_event, &mut state).await;
                 continue;
-            },
-            _ => {},
+            }
+            _ => {}
         }
 
         state.redraw = general::action_handler(&msg, &mut state).await;

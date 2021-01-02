@@ -16,7 +16,7 @@ pub async fn start(mut rx: Receiver<Action>) {
 
                 match ev {
                     crossterm::event::Event::Key(event) => {
-                        DISPATCH.event(Action::KeyPress(event.clone())).await;
+                        DISPATCH.event(Action::KeyPress(event)).await;
                     }
                     crossterm::event::Event::Resize(_, _) => {
                         DISPATCH.event(Action::Redraw).await;

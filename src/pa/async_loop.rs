@@ -1,6 +1,9 @@
 use super::common::*;
 
-use crate::{SENDERS, models::actions::statics::{CHANNEL_CAPACITY, PA_MESSAGE}};
+use crate::{
+    models::actions::statics::{CHANNEL_CAPACITY, PA_MESSAGE},
+    SENDERS,
+};
 
 use std::time::Duration;
 

@@ -21,9 +21,7 @@ fn handle_conflicting_bindings(actions: &mut Vec<Action>, state: &mut RSState) {
         return;
     }
 
-    if actions.contains(&Action::ExitSignal) 
-        && actions.contains(&Action::CloseContextMenu) {
-
+    if actions.contains(&Action::ExitSignal) && actions.contains(&Action::CloseContextMenu) {
         if state.ui_mode == UIMode::ContextMenu {
             actions.retain(|action| *action != Action::ExitSignal);
         } else {

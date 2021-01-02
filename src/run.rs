@@ -1,7 +1,6 @@
 use crate::{
-    event_loop::event_loop, input, pa, ui, Action, RSError,
-    DISPATCH, SENDERS, VARIABLES,
-    models::actions::statics::*,
+    event_loop::event_loop, input, models::actions::statics::*, pa, ui, Action, RSError, DISPATCH,
+    SENDERS, VARIABLES,
 };
 
 use ev_apple::EventsManager;

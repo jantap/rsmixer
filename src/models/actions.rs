@@ -3,7 +3,7 @@ use crate::{
     models::PageType,
 };
 
-use ev_apple::{Message, messages};
+use ev_apple::{messages, Message};
 
 use std::collections::HashMap;
 

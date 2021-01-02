@@ -12,7 +12,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
 
             return RedrawType::Entries;
         }
-        _ => {},
+        _ => {}
     };
     RedrawType::None
 }

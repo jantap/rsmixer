@@ -16,24 +16,42 @@ use statics::*;
 messages!(Action,
     ExitSignal => EXIT_MESSAGE_ID,
 
+    // redraw the whole screen (called every window resize)
     Redraw => MAIN_MESSAGE,
+
+    // entry updates
     EntryRemoved(EntryIdentifier) => MAIN_MESSAGE,
     EntryUpdate(EntryIdentifier, Box<Entry>) => MAIN_MESSAGE,
     PeakVolumeUpdate(EntryIdentifier, f32) => MAIN_MESSAGE,
-    RequstChangeVolume(i16) => MAIN_MESSAGE,
-    InputVolumeValue => MAIN_MESSAGE,
+
+    // move around the UI
     MoveUp(u16) => MAIN_MESSAGE,
     MoveDown(u16) => MAIN_MESSAGE,
     ChangePage(PageType) => MAIN_MESSAGE,
+    // positive - forwards, negative - backwards
+    CyclePages(i8) => MAIN_MESSAGE,
+
+    // volume changes
     RequestMute => MAIN_MESSAGE,
+    InputVolumeValue => MAIN_MESSAGE,
+    // request volume change where the argument is a
+    // number of percentage points it should be changed by
+    RequstChangeVolume(i16) => MAIN_MESSAGE,
+
+    // context menus
     OpenContextMenu => MAIN_MESSAGE,
     CloseContextMenu => MAIN_MESSAGE,
-    CyclePages(i8) => MAIN_MESSAGE,
+    Confirm => MAIN_MESSAGE,
+
     ShowHelp => MAIN_MESSAGE,
+
     Hide => MAIN_MESSAGE,
-    PADisconnected => MAIN_MESSAGE,
+
+    // PulseAudio connection status
     RetryIn(u64) => MAIN_MESSAGE,
     ConnectToPA => MAIN_MESSAGE,
+    PADisconnected => MAIN_MESSAGE,
+
     KeyPress(KeyEvent) => MAIN_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,

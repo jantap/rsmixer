@@ -5,7 +5,7 @@ mod variables;
 
 pub use variables::Variables;
 
-use crate::{Action, RSError, Styles};
+use crate::{Action, RSError, Styles, VERSION};
 
 use std::convert::TryFrom;
 
@@ -17,11 +17,14 @@ use linked_hash_map::LinkedHashMap;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+use semver::Version;
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct RsMixerConfig {
+    version: Option<String>,
+    pa_retry_time: Option<u64>,
     bindings: MultiMap<String, String>,
     colors: LinkedHashMap<String, LinkedHashMap<String, String>>,
-    pa_retry_time: Option<u64>,
 }
 
 impl RsMixerConfig {
@@ -30,17 +33,9 @@ impl RsMixerConfig {
         Ok(config)
     }
 
-    pub fn interpret(&self) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
-        let mut bindings: MultiMap<KeyEvent, Action> = MultiMap::new();
-
-        for (k, cs) in &self.bindings {
-            for c in cs {
-                bindings.insert(
-                    keys::try_string_to_keyevent(&k)?,
-                    Action::try_from(c.clone())?,
-                );
-            }
-        }
+    pub fn interpret(&mut self) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
+        
+        let bindings = self.bindings()?;
 
         let mut styles: Styles = LinkedHashMap::new();
 
@@ -64,7 +59,61 @@ impl RsMixerConfig {
             styles.insert(k.clone(), c);
         }
 
+        self.compatibility_layer()?;
+
+        self.version = Some(String::from(VERSION));
+
+        confy::store("rsmixer", self.clone())?;
+
         Ok((styles, bindings, Variables::new(self)))
+    }
+
+    fn bindings(&self) -> Result<MultiMap<KeyEvent, Action>, RSError> {
+        let mut bindings: MultiMap<KeyEvent, Action> = MultiMap::new();
+
+        for (k, cs) in &self.bindings {
+            for c in cs {
+                bindings.insert(
+                    keys::try_string_to_keyevent(&k)?,
+                    Action::try_from(c.clone())?,
+                );
+            }
+        }
+
+        Ok(bindings)
+    }
+
+    fn compatibility_layer(&mut self) -> Result<(), RSError> {
+        let current_ver = Version::parse(VERSION)?;
+
+        let config_ver = match &self.version {
+            Some(v) => v.clone(),
+            None => "0.0.0".to_string(),
+        };
+        let config_ver = Version::parse(&config_ver)?;
+
+        if config_ver >= current_ver {
+            return Ok(());
+        }
+
+        let mut parsed: MultiMap<KeyEvent, (Action, String)> = MultiMap::new();
+
+        for (k, cs) in &self.bindings {
+            for c in cs {
+                parsed.insert(
+                    keys::try_string_to_keyevent(&k)?,
+                    (Action::try_from(c.clone())?, k.clone()),
+                );
+            }
+        }
+
+        if parsed.iter().find(|(_, v)| (**v).0 == Action::Confirm).is_none() {
+            if let Some((_, (_, k))) = parsed.iter().find(|(_, v)| (**v).0 == Action::OpenContextMenu) {
+                self.bindings.insert(k.clone(), Action::Confirm.to_string());
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -119,10 +168,12 @@ impl std::default::Default for RsMixerConfig {
         c.insert("fg".to_string(), "green".to_string());
         c.insert("bg".to_string(), "black".to_string());
         styles.insert("green".to_string(), c);
+
         Self {
+            version: Some(String::from(VERSION.clone()).to_owned()),
+            pa_retry_time: None,
             bindings,
             colors: styles,
-            pa_retry_time: None,
         }
     }
 }

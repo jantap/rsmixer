@@ -30,7 +30,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
             state.ui_mode = UIMode::Normal;
             return RedrawType::Full;
         }
-        Action::OpenContextMenu => {
+        Action::Confirm => {
             if state.selected >= state.page_entries.len() {
                 return RedrawType::None;
             }

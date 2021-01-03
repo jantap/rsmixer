@@ -41,6 +41,8 @@ lazy_static! {
     pub static ref BINDINGS: Storage<MultiMap<KeyEvent, Action>> = Storage::new();
 }
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 pub type Styles = LinkedHashMap<String, ContentStyle>;
 
 #[derive(Debug, Options)]
@@ -72,7 +74,7 @@ async fn launch() -> Result<(), RSError> {
         simple_logging::log_to_file(file, lvl).unwrap();
     }
 
-    let config = RsMixerConfig::load()?;
+    let mut config = RsMixerConfig::load()?;
 
     let (styles, bindings, variables) = config.interpret()?;
 

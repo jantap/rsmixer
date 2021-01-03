@@ -28,4 +28,12 @@ fn handle_conflicting_bindings(actions: &mut Vec<Action>, state: &mut RSState) {
             actions.retain(|action| *action != Action::CloseContextMenu);
         }
     }
+
+    if actions.contains(&Action::Confirm) && actions.contains(&Action::OpenContextMenu) {
+        if state.ui_mode == UIMode::ContextMenu {
+            actions.retain(|action| *action != Action::OpenContextMenu);
+        } else {
+            actions.retain(|action| *action != Action::Confirm);
+        }
+    }
 }

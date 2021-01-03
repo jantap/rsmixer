@@ -19,6 +19,8 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw
 
+        log::debug!("Action: {:#?}", msg);
+
         match msg {
             Action::ExitSignal => {
                 break;

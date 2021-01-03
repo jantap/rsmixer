@@ -12,6 +12,7 @@ pub enum RSError {
     KeyCodeError(String),
     ActionBindingError(String),
     InvalidColor(String),
+    InvalidVersion(String),
 
     // UI related errors
     TerminalTooSmall,
@@ -60,6 +61,9 @@ impl fmt::Display for RSError {
             Self::InvalidColor(color) => {
                 write!(f, "Error in config file\n'{}' is not a valid color", color)
             }
+            Self::InvalidVersion(version) => {
+                write!(f, "Error in config file\n'{}' is not a valid version code", version)
+            }
         }
     }
 }
@@ -91,5 +95,11 @@ impl From<tokio::task::JoinError> for RSError {
 impl From<confy::ConfyError> for RSError {
     fn from(err: confy::ConfyError) -> RSError {
         RSError::ConfyError(err)
+    }
+}
+
+impl From<semver::SemVerError> for RSError {
+    fn from(err: semver::SemVerError) -> RSError {
+        RSError::InvalidVersion("".to_string())
     }
 }

@@ -2,6 +2,36 @@ use crate::{models::PageType, Action, RSError};
 
 use std::convert::TryFrom;
 
+impl ToString for Action {
+    fn to_string(&self) -> String {
+        match self {
+            Action::ExitSignal => "exit".to_string(),
+            Action::RequestMute => "mute".to_string(),
+            Action::ChangePage(PageType::Output) => "show_output".to_string(),
+            Action::ChangePage(PageType::Input) => "show_input".to_string(),
+            Action::ChangePage(PageType::Cards) => "show_cards".to_string(),
+            Action::OpenContextMenu => "context_menu".to_string(),
+            Action::ShowHelp => "help".to_string(),
+            Action::InputVolumeValue => "input_volume_value".to_string(),
+            Action::RequstChangeVolume(num) => {
+                if *num < 0 {
+                    format!("lower_volume({})", num)
+                } else {
+                    format!("raise_volume({})", num)
+                }
+            }
+            Action::MoveUp(num) => format!("up({})", num),
+            Action::MoveDown(num) => format!("down({})", num),
+            Action::CyclePages(1) => "cycle_pages_forward".to_string(),
+            Action::CyclePages(-1) => "cycle_pages_backward".to_string(),
+            Action::CloseContextMenu => "close_context_menu".to_string(),
+            Action::Confirm => "confirm".to_string(),
+            Action::Hide => "hide".to_string(),
+            _ => "".to_string(),
+        }
+    }
+}
+
 impl TryFrom<String> for Action {
     type Error = RSError;
 
@@ -72,6 +102,7 @@ impl TryFrom<String> for Action {
             "cycle_pages_forward" => Action::CyclePages(1),
             "cycle_pages_backward" => Action::CyclePages(-1),
             "close_context_menu" => Action::CloseContextMenu,
+            "confirm" => Action::Confirm,
             "hide" => Action::Hide,
             _ => {
                 return Err(RSError::ActionBindingError(st.clone()));

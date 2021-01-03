@@ -104,7 +104,11 @@ impl Entry {
             area2 = Rect::new(0, 0, 0, 0);
         }
 
-        let main_vol = (play.volume.avg().0 as f32) / (volume::Volume::NORMAL.0 as f32 * 1.5);
+        let avg = play.volume.avg().0;
+        let base_delta = (volume::Volume::NORMAL.0 as f32 - volume::Volume::MUTED.0 as f32) / 100.0;
+        let vol_percent = ((avg - volume::Volume::MUTED.0) as f32 / base_delta).round() as u32;
+        let main_vol = vol_percent as f32 / 150.0;
+
         play.volume_bar = play
             .volume_bar
             .volume(main_vol)
@@ -125,7 +129,7 @@ impl Entry {
         execute!(buf, MoveTo(area1.x, area1.y))?;
         write!(buf, "{}", name_style.apply(short_name))?;
 
-        let vol_perc = format!("  {}", (main_vol * 150.0) as u32);
+        let vol_perc = format!("  {}", vol_percent);
         let vol_perc = String::from(&vol_perc[vol_perc.len() - 3..vol_perc.len()]);
         let vol_db = play.volume.avg().print_db();
         if vol_db.len() + vol_perc.len() <= area1.width as usize + 3 {

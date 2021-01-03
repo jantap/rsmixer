@@ -28,20 +28,21 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
                     .get_mut(&state.page_entries.get(state.selected).unwrap())
                 {
                     let mut vols = entry.play_entry.as_ref().unwrap().volume;
+                    let avg = vols.avg().0;
+
+                    let base_delta = (volume::Volume::NORMAL.0 as f32 - volume::Volume::MUTED.0 as f32) / 100.0;
+
+                    let current_percent = ((avg - volume::Volume::MUTED.0) as f32 / base_delta).round() as u32;
+                    let target_percent = current_percent as i16 + how_much;
+
+                    let target = if target_percent < 0 { volume::Volume::MUTED.0 }
+                        else if target_percent == 100 { volume::Volume::NORMAL.0 }
+                        else if target_percent >= 150 { (volume::Volume::NORMAL.0 as f32 * 1.5) as u32 }
+                        else if target_percent < 100 { volume::Volume::MUTED.0 + target_percent as u32 * base_delta as u32 }
+                        else { volume::Volume::NORMAL.0 + (target_percent - 100) as u32 * base_delta as u32 };
+
                     for v in vols.get_mut() {
-                        // @TODO add config
-                        // @TODO don't overflow
-                        let amount =
-                            (volume::Volume::NORMAL.0 as f32 * how_much as f32 / 100.0) as i64;
-                        if (v.0 as i64) < volume::Volume::MUTED.0 as i64 - amount {
-                            v.0 = volume::Volume::MUTED.0;
-                        } else if (v.0 as i64)
-                            > (volume::Volume::NORMAL.0 as f32 * 1.5) as i64 - amount
-                        {
-                            v.0 = (volume::Volume::NORMAL.0 as f32 * 1.5) as u32;
-                        } else {
-                            v.0 = (v.0 as i64 + amount) as u32;
-                        }
+                        v.0 = target;
                     }
                     DISPATCH
                         .event(Action::SetVolume(

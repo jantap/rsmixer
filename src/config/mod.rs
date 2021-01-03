@@ -33,8 +33,9 @@ impl RsMixerConfig {
         Ok(config)
     }
 
-    pub fn interpret(&mut self) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
-        
+    pub fn interpret(
+        &mut self,
+    ) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
         let bindings = self.bindings()?;
 
         let mut styles: Styles = LinkedHashMap::new();
@@ -107,8 +108,15 @@ impl RsMixerConfig {
             }
         }
 
-        if parsed.iter().find(|(_, v)| (**v).0 == Action::Confirm).is_none() {
-            if let Some((_, (_, k))) = parsed.iter().find(|(_, v)| (**v).0 == Action::OpenContextMenu) {
+        if parsed
+            .iter()
+            .find(|(_, v)| (**v).0 == Action::Confirm)
+            .is_none()
+        {
+            if let Some((_, (_, k))) = parsed
+                .iter()
+                .find(|(_, v)| (**v).0 == Action::OpenContextMenu)
+            {
                 self.bindings.insert(k.clone(), Action::Confirm.to_string());
             }
         }
@@ -170,7 +178,7 @@ impl std::default::Default for RsMixerConfig {
         styles.insert("green".to_string(), c);
 
         Self {
-            version: Some(String::from(VERSION.clone()).to_owned()),
+            version: Some(String::from(VERSION)),
             pa_retry_time: None,
             bindings,
             colors: styles,

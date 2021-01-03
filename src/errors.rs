@@ -62,7 +62,11 @@ impl fmt::Display for RSError {
                 write!(f, "Error in config file\n'{}' is not a valid color", color)
             }
             Self::InvalidVersion(version) => {
-                write!(f, "Error in config file\n'{}' is not a valid version code", version)
+                write!(
+                    f,
+                    "Error in config file\n'{}' is not a valid version code",
+                    version
+                )
             }
         }
     }
@@ -99,7 +103,7 @@ impl From<confy::ConfyError> for RSError {
 }
 
 impl From<semver::SemVerError> for RSError {
-    fn from(err: semver::SemVerError) -> RSError {
+    fn from(_err: semver::SemVerError) -> RSError {
         RSError::InvalidVersion("".to_string())
     }
 }

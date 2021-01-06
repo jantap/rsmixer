@@ -153,6 +153,7 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("shift+tab".to_string(), "cycle_pages_backward".to_string());
 
         bindings.insert("enter".to_string(), "context_menu".to_string());
+        bindings.insert("enter".to_string(), "confirm".to_string());
         bindings.insert("esc".to_string(), "close_context_menu".to_string());
         bindings.insert("q".to_string(), "close_context_menu".to_string());
 

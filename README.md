@@ -55,12 +55,12 @@ In `~/.config/rsmixer/rsmixer.toml` you will find a section `[bindings]`. There 
 All keybindings look one of these:
 
 ```
-q = 'exit'
-"shift+tab" = 'cycle_pages_backward'
-right = 'raise_volume(5)'
+q = ['exit']
+"shift+tab" = ['cycle_pages_backward']
+right = ['raise_volume(5)']
 ```
 
-Basically `key = action`. Key is either:
+Basically `key = ArrayOf(action)`. Key is either:
 
 - a char
 - a special key. [Special keys supported](special_keys.md) (if anything is missing just create an issue)

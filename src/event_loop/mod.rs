@@ -14,8 +14,7 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
 
     let mut state = RSState::default();
 
-    let mut ui = crate::ui::UI::default();
-    ui.screen.set_styles((*STYLES).get().clone());
+    state.ui.screen.set_styles((*STYLES).get().clone());
 
     state.redraw.resize = true;
     state.redraw.full = true;
@@ -60,7 +59,7 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
             _ => {}
         }
 
-        ui::redraw(&mut stdout, &mut ui, &mut state).await?;
+        ui::redraw(&mut stdout, &mut state).await?;
 
         state.redraw.reset();
     }

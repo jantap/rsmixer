@@ -17,14 +17,13 @@ pub type Screen = screen_buffer_ui::Screen<Style>;
 
 pub async fn redraw<W: Write>(
     stdout: &mut W,
-    ui: &mut UI,
     state: &mut RSState,
 ) -> Result<(), RSError> {
     if state.redraw.resize {
-        ui.terminal_too_small = false;
-        match ui.resize(state) {
+        state.ui.terminal_too_small = false;
+        match resize(state) {
             Err(RSError::TerminalTooSmall) => {
-                ui.terminal_too_small = true;
+                state.ui.terminal_too_small = true;
             }
             Err(e) => {
                 return Err(e);
@@ -33,40 +32,40 @@ pub async fn redraw<W: Write>(
         };
     }
 
-    if ui.terminal_too_small {
-        ui.screen.rect(
-            Rect::new(0, 0, ui.screen.width, ui.screen.height),
+    if state.ui.terminal_too_small {
+        state.ui.screen.rect(
+            Rect::new(0, 0, state.ui.screen.width, state.ui.screen.height),
             ' ',
             Style::Normal,
         );
-        ui.screen
+        state.ui.screen
             .string(0, 0, "Terminal too small".to_string(), Style::Normal);
 
-        ui.screen.draw_changes(stdout)?;
+        state.ui.screen.draw_changes(stdout)?;
 
         return Ok(());
     }
 
     if state.redraw.full {
-        ui.full_redraw(state)?;
+        full_redraw(state)?;
 
         state.redraw.reset();
     }
 
     if state.redraw.entries {
-        ui.draw_entries(state, false)?;
+        draw_entries(state, false)?;
 
         state.redraw.affected_entries = HashSet::new();
     }
 
     if !state.redraw.affected_entries.is_empty() {
-        ui.draw_entries(state, true)?;
+        draw_entries(state, true)?;
     }
 
     if let Some(index) = state.redraw.peak_volume {
         if state
             .page_entries
-            .visible_range(ui.screen.height)
+            .visible_range(state.ui.screen.height)
             .any(|i| i == index)
         {
             if let Some(play) = state
@@ -75,18 +74,18 @@ pub async fn redraw<W: Write>(
             {
                 play.peak_volume_bar
                     .volume(play.peak)
-                    .render(&mut ui.screen)?;
+                    .render(&mut state.ui.screen)?;
             }
         }
     }
 
     match state.ui_mode {
-        UIMode::Help => state.help.render(&mut ui.screen)?,
-        UIMode::ContextMenu => state.context_menu.render(&mut ui.screen)?,
+        UIMode::Help => state.help.render(&mut state.ui.screen)?,
+        UIMode::ContextMenu => state.context_menu.render(&mut state.ui.screen)?,
         _ => {}
     };
 
-    ui.screen.draw_changes(stdout)?;
+    state.ui.screen.draw_changes(stdout)?;
 
     Ok(())
 }
@@ -94,7 +93,7 @@ pub async fn redraw<W: Write>(
 pub struct UI {
     pub screen: Screen,
     border: BlockWidget,
-    entries_area: Rect,
+    pub entries_area: Rect,
     terminal_too_small: bool,
     pages_names: Vec<String>,
 }
@@ -115,116 +114,114 @@ impl Default for UI {
     }
 }
 
-impl UI {
-    fn resize(&mut self, state: &mut RSState) -> Result<(), RSError> {
-        let (x, y) = crossterm::terminal::size()?;
-        self.screen.resize(x, y);
+fn resize(state: &mut RSState) -> Result<(), RSError> {
+    let (x, y) = crossterm::terminal::size()?;
+    state.ui.screen.resize(x, y);
 
-        self.border
-            .resize(Rect::new(0, 0, self.screen.width, self.screen.height))?;
+    state.ui.border
+        .resize(Rect::new(0, 0, state.ui.screen.width, state.ui.screen.height))?;
 
-        self.entries_area = Rect::new(2, 2, self.screen.width - 4, self.screen.height - 4);
-        let mut entry_area = self.entries_area;
+    state.ui.entries_area = Rect::new(2, 2, state.ui.screen.width - 4, state.ui.screen.height - 4);
+    let mut entry_area = state.ui.entries_area;
 
-        for i in state.page_entries.visible_range(self.entries_area.height) {
-            let ent = match state.entries.get_mut(&state.page_entries.get(i).unwrap()) {
-                Some(x) => x,
-                None => {
-                    continue;
-                }
-            };
-            ent.position = state.page_entries.lvls[i];
-
-            entry_area = entry_area.h(entry_height(ent.position));
-
-            ent.resize(entry_area)?;
-
-            entry_area.y += entry_height(ent.position);
-        }
-
-        state.context_menu.resize(self.entries_area)?;
-
-        state.help.resize(self.entries_area)?;
-
-        Ok(())
-    }
-
-    fn full_redraw(&mut self, state: &mut RSState) -> Result<(), RSError> {
-        match state.ui_mode {
-            UIMode::RetryIn(time) => {
-                self.screen.rect(
-                    Rect::new(0, 0, self.screen.width, self.screen.height),
-                    ' ',
-                    Style::Normal,
-                );
-                self.screen.string(
-                    0,
-                    0,
-                    format!("PulseAudio disconnected. Retrying in {}...", time),
-                    Style::Normal,
-                );
-            }
-            _ => {
-                self.border.render(&mut self.screen)?;
-
-                self.draw_page_names(state);
-
-                self.draw_entries(state, false)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    fn draw_page_names(&mut self, state: &mut RSState) {
-        if self.screen.width as usize
-            > 2 + self.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6
-        {
-            let page: i8 = state.current_page.into();
-            let page = page as usize;
-            let mut length_so_far = 0;
-
-            for (i, name) in self.pages_names.iter().enumerate() {
-                self.screen.string(
-                    1 + length_so_far,
-                    0,
-                    name.clone(),
-                    if i == page { Style::Bold } else { Style::Muted },
-                );
-                if i != 2 {
-                    self.screen.string(
-                        1 + length_so_far + name.len() as u16,
-                        0,
-                        " / ".to_string(),
-                        Style::Muted,
-                    );
-                    length_so_far += name.len() as u16 + 3;
-                }
-            }
-        } else {
-            self.screen
-                .string(1, 0, state.current_page.to_string(), Style::Bold);
-        }
-    }
-
-    fn draw_entries(&mut self, state: &mut RSState, only_affected: bool) -> Result<(), RSError> {
-        for i in state.page_entries.visible_range(self.entries_area.height) {
-            if only_affected && state.redraw.affected_entries.get(&i).is_none() {
+    for i in state.page_entries.visible_range(state.ui.entries_area.height) {
+        let ent = match state.entries.get_mut(&state.page_entries.get(i).unwrap()) {
+            Some(x) => x,
+            None => {
                 continue;
             }
+        };
+        ent.position = state.page_entries.lvls[i];
 
-            let ent = match state.entries.get_mut(&state.page_entries.get(i).unwrap()) {
-                Some(x) => x,
-                None => {
-                    continue;
-                }
-            };
-            ent.position = state.page_entries.lvls[i];
-            ent.is_selected = state.page_entries.selected() == i;
+        entry_area = entry_area.h(entry_height(ent.position));
 
-            ent.render(&mut self.screen)?;
+        ent.resize(entry_area)?;
+
+        entry_area.y += entry_height(ent.position);
+    }
+
+    state.context_menu.resize(state.ui.entries_area)?;
+
+    state.help.resize(state.ui.entries_area)?;
+
+    Ok(())
+}
+
+fn full_redraw(state: &mut RSState) -> Result<(), RSError> {
+    match state.ui_mode {
+        UIMode::RetryIn(time) => {
+            state.ui.screen.rect(
+                Rect::new(0, 0, state.ui.screen.width, state.ui.screen.height),
+                ' ',
+                Style::Normal,
+            );
+            state.ui.screen.string(
+                0,
+                0,
+                format!("PulseAudio disconnected. Retrying in {}...", time),
+                Style::Normal,
+            );
+        }
+        _ => {
+            state.ui.border.render(&mut state.ui.screen)?;
+
+            draw_page_names(state);
+
+            draw_entries(state, false)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn draw_page_names(state: &mut RSState) {
+    if state.ui.screen.width as usize
+        > 2 + state.ui.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6
+    {
+        let page: i8 = state.current_page.into();
+        let page = page as usize;
+        let mut length_so_far = 0;
+
+        for (i, name) in state.ui.pages_names.iter().enumerate() {
+            state.ui.screen.string(
+                1 + length_so_far,
+                0,
+                name.clone(),
+                if i == page { Style::Bold } else { Style::Muted },
+            );
+            if i != 2 {
+                state.ui.screen.string(
+                    1 + length_so_far + name.len() as u16,
+                    0,
+                    " / ".to_string(),
+                    Style::Muted,
+                );
+                length_so_far += name.len() as u16 + 3;
+            }
+        }
+    } else {
+        state.ui.screen
+            .string(1, 0, state.current_page.to_string(), Style::Bold);
+    }
+}
+
+fn draw_entries(state: &mut RSState, only_affected: bool) -> Result<(), RSError> {
+    for i in state.page_entries.visible_range(state.ui.entries_area.height) {
+        if only_affected && state.redraw.affected_entries.get(&i).is_none() {
+            continue;
         }
 
-        Ok(())
+        let ent = match state.entries.get_mut(&state.page_entries.get(i).unwrap()) {
+            Some(x) => x,
+            None => {
+                continue;
+            }
+        };
+        ent.position = state.page_entries.lvls[i];
+        ent.is_selected = state.page_entries.selected() == i;
+
+        ent.render(&mut state.ui.screen)?;
     }
+
+    Ok(())
 }

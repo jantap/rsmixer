@@ -1,6 +1,6 @@
 use super::{ContextMenu, PageEntries, PageType, Redraw, UIMode};
 
-use crate::{entry::Entries, ui::widgets::HelpWidget};
+use crate::{entry::Entries, ui::{UI, widgets::HelpWidget}};
 
 pub struct RSState {
     pub current_page: PageType,
@@ -10,6 +10,7 @@ pub struct RSState {
     pub ui_mode: UIMode,
     pub redraw: Redraw,
     pub help: HelpWidget,
+    pub ui: UI,
 }
 
 impl Default for RSState {
@@ -22,6 +23,7 @@ impl Default for RSState {
             ui_mode: UIMode::Normal,
             redraw: Redraw::default(),
             help: HelpWidget::default(),
+            ui: UI::default(),
         }
     }
 }

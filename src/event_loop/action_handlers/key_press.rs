@@ -22,10 +22,13 @@ fn handle_conflicting_bindings(actions: &mut Vec<Action>, state: &mut RSState) {
     }
 
     if actions.contains(&Action::ExitSignal) && actions.contains(&Action::CloseContextMenu) {
-        if state.ui_mode == UIMode::ContextMenu {
-            actions.retain(|action| *action != Action::ExitSignal);
-        } else {
-            actions.retain(|action| *action != Action::CloseContextMenu);
+        match state.ui_mode {
+            UIMode::ContextMenu | UIMode::Help => {
+                actions.retain(|action| *action != Action::ExitSignal);
+            }
+            _ => {
+                actions.retain(|action| *action != Action::CloseContextMenu);
+            }
         }
     }
 
@@ -34,6 +37,28 @@ fn handle_conflicting_bindings(actions: &mut Vec<Action>, state: &mut RSState) {
             actions.retain(|action| *action != Action::OpenContextMenu);
         } else {
             actions.retain(|action| *action != Action::Confirm);
+        }
+    }
+
+    if actions.contains(&Action::MoveLeft) {
+        match state.ui_mode {
+            UIMode::ContextMenu | UIMode::Help => {
+                actions.retain(|action| *action == Action::MoveLeft);
+            }
+            _ => {
+                actions.retain(|action| *action != Action::MoveLeft);
+            }
+        }
+    }
+
+    if actions.contains(&Action::MoveRight) {
+        match state.ui_mode {
+            UIMode::ContextMenu | UIMode::Help => {
+                actions.retain(|action| *action == Action::MoveRight);
+            }
+            _ => {
+                actions.retain(|action| *action != Action::MoveRight);
+            }
         }
     }
 }

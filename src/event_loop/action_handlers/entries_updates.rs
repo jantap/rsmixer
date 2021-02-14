@@ -1,13 +1,15 @@
 use super::common::*;
 
 use crate::{
-    entry::{EntryIdentifier, HiddenStatus},
+    entry::{EntryIdentifier, EntryKind, HiddenStatus},
     ui::util::parent_child_types,
 };
 
+use screen_buffer_ui::Scrollable;
+
 use std::collections::{HashMap, HashSet};
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
+pub async fn action_handler(msg: &Action, state: &mut RSState) {
     // we only need to update page entries if entries changed
     match msg {
         Action::Redraw
@@ -16,29 +18,35 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
         | Action::ChangePage(_) => {}
 
         Action::Hide => {
-            if let Some(selected) = state.page_entries.get(state.selected) {
+            if let Some(selected) = state.page_entries.get(state.page_entries.selected()) {
                 state.entries.hide(selected);
             }
         }
         _ => {
-            return RedrawType::None;
+            return;
         }
     };
 
-    let last_sel = state.page_entries.get(state.selected);
+    let last_sel = state.page_entries.get(state.page_entries.selected());
 
     let (p, c) = parent_child_types(state.current_page);
 
-    let mut parents = HashSet::new();
-    state.entries.iter_type(c).for_each(|(_, e)| {
-        parents.insert(e.parent);
-    });
+    if p != EntryType::Card && c != EntryType::Card {
+        let mut parents = HashSet::new();
+        state.entries.iter_type(c).for_each(|(_, e)| {
+            if let EntryKind::PlayEntry(play) = &e.entry_kind {
+                parents.insert(play.parent);
+            }
+        });
 
-    for (_, p_e) in state.entries.iter_type_mut(p) {
-        p_e.hidden = match parents.get(&Some(p_e.index)) {
-            Some(_) => HiddenStatus::HiddenKids,
-            None => HiddenStatus::NoKids,
-        };
+        for (_, p_e) in state.entries.iter_type_mut(p) {
+            if let EntryKind::PlayEntry(play) = &mut p_e.entry_kind {
+                play.hidden = match parents.get(&Some(p_e.index)) {
+                    Some(_) => HiddenStatus::HiddenKids,
+                    None => HiddenStatus::NoKids,
+                };
+            }
+        }
     }
 
     let entries_changed = state.page_entries.set(
@@ -53,7 +61,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
     match state.ui_mode {
         UIMode::MoveEntry(ident, _) => {
             if let Some(i) = state.page_entries.iter_entries().position(|&x| x == ident) {
-                state.selected = i;
+                state.page_entries.set_selected(i);
             }
         }
         _ => {
@@ -62,7 +70,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
                 .iter_entries()
                 .position(|&x| Some(x) == last_sel)
             {
-                state.selected = i;
+                state.page_entries.set_selected(i);
             }
         }
     };
@@ -78,9 +86,8 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
             ))
             .await;
 
-        RedrawType::Entries
-    } else {
-        RedrawType::None
+        state.redraw.entries = true;
+        state.redraw.resize = true;
     }
 }
 
@@ -94,8 +101,6 @@ fn monitor_list(state: &mut RSState) -> HashMap<EntryIdentifier, Option<u32>> {
             );
         }
     });
-
-    log::error!("{:?}", monitors);
 
     monitors
 }

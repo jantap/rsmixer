@@ -1,6 +1,6 @@
 pub use crate::{
-    entry::EntryType,
-    models::{context_menus::context_menu, PageType, RSState, RedrawType, UIMode},
+    entry::{EntryKind, EntryType},
+    models::{PageType, RSState, Redraw, UIMode},
     Action, DISPATCH,
 };
 

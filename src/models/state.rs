@@ -1,21 +1,15 @@
-use super::{ContextMenuOption, PageEntries, PageType, RedrawType, UIMode};
+use super::{ContextMenu, PageEntries, PageType, Redraw, UIMode};
 
-use crate::{
-    entry::Entries,
-    ui::{page::UIPage, util::Rect},
-};
+use crate::{entry::Entries, ui::widgets::HelpWidget};
 
 pub struct RSState {
     pub current_page: PageType,
     pub entries: Entries,
     pub page_entries: PageEntries,
-    pub selected: usize,
-    pub selected_context: usize,
-    pub context_options: Vec<ContextMenuOption>,
-    pub scroll: usize,
-    pub redraw: RedrawType,
+    pub context_menu: ContextMenu,
     pub ui_mode: UIMode,
-    pub ui_page: UIPage,
+    pub redraw: Redraw,
+    pub help: HelpWidget,
 }
 
 impl Default for RSState {
@@ -24,15 +18,10 @@ impl Default for RSState {
             current_page: PageType::Output,
             entries: Entries::default(),
             page_entries: PageEntries::new(),
-            selected: 0,
-            selected_context: 0,
-            context_options: Vec::new(),
-            scroll: 0,
-            redraw: RedrawType::None,
+            context_menu: ContextMenu::default(),
             ui_mode: UIMode::Normal,
-            ui_page: UIPage {
-                inner_area: Rect::new(2, 2, 0, 0),
-            },
+            redraw: Redraw::default(),
+            help: HelpWidget::default(),
         }
     }
 }

@@ -1,17 +1,11 @@
-use super::Widget;
-
-use crate::{
-    draw_at, repeat_string,
-    ui::util::{get_style, Rect},
-    RSError,
+use super::{
+    super::{Rect, Screen, Style},
+    Widget,
 };
 
-use std::{
-    cmp::{max, min},
-    io::Write,
-};
+use crate::RSError;
 
-use crossterm::{cursor::MoveTo, execute};
+use screen_buffer_ui::Pixel;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum VolumeWidgetBorder {
@@ -25,8 +19,7 @@ pub enum VolumeWidgetBorder {
 pub struct VolumeWidget {
     pub percent: f32,
     pub border: VolumeWidgetBorder,
-    last_filled: u16,
-    last_area: Rect,
+    pub area: Rect,
     pub mute: bool,
 }
 
@@ -35,8 +28,7 @@ impl VolumeWidget {
         Self {
             percent: 0.0,
             border: VolumeWidgetBorder::Single,
-            last_filled: 0,
-            last_area: Rect::default(),
+            area: Rect::default(),
             mute: false,
         }
     }
@@ -56,100 +48,66 @@ impl VolumeWidget {
         self
     }
 
-    fn get_segments(&self, width: u16) -> (u16, u16, u16) {
+    pub fn set_area(mut self, area: Rect) -> Self {
+        self.area = area;
+        self
+    }
+
+    fn get_segments(&self) -> (u16, u16, u16) {
+        let width = self.area.width;
         let third = (0.34 * (width - 2) as f32).floor() as u16;
         let last = width - 2 - third * 2;
 
-        (third, third * 2, last)
+        (third, third * 2, third * 2 + last)
     }
 }
 
-impl<W: Write> Widget<W> for VolumeWidget {
-    fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
-        if area.width < 2 {
-            return Ok(());
+impl Widget for VolumeWidget {
+    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+        if area.width < 3 || area.height < 1 {
+            return Err(RSError::TerminalTooSmall);
         }
-        self.border.render(area, buf)?;
 
-        let filled = (self.percent * (area.width - 2) as f32).floor() as u16;
+        self.area = area;
 
-        let segments = self.get_segments(area.width);
-        let third = segments.0;
+        Ok(())
+    }
+    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+        self.border.render(screen, &self.area);
 
-        let styles = if self.mute {
-            (get_style("muted"), get_style("muted"), get_style("muted"))
-        } else {
-            (get_style("green"), get_style("orange"), get_style("red"))
-        };
+        let filled = (self.percent * (self.area.width - 2) as f32).floor() as u16;
 
-        if self.last_area != area {
-            let green_filled = min(filled, third);
-            let orange_filled = max(min(filled, third * 2), third) - third;
-            let red_filled = max(min(filled, area.width - 2), third * 2) - third * 2;
+        let mut pixels: Vec<Pixel<Style>> = (0..(self.area.width - 2))
+            .map(|i| Pixel {
+                text: if i < filled { Some('▮') } else { Some('-') },
+                style: Style::Muted,
+            })
+            .collect();
 
-            let s = format!(
-                "{}{}{}",
-                styles.0.apply(format!(
-                    "{}{}",
-                    repeat_string!("▮", green_filled),
-                    repeat_string!("-", segments.0 - green_filled),
-                )),
-                styles.1.apply(format!(
-                    "{}{}",
-                    repeat_string!("▮", orange_filled),
-                    repeat_string!("-", segments.0 - orange_filled),
-                )),
-                styles.2.apply(format!(
-                    "{}{}",
-                    repeat_string!("▮", red_filled),
-                    repeat_string!("-", segments.2 - red_filled),
-                ))
-            );
-            execute!(buf, MoveTo(area.x + 1, area.y))?;
-            write!(buf, "{}", s)?;
-        } else {
-            let (range, ch) = if filled > self.last_filled {
-                (self.last_filled..filled, "▮")
-            } else {
-                (filled..self.last_filled, "-")
-            };
-            let mut g = 0;
-            let mut o = 0;
-            let mut r = 0;
+        if !self.mute {
+            let segments = self.get_segments();
 
-            for i in range {
-                if i < third {
-                    g += 1;
-                } else if i > third * 2 {
-                    r += 1;
-                } else {
-                    o += 1;
-                }
+            for i in 0..segments.0 {
+                pixels[i as usize].style = Style::Green;
             }
-
-            let s = format!(
-                "{}{}{}",
-                styles.0.apply(repeat_string!(ch, g)),
-                styles.1.apply(repeat_string!(ch, r)),
-                styles.2.apply(repeat_string!(ch, o)),
-            );
-            execute!(
-                buf,
-                MoveTo(area.x + 1 + min(self.last_filled, filled), area.y)
-            )?;
-            write!(buf, "{}", s)?;
+            for i in segments.0..segments.1 {
+                pixels[i as usize].style = Style::Orange;
+            }
+            for i in segments.1..segments.2 {
+                pixels[i as usize].style = Style::Red;
+            }
         }
 
-        buf.flush()?;
+        screen.pixels(self.area.x + 1, self.area.y, pixels);
 
         Ok(())
     }
 }
 
-impl<W: Write> Widget<W> for VolumeWidgetBorder {
-    fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError> {
+impl VolumeWidgetBorder {
+    fn render(&mut self, screen: &mut Screen, area: &Rect) {
         if *self == VolumeWidgetBorder::None {
-            return Ok(());
+            return;
         }
 
         let ch1 = match self {
@@ -164,15 +122,13 @@ impl<W: Write> Widget<W> for VolumeWidgetBorder {
             VolumeWidgetBorder::Lower => "┘",
             _ => "",
         };
-        draw_at!(buf, ch1, area.x, area.y, get_style("normal"));
-        draw_at!(
-            buf,
-            ch2,
+
+        screen.string(area.x, area.y, ch1.to_string(), Style::Normal);
+        screen.string(
             area.x + area.width - 1,
             area.y,
-            get_style("normal")
+            ch2.to_string(),
+            Style::Normal,
         );
-
-        Ok(())
     }
 }

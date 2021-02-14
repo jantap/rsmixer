@@ -22,11 +22,14 @@ impl ToString for Action {
             }
             Action::MoveUp(num) => format!("up({})", num),
             Action::MoveDown(num) => format!("down({})", num),
+            Action::MoveLeft => "left".to_string(),
+            Action::MoveRight => "right".to_string(),
             Action::CyclePages(1) => "cycle_pages_forward".to_string(),
             Action::CyclePages(-1) => "cycle_pages_backward".to_string(),
             Action::CloseContextMenu => "close_context_menu".to_string(),
             Action::Confirm => "confirm".to_string(),
             Action::Hide => "hide".to_string(),
+
             _ => "".to_string(),
         }
     }
@@ -99,6 +102,8 @@ impl TryFrom<String> for Action {
                 };
                 Action::MoveDown(a)
             }
+            "left" => Action::MoveLeft,
+            "right" => Action::MoveRight,
             "cycle_pages_forward" => Action::CyclePages(1),
             "cycle_pages_backward" => Action::CyclePages(-1),
             "close_context_menu" => Action::CloseContextMenu,

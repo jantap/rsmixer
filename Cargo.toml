@@ -1,6 +1,6 @@
 [package]
 name = "rsmixer"
-version = "0.3.0"
+version = "0.4.0"
 license = "MIT"
 homepage = "https://github.com/jantap/rsmixer"
 repository = "https://github.com/jantap/rsmixer"
@@ -28,9 +28,10 @@ multimap = "0.8.2"
 lazy_static = "1.4.0"
 unicode-width = "0.1.8"
 state = { version = "0.4.1", features = ["tls"] }
-crossterm = { version = "0.17.5", features = ["serde", "event-stream"] }
+crossterm = { version = "0.19.0", features = ["serde", "event-stream"] }
 crossbeam-channel = "0.4.2"
 ev-apple = "0.1.1"
+screen-buffer-ui = "0.1.2"
 
 # error handling
 thiserror = "1.0.20"
@@ -48,3 +49,4 @@ futures = "0.3.5"
 # pulseaudio
 libpulse-binding = { version = "2.21.0", default-features = false }
 semver = "0.11.0"
+itertools = "0.10.0"

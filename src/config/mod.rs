@@ -7,9 +7,12 @@ pub use variables::Variables;
 
 use crate::{Action, RSError, Styles, VERSION};
 
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
-use crossterm::{event::KeyEvent, style::ContentStyle};
+use crossterm::{
+    event::KeyEvent,
+    style::{Attribute, ContentStyle},
+};
 
 use multimap::MultiMap;
 
@@ -24,7 +27,14 @@ pub struct RsMixerConfig {
     version: Option<String>,
     pa_retry_time: Option<u64>,
     bindings: MultiMap<String, String>,
-    colors: LinkedHashMap<String, LinkedHashMap<String, String>>,
+    colors: LinkedHashMap<String, ConfigColor>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ConfigColor {
+    fg: Option<String>,
+    bg: Option<String>,
+    attributes: Option<Vec<String>>,
 }
 
 impl RsMixerConfig {
@@ -36,31 +46,50 @@ impl RsMixerConfig {
     pub fn interpret(
         &mut self,
     ) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
+        self.compatibility_layer()?;
+
         let bindings = self.bindings()?;
 
-        let mut styles: Styles = LinkedHashMap::new();
+        let mut styles: Styles = HashMap::new();
 
         for (k, v) in &self.colors {
             let mut c = ContentStyle::new();
 
-            if let Some(q) = v.get("fg") {
+            if let Some(q) = &v.fg {
                 if let Some(color) = colors::str_to_color(q) {
                     c = c.foreground(color);
                 } else {
                     return Err(RSError::InvalidColor(q.clone()));
                 }
             }
-            if let Some(q) = v.get("bg") {
+            if let Some(q) = &v.bg {
                 if let Some(color) = colors::str_to_color(q) {
                     c = c.background(color);
                 } else {
                     return Err(RSError::InvalidColor(q.clone()));
                 }
             }
-            styles.insert(k.clone(), c);
+            if let Some(attrs) = &v.attributes {
+                for attr in attrs {
+                    match &attr[..] {
+                        "bold" => {
+                            c = c.attribute(Attribute::Bold);
+                        }
+                        "underlined" => {
+                            c = c.attribute(Attribute::Underlined);
+                        }
+                        "italic" => {
+                            c = c.attribute(Attribute::Italic);
+                        }
+                        "dim" => {
+                            c = c.attribute(Attribute::Dim);
+                        }
+                        _ => {}
+                    };
+                }
+            }
+            styles.insert(k.into(), c);
         }
-
-        self.compatibility_layer()?;
 
         self.version = Some(String::from(VERSION));
 
@@ -97,6 +126,15 @@ impl RsMixerConfig {
             return Ok(());
         }
 
+        if config_ver == Version::parse("0.3.0").unwrap() {
+            if let Some(c) = self.colors.get(&"normal".to_string()) {
+                let mut c = c.clone();
+                c.attributes = Some(vec!["bold".to_string()]);
+                self.colors.insert("bold".to_string(), c);
+            }
+            return Ok(());
+        }
+
         let mut parsed: MultiMap<KeyEvent, (Action, String)> = MultiMap::new();
 
         for (k, cs) in &self.bindings {
@@ -129,9 +167,12 @@ impl std::default::Default for RsMixerConfig {
     fn default() -> Self {
         let mut bindings = MultiMap::new();
         bindings.insert("q".to_string(), "exit".to_string());
+        bindings.insert("?".to_string(), "help".to_string());
 
         bindings.insert("j".to_string(), "down(1)".to_string());
         bindings.insert("k".to_string(), "up(1)".to_string());
+        bindings.insert("h".to_string(), "left".to_string());
+        bindings.insert("l".to_string(), "right".to_string());
         bindings.insert("down".to_string(), "down(1)".to_string());
         bindings.insert("up".to_string(), "up(1)".to_string());
 
@@ -157,32 +198,69 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("esc".to_string(), "close_context_menu".to_string());
         bindings.insert("q".to_string(), "close_context_menu".to_string());
 
-        let mut styles = LinkedHashMap::new();
         let mut c = LinkedHashMap::new();
-        c.insert("fg".to_string(), "white".to_string());
-        c.insert("bg".to_string(), "black".to_string());
-        styles.insert("normal".to_string(), c.clone());
-        c.insert("fg".to_string(), "black".to_string());
-        c.insert("bg".to_string(), "white".to_string());
-        styles.insert("inverted".to_string(), c.clone());
-        c.insert("fg".to_string(), "grey".to_string());
-        c.insert("bg".to_string(), "black".to_string());
-        styles.insert("muted".to_string(), c.clone());
-        c.insert("fg".to_string(), "red".to_string());
-        c.insert("bg".to_string(), "black".to_string());
-        styles.insert("red".to_string(), c.clone());
-        c.insert("fg".to_string(), "yellow".to_string());
-        c.insert("bg".to_string(), "black".to_string());
-        styles.insert("orange".to_string(), c.clone());
-        c.insert("fg".to_string(), "green".to_string());
-        c.insert("bg".to_string(), "black".to_string());
-        styles.insert("green".to_string(), c);
+        c.insert(
+            "normal".to_string(),
+            ConfigColor {
+                fg: Some("white".to_string()),
+                bg: Some("black".to_string()),
+                attributes: None,
+            },
+        );
+        c.insert(
+            "bold".to_string(),
+            ConfigColor {
+                fg: Some("white".to_string()),
+                bg: Some("black".to_string()),
+                attributes: Some(vec!["bold".to_string()]),
+            },
+        );
+        c.insert(
+            "inverted".to_string(),
+            ConfigColor {
+                fg: Some("black".to_string()),
+                bg: Some("white".to_string()),
+                attributes: None,
+            },
+        );
+        c.insert(
+            "muted".to_string(),
+            ConfigColor {
+                fg: Some("grey".to_string()),
+                bg: Some("black".to_string()),
+                attributes: None,
+            },
+        );
+        c.insert(
+            "red".to_string(),
+            ConfigColor {
+                fg: Some("red".to_string()),
+                bg: Some("black".to_string()),
+                attributes: None,
+            },
+        );
+        c.insert(
+            "orange".to_string(),
+            ConfigColor {
+                fg: Some("yellow".to_string()),
+                bg: Some("black".to_string()),
+                attributes: None,
+            },
+        );
+        c.insert(
+            "green".to_string(),
+            ConfigColor {
+                fg: Some("green".to_string()),
+                bg: Some("black".to_string()),
+                attributes: None,
+            },
+        );
 
         Self {
             version: Some(String::from(VERSION)),
             pa_retry_time: None,
             bindings,
-            colors: styles,
+            colors: c,
         }
     }
 }

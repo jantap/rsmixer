@@ -1,8 +1,8 @@
 use super::UIMode;
 
 use crate::{
-    entry::{Entries, Entry, EntryIdentifier, EntryType, HiddenStatus},
-    ui::util::{get_style, parent_child_types},
+    entry::{Entries, Entry, EntryIdentifier, EntryKind, EntryType, HiddenStatus},
+    ui::util::parent_child_types,
 };
 
 use std::{fmt::Display, iter};
@@ -48,24 +48,25 @@ impl PageType {
         }
     }
     pub fn as_styled_string(&self) -> String {
-        let styled_name = |pt: PageType| {
-            if pt == *self {
-                get_style("normal.bold").apply(pt.as_str())
-            } else {
-                get_style("muted").apply(pt.as_str())
-            }
-        };
+        // let styled_name = |pt: PageType| {
+        //     if pt == *self {
+        //         get_style("normal.bold").apply(pt.as_str())
+        //     } else {
+        //         get_style("muted").apply(pt.as_str())
+        //     }
+        // };
 
-        let divider = get_style("muted").apply(" / ");
+        // let divider = get_style("muted").apply(" / ");
 
-        format!(
-            "{}{}{}{}{}",
-            styled_name(PageType::Output),
-            divider.clone(),
-            styled_name(PageType::Input),
-            divider.clone(),
-            styled_name(PageType::Cards)
-        )
+        // format!(
+        //     "{}{}{}{}{}",
+        //     styled_name(PageType::Output),
+        //     divider.clone(),
+        //     styled_name(PageType::Input),
+        //     divider.clone(),
+        //     styled_name(PageType::Cards)
+        // )
+        "".to_string()
     }
     pub fn generate_page<'a>(
         &'a self,
@@ -105,7 +106,13 @@ impl PageType {
                 .map(move |(ident, entry)| {
                     std::iter::once((ident, entry)).chain(entries.iter_type(child).filter(
                         move |(_, e)| {
-                            e.parent == Some(ident.index) && e.hidden != HiddenStatus::Hidden
+                            e.parent() == Some(ident.index)
+                                && match &e.entry_kind {
+                                    EntryKind::CardEntry(_) => true,
+                                    EntryKind::PlayEntry(play) => {
+                                        play.hidden != HiddenStatus::Hidden
+                                    }
+                                }
                         },
                     ))
                 })

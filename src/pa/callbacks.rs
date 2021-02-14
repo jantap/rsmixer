@@ -1,10 +1,11 @@
 use super::common::*;
 
 use crate::{
-    entry::{CardEntry, CardProfile, Entry, EntrySpaceLvl, HiddenStatus, PlayEntry},
-    ui::widgets::VolumeWidget,
+    entry::{CardProfile, Entry},
     DISPATCH,
 };
+
+use screen_buffer_ui::Rect;
 
 use pulse::{
     callbacks::ListResult,
@@ -165,6 +166,8 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
             .filter_map(|p| {
                 if let Some(n) = &p.name {
                     Some(CardProfile {
+                        area: Rect::default(),
+                        is_selected: false,
                         name: n.to_string(),
                         description: match &p.description {
                             Some(s) => s.to_string(),
@@ -191,20 +194,7 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
         };
 
         let ident = EntryIdentifier::new(EntryType::Card, i.index);
-        let entry = Entry {
-            entry_type: EntryType::Card,
-            index: i.index,
-            hidden: HiddenStatus::Show,
-            name: n,
-            parent: None,
-            position: EntrySpaceLvl::Empty,
-            is_selected: false,
-            card_entry: Some(CardEntry {
-                profiles,
-                selected_profile,
-            }),
-            play_entry: None,
-        };
+        let entry = Entry::new_card_entry(i.index, n, profiles, selected_profile);
 
         DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
     }
@@ -221,26 +211,18 @@ pub fn on_sink_info(
                 None => String::new(),
             };
             let ident = EntryIdentifier::new(EntryType::Sink, i.index);
-            let entry = Entry {
-                entry_type: EntryType::Sink,
-                hidden: HiddenStatus::Show,
-                index: i.index,
+            let entry = Entry::new_play_entry(
+                EntryType::Sink,
+                i.index,
                 name,
-                parent: None,
-                position: EntrySpaceLvl::Empty,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: Some(i.monitor_source),
-                    sink: None,
-                    suspended: i.state == SinkState::Suspended,
-                }),
-            };
+                None,
+                i.mute,
+                i.volume,
+                Some(i.monitor_source),
+                None,
+                i.state == SinkState::Suspended,
+            );
+
             DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
         }
     }
@@ -264,26 +246,19 @@ pub fn on_sink_input_info(
                 },
             };
             let ident = EntryIdentifier::new(EntryType::SinkInput, i.index);
-            let entry = Entry {
-                entry_type: EntryType::SinkInput,
-                hidden: HiddenStatus::Show,
-                parent: Some(i.sink),
-                position: EntrySpaceLvl::Empty,
-                name: n,
-                index: i.index,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: None,
-                    sink: Some(i.sink),
-                    suspended: false,
-                }),
-            };
+
+            let entry = Entry::new_play_entry(
+                EntryType::SinkInput,
+                i.index,
+                n,
+                Some(i.sink),
+                i.mute,
+                i.volume,
+                None,
+                Some(i.sink),
+                false,
+            );
+
             DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Sink, i.sink));
         }
@@ -301,26 +276,18 @@ pub fn on_source_info(
                 None => String::new(),
             };
             let ident = EntryIdentifier::new(EntryType::Source, i.index);
-            let entry = Entry {
-                entry_type: EntryType::Source,
-                position: EntrySpaceLvl::Empty,
-                index: i.index,
-                hidden: HiddenStatus::Show,
+            let entry = Entry::new_play_entry(
+                EntryType::Source,
+                i.index,
                 name,
-                parent: None,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: Some(i.index),
-                    sink: None,
-                    suspended: i.state == SourceState::Suspended,
-                }),
-            };
+                None,
+                i.mute,
+                i.volume,
+                Some(i.index),
+                None,
+                i.state == SourceState::Suspended,
+            );
+
             DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
         }
     }
@@ -344,26 +311,18 @@ pub fn on_source_output_info(
                 return;
             }
             let ident = EntryIdentifier::new(EntryType::SourceOutput, i.index);
-            let entry = Entry {
-                entry_type: EntryType::SourceOutput,
-                parent: Some(i.source),
-                hidden: HiddenStatus::Show,
-                index: i.index,
-                name: n,
-                position: EntrySpaceLvl::Empty,
-                is_selected: false,
-                card_entry: None,
-                play_entry: Some(PlayEntry {
-                    volume_bar: VolumeWidget::default(),
-                    peak_volume_bar: VolumeWidget::default(),
-                    peak: 0.0,
-                    mute: i.mute,
-                    volume: i.volume,
-                    monitor_source: Some(i.source),
-                    sink: None,
-                    suspended: false,
-                }),
-            };
+            let entry = Entry::new_play_entry(
+                EntryType::SourceOutput,
+                i.index,
+                n,
+                Some(i.source),
+                i.mute,
+                i.volume,
+                Some(i.source),
+                None,
+                false,
+            );
+
             DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Source, i.index));
         }

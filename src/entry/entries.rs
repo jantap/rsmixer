@@ -1,4 +1,4 @@
-use super::{Entry, EntryIdentifier, EntryType};
+use super::{Entry, EntryIdentifier, EntryKind, EntryType, PlayEntry};
 
 use std::collections::BTreeMap;
 
@@ -37,6 +37,24 @@ impl Entries {
     pub fn get_mut(&mut self, ident: &EntryIdentifier) -> Option<&mut Entry> {
         self.0.get_mut(ident)
     }
+    pub fn get_play_entry(&self, entry_ident: &EntryIdentifier) -> Option<&PlayEntry> {
+        match self.0.get(entry_ident) {
+            Some(e) => match &e.entry_kind {
+                EntryKind::PlayEntry(p) => Some(p),
+                _ => None,
+            },
+            None => None,
+        }
+    }
+    pub fn get_play_entry_mut(&mut self, entry_ident: &EntryIdentifier) -> Option<&mut PlayEntry> {
+        match self.0.get_mut(entry_ident) {
+            Some(e) => match &mut e.entry_kind {
+                EntryKind::PlayEntry(p) => Some(p),
+                _ => None,
+            },
+            None => None,
+        }
+    }
     pub fn position<P>(&mut self, predicate: P) -> Option<usize>
     where
         P: FnMut((&EntryIdentifier, &Entry)) -> bool,
@@ -57,7 +75,7 @@ impl Entries {
     }
     pub fn hide(&mut self, ident: EntryIdentifier) {
         let (entry_type, index, parent) = if let Some(entry) = self.0.get(&ident) {
-            (entry.entry_type, entry.index, entry.parent)
+            (entry.entry_type, entry.index, entry.parent())
         } else {
             return;
         };
@@ -73,10 +91,10 @@ impl Entries {
                 self.0
                     .iter_mut()
                     .filter(|(i, e)| {
-                        (i.entry_type == desired && e.parent == Some(index))
+                        (i.entry_type == desired && e.parent() == Some(index))
                             || (i.entry_type == entry_type && e.index == index)
                     })
-                    .for_each(|(_, e)| e.hidden.negate(e.entry_type));
+                    .for_each(|(_, e)| e.negate_hidden(e.entry_type));
             }
             EntryType::SinkInput | EntryType::SourceOutput => {
                 let (desired, parent_type) = if entry_type == EntryType::SinkInput {
@@ -87,10 +105,10 @@ impl Entries {
                 self.0
                     .iter_mut()
                     .filter(|(ident, e)| {
-                        (ident.entry_type == desired && e.parent == parent)
+                        (ident.entry_type == desired && e.parent() == parent)
                             || (ident.entry_type == parent_type && Some(e.index) == parent)
                     })
-                    .for_each(|(_, e)| e.hidden.negate(e.entry_type));
+                    .for_each(|(_, e)| e.negate_hidden(e.entry_type));
             }
             _ => {}
         }

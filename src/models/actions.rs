@@ -27,6 +27,8 @@ messages!(Action,
     // move around the UI
     MoveUp(u16) => MAIN_MESSAGE,
     MoveDown(u16) => MAIN_MESSAGE,
+    MoveLeft => MAIN_MESSAGE,
+    MoveRight => MAIN_MESSAGE,
     ChangePage(PageType) => MAIN_MESSAGE,
     // positive - forwards, negative - backwards
     CyclePages(i8) => MAIN_MESSAGE,

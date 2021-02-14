@@ -49,7 +49,9 @@ impl fmt::Display for RSError {
                 "Error in internal communication between pulseaudio threads"
             ),
             Self::NoEntryError => write!(f, "Error while creating entry"),
-            Self::ConfyError(err) => err.fmt(f),
+            Self::ConfyError(err) => {
+                write!(f, "{:#}\n\nIf you've just updated RsMixer version see", err)
+            }
             Self::KeyCodeError(kc) => write!(
                 f,
                 "Error in config file\n'{}' is not a valid key binding",

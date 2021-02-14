@@ -1,18 +1,20 @@
 mod block;
 mod context_menu;
 mod entry;
+mod help;
+mod tool_window;
 mod volume;
 
 pub use block::BlockWidget;
-pub use context_menu::ContextMenuWidget;
+pub use help::HelpWidget;
+pub use tool_window::ToolWindowWidget;
 pub use volume::{VolumeWidget, VolumeWidgetBorder};
 
-use super::util::Rect;
+use super::{Rect, Screen};
 
 use crate::RSError;
 
-use std::io::Write;
-
-pub trait Widget<W: Write> {
-    fn render(&mut self, area: Rect, buf: &mut W) -> Result<(), RSError>;
+pub trait Widget {
+    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError>;
+    fn resize(&mut self, area: Rect) -> Result<(), RSError>;
 }

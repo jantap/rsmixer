@@ -1,14 +1,16 @@
 use crate::{
     entry::{EntryIdentifier, EntrySpaceLvl, EntryType},
-    ui::util::{entry_height, Rect},
-    RSError,
+    ui::util::entry_height,
 };
+
+use screen_buffer_ui::{scrollable, Scrollable};
 
 pub struct PageEntries {
     pub entries: Vec<EntryIdentifier>,
     pub last_term_h: u16,
     pub lvls: Vec<EntrySpaceLvl>,
     pub visibility: Vec<usize>,
+    selected: usize,
 }
 
 impl PageEntries {
@@ -18,6 +20,7 @@ impl PageEntries {
             last_term_h: 0,
             lvls: Vec::new(),
             visibility: Vec::new(),
+            selected: 0,
         }
     }
 
@@ -37,71 +40,8 @@ impl PageEntries {
         }
     }
 
-    pub fn reflow_scroll(&mut self, h: u16, force: bool) {
-        if !force && h == self.last_term_h {
-            return;
-        }
-
-        self.last_term_h = h;
-
-        self.visibility = Vec::new();
-
-        let mut current_scroll_page = 0;
-        let mut current_height = 0;
-
-        self.visibility = self
-            .lvls
-            .iter()
-            .map(|&e| {
-                current_height += entry_height(e);
-
-                if current_height > h {
-                    current_scroll_page += 1;
-                    current_height = 0;
-                }
-
-                current_scroll_page
-            })
-            .collect();
-    }
-
-    pub fn is_entry_visible(&self, index: usize, scroll: usize) -> Result<Option<Rect>, RSError> {
-        let (w, _) = crossterm::terminal::size()?;
-
-        if self.visibility[index] != scroll {
-            return Ok(None);
-        }
-
-        let mut he = 0;
-        for i in 0..index {
-            if self.visibility[i] == scroll {
-                he += entry_height(self.lvls[i]);
-            }
-        }
-
-        Ok(Some(Rect::new(
-            2,
-            2 + he,
-            w - 4,
-            entry_height(self.lvls[index]),
-        )))
-    }
-
-    pub fn visible_range_with_lvl<'a>(
-        &'a self,
-        scroll: usize,
-    ) -> Box<dyn Iterator<Item = (usize, EntrySpaceLvl)> + 'a> {
-        let start = self
-            .visibility
-            .iter()
-            .position(|&x| x == scroll)
-            .unwrap_or(0);
-        let end = match self.visibility.iter().rposition(|&x| x == scroll) {
-            Some(s) => s + 1,
-            None => 0,
-        };
-
-        Box::new((start..end).map(move |x| -> (usize, EntrySpaceLvl) { (x, self.lvls[x]) }))
+    pub fn get_selected(&self) -> Option<EntryIdentifier> {
+        self.get(self.selected())
     }
 
     pub fn set(&mut self, vs: Vec<EntryIdentifier>, parent_type: EntryType) -> bool {
@@ -121,14 +61,37 @@ impl PageEntries {
                 self.lvls.push(calc_lvl(parent_type, &vs, index));
             }
 
-            self.reflow_scroll(self.last_term_h, true);
-
             self.entries = vs;
         }
 
         ret
     }
 }
+
+scrollable!(
+    PageEntries,
+    fn selected(&self) -> usize {
+        self.selected
+    },
+    fn len(&self) -> usize {
+        self.entries.len()
+    },
+    fn set_selected(&mut self, selected: usize) -> bool {
+        if selected < self.entries.len() {
+            self.selected = selected;
+            true
+        } else {
+            false
+        }
+    },
+    fn element_height(&self, index: usize) -> u16 {
+        if let Some(lvl) = self.lvls.get(index) {
+            entry_height(*lvl)
+        } else {
+            0
+        }
+    }
+);
 
 fn calc_lvl(parent_type: EntryType, vs: &[EntryIdentifier], index: usize) -> EntrySpaceLvl {
     if parent_type == EntryType::Card {

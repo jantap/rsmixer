@@ -1,11 +1,55 @@
-use crate::{config::keys, models::PageType, Action, RSError, BINDINGS};
+use crate::{config::keys, models::PageType, repeat, Action, BINDINGS};
 
 use std::{collections::HashSet, mem::discriminant};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HelpLine {
-    key_events: Vec<String>,
-    category: String,
+    pub key_events: Vec<String>,
+    pub category: String,
+}
+
+impl HelpLine {
+    pub fn lines_needed(&self, mut w: u16) -> u16 {
+        let mut i = 0;
+        let mut j = 0;
+        w -= self.category.len() as u16;
+        self.key_events.iter().for_each(|ke| {
+            if i + ke.len() as u16 + 1 > w {
+                i = (ke.len() + 1) as u16;
+                j += 1;
+            } else {
+                i += (ke.len() + 1) as u16;
+            }
+        });
+
+        j + 1
+    }
+
+    pub fn as_lines(&self, mut w: u16) -> Vec<String> {
+        let mut cur = "".to_string();
+        let mut v = Vec::new();
+        w -= self.category.len() as u16;
+        self.key_events.iter().for_each(|ke| {
+            if cur.len() + ke.len() + 1 > w as usize {
+                v.push(cur.clone());
+                cur = format!("{} ", ke);
+            } else {
+                cur = format!("{}{} ", cur, ke);
+            }
+        });
+
+        v.push(cur);
+
+        if !v.is_empty() {
+            v[0] = format!(
+                "{}{}{}",
+                v[0],
+                repeat!(" ", w as usize - v[0].len()),
+                self.category
+            );
+        }
+        v
+    }
 }
 
 pub enum ActionMatcher {
@@ -89,66 +133,4 @@ pub fn generate() -> Vec<HelpLine> {
     }
 
     help_lines
-}
-
-pub fn help_lines_to_strings(hls: &[HelpLine], width: u16) -> Result<(u16, Vec<String>), RSError> {
-    let mut lines = Vec::new();
-
-    let longest_name = hls.iter().map(|hl| hl.category.len()).max().unwrap();
-    let longest_first_two = hls
-        .iter()
-        .map(|hl| {
-            let mut c = 0;
-            if !hl.key_events.is_empty() {
-                c += hl.key_events[0].len();
-            }
-            if hl.key_events.len() > 1 {
-                c += hl.key_events[1].len();
-            }
-            c
-        })
-        .max()
-        .unwrap();
-    let longest_key_ev = hls
-        .iter()
-        .map(|hl| hl.key_events.iter().map(|ev| ev.len()).max().unwrap())
-        .max()
-        .unwrap();
-
-    let big_width = longest_name + longest_first_two + 5;
-    let small_width = longest_name + longest_key_ev + 3;
-
-    if width < small_width as u16 {
-        return Err(RSError::TerminalTooSmall);
-    }
-    let width = if width > big_width as u16 {
-        big_width
-    } else {
-        small_width
-    };
-
-    for hl in hls {
-        let available_width = width - longest_name - 3;
-        let mut current_lines = Vec::new();
-        current_lines.push("".to_string());
-
-        for ev in &hl.key_events {
-            let cond = available_width >= current_lines.last().unwrap().len() + ev.len();
-            if cond {
-                let cur = current_lines.last_mut().unwrap();
-                *cur = format!("{}{}  ", cur, ev);
-            } else {
-                current_lines.push(format!("{}  ", ev.clone()));
-            }
-        }
-
-        let first = current_lines.first_mut().unwrap();
-        let whitespace_needed = width - longest_name - (*first).len();
-        let whitespace = (0..whitespace_needed).map(|_| " ").collect::<String>();
-        *first = format!("{}{}{}", first.clone(), whitespace, hl.category);
-
-        lines.append(&mut current_lines);
-    }
-
-    Ok((width as u16, lines))
 }

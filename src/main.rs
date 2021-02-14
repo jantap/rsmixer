@@ -17,6 +17,7 @@ pub use models::Action;
 
 use config::{RsMixerConfig, Variables};
 use ev_apple::{Dispatch, Senders};
+use models::Style;
 
 use tokio::runtime;
 
@@ -30,8 +31,8 @@ use state::Storage;
 
 use gumdrop::Options;
 
-use linked_hash_map::LinkedHashMap;
 use multimap::MultiMap;
+use std::collections::HashMap;
 
 lazy_static! {
     pub static ref DISPATCH: Dispatch<Action> = Dispatch::default();
@@ -43,7 +44,7 @@ lazy_static! {
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Styles = LinkedHashMap<String, ContentStyle>;
+pub type Styles = HashMap<Style, ContentStyle>;
 
 #[derive(Debug, Options)]
 struct CliOptions {

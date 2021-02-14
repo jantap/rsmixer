@@ -3,8 +3,8 @@ mod action_handlers;
 use action_handlers::*;
 
 use crate::{
-    models::{RSState, RedrawType, UIMode},
-    ui, Action, RSError,
+    models::{PageType, RSState, UIMode},
+    ui, Action, RSError, STYLES,
 };
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
@@ -14,7 +14,11 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
 
     let mut state = RSState::default();
 
-    ui::draw_page(&mut stdout, &mut state).await?;
+    let mut ui = crate::ui::UI::default();
+    ui.screen.set_styles((*STYLES).get().clone());
+
+    state.redraw.resize = true;
+    state.redraw.full = true;
 
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw
@@ -32,46 +36,33 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
             _ => {}
         }
 
-        state.redraw = general::action_handler(&msg, &mut state).await;
+        general::action_handler(&msg, &mut state).await;
 
-        entries_updates::action_handler(&msg, &mut state)
-            .await
-            .apply(&mut state.redraw);
+        entries_updates::action_handler(&msg, &mut state).await;
+
+        if state.current_page != PageType::Cards {
+            play_entries::action_handler(&msg, &mut state).await;
+        }
 
         match state.ui_mode {
             UIMode::Normal => {
-                normal::action_handler(&msg, &mut state)
-                    .await
-                    .apply(&mut state.redraw);
+                normal::action_handler(&msg, &mut state).await;
             }
             UIMode::ContextMenu => {
-                context_menu::action_handler(&msg, &mut state)
-                    .await
-                    .apply(&mut state.redraw);
+                context_menu::action_handler(&msg, &mut state).await;
             }
             UIMode::Help => {
-                if msg == Action::Redraw {
-                    state.redraw.take_bigger(RedrawType::Help);
-                }
+                help::action_handler(&msg, &mut state).await;
             }
             UIMode::MoveEntry(_, _) => {
-                move_entry::action_handler(&msg, &mut state)
-                    .await
-                    .apply(&mut state.redraw);
-            }
-            UIMode::InputVolumeValue => {
-                input_volume::action_handler(&msg, &mut state)
-                    .await
-                    .apply(&mut state.redraw);
+                move_entry::action_handler(&msg, &mut state).await;
             }
             _ => {}
-        };
+        }
 
-        scroll::scroll_handler(&msg, &mut state)
-            .await?
-            .apply(&mut state.redraw);
+        ui::redraw(&mut stdout, &mut ui, &mut state).await?;
 
-        ui::redraw(&mut stdout, &mut state).await?;
+        state.redraw.reset();
     }
     Ok(())
 }

@@ -1,56 +1,41 @@
-use super::{common::*, play_entries};
+use super::common::*;
 
-use std::collections::HashSet;
+use crate::{entry::EntryKind, models::ContextMenu};
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) -> RedrawType {
-    let mut redraw = normal_handler(msg, state).await;
+use screen_buffer_ui::Scrollable;
 
-    if state.current_page != PageType::Cards {
-        play_entries::action_handler(msg, state)
-            .await
-            .apply(&mut redraw);
-    }
-
-    redraw
+pub async fn action_handler(msg: &Action, state: &mut RSState) {
+    normal_handler(msg, state).await;
 }
 
-async fn normal_handler(msg: &Action, state: &mut RSState) -> RedrawType {
+async fn normal_handler(msg: &Action, state: &mut RSState) {
     match msg.clone() {
         Action::EntryUpdate(ident, _) => {
             if state.page_entries.iter_entries().any(|&i| i == ident) {
-                return RedrawType::Entries;
-            }
-        }
-        Action::PeakVolumeUpdate(ident, peak) => {
-            if ident.entry_type == EntryType::Card {
-                return RedrawType::None;
-            }
-            if let Some(e) = state.entries.get_mut(&ident) {
-                let play = e.play_entry.as_mut().unwrap();
-                if (play.peak - peak).abs() < f32::EPSILON {
-                    return RedrawType::None;
-                }
-                play.peak = peak;
-            }
-            if state.page_entries.iter_entries().any(|&i| i == ident) {
-                return RedrawType::PeakVolume(ident);
+                state.redraw.entries = true;
             }
         }
         Action::MoveUp(how_much) => {
-            let mut affected = HashSet::new();
-            affected.insert(state.selected);
-            state.selected = max(state.selected as i32 - how_much as i32, 0) as usize;
-            affected.insert(state.selected);
-
-            return RedrawType::PartialEntries(affected);
+            state
+                .redraw
+                .affected_entries
+                .insert(state.page_entries.selected());
+            state.page_entries.up(how_much as usize);
+            state
+                .redraw
+                .affected_entries
+                .insert(state.page_entries.selected());
         }
         Action::MoveDown(how_much) => {
-            let mut affected = HashSet::new();
-            affected.insert(state.selected);
-            state.selected = min(state.selected + how_much as usize, state.page_entries.len());
-            affected.insert(state.selected);
-
-            return RedrawType::PartialEntries(affected);
+            state
+                .redraw
+                .affected_entries
+                .insert(state.page_entries.selected());
+            state.page_entries.down(how_much as usize);
+            state
+                .redraw
+                .affected_entries
+                .insert(state.page_entries.selected());
         }
         Action::CyclePages(which_way) => {
             DISPATCH
@@ -58,34 +43,32 @@ async fn normal_handler(msg: &Action, state: &mut RSState) -> RedrawType {
                     i8::from(state.current_page) + which_way,
                 )))
                 .await;
-            return RedrawType::None;
         }
         Action::OpenContextMenu => {
-            if state.selected < state.page_entries.len() {
-                if let Some(entry) = state
-                    .entries
-                    .get(&state.page_entries.get(state.selected).unwrap())
-                {
+            if state.page_entries.selected() < state.page_entries.len() {
+                if let Some(entry) = state.entries.get(
+                    &state
+                        .page_entries
+                        .get(state.page_entries.selected())
+                        .unwrap(),
+                ) {
                     state.ui_mode = UIMode::ContextMenu;
-                    state.context_options = context_menu(entry);
+                    state.context_menu = ContextMenu::new(entry);
 
-                    if entry.entry_type == EntryType::Card {
-                        if let Some(index) = entry.card_entry.as_ref().unwrap().selected_profile {
-                            state.selected_context = index;
-                        }
-                    } else {
-                        state.selected_context = 0;
+                    if let EntryKind::CardEntry(card) = &entry.entry_kind {
+                        state
+                            .context_menu
+                            .set_selected(card.selected_profile.unwrap_or(0));
                     }
 
-                    return RedrawType::ContextMenu;
+                    state.redraw.resize = true;
                 }
             }
         }
         Action::ShowHelp => {
             state.ui_mode = UIMode::Help;
-            return RedrawType::Help;
+            state.redraw.resize = true;
         }
         _ => {}
     };
-    RedrawType::None
 }

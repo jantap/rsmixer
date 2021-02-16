@@ -126,6 +126,7 @@ impl Widget for CardEntry {
                 self.profiles[index].description.len(),
                 (self.area.width / 2).into(),
             );
+
             screen.string(
                 self.area.x + self.area.width - profile_len as u16,
                 self.area.y,

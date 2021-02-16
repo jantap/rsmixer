@@ -6,14 +6,14 @@ impl ToString for Action {
     fn to_string(&self) -> String {
         match self {
             Action::ExitSignal => "exit".to_string(),
-            Action::RequestMute => "mute".to_string(),
+            Action::RequestMute(_) => "mute".to_string(),
             Action::ChangePage(PageType::Output) => "show_output".to_string(),
             Action::ChangePage(PageType::Input) => "show_input".to_string(),
             Action::ChangePage(PageType::Cards) => "show_cards".to_string(),
-            Action::OpenContextMenu => "context_menu".to_string(),
+            Action::OpenContextMenu(_) => "context_menu".to_string(),
             Action::ShowHelp => "help".to_string(),
             Action::InputVolumeValue => "input_volume_value".to_string(),
-            Action::RequstChangeVolume(num) => {
+            Action::RequstChangeVolume(num, _) => {
                 if *num < 0 {
                     format!("lower_volume({})", num)
                 } else {
@@ -28,7 +28,7 @@ impl ToString for Action {
             Action::CyclePages(-1) => "cycle_pages_backward".to_string(),
             Action::CloseContextMenu => "close_context_menu".to_string(),
             Action::Confirm => "confirm".to_string(),
-            Action::Hide => "hide".to_string(),
+            Action::Hide(_) => "hide".to_string(),
 
             _ => "".to_string(),
         }
@@ -59,11 +59,11 @@ impl TryFrom<String> for Action {
 
         let x = match s {
             "exit" => Action::ExitSignal,
-            "mute" => Action::RequestMute,
+            "mute" => Action::RequestMute(None),
             "show_output" => Action::ChangePage(PageType::Output),
             "show_input" => Action::ChangePage(PageType::Input),
             "show_cards" => Action::ChangePage(PageType::Cards),
-            "context_menu" => Action::OpenContextMenu,
+            "context_menu" => Action::OpenContextMenu(None),
             "help" => Action::ShowHelp,
             "input_volume_value" => Action::InputVolumeValue,
             "lower_volume" => {
@@ -73,7 +73,7 @@ impl TryFrom<String> for Action {
                         return Err(RSError::ActionBindingError(st.clone()));
                     }
                 };
-                Action::RequstChangeVolume(-a)
+                Action::RequstChangeVolume(-a, None)
             }
             "raise_volume" => {
                 let a = match a.parse::<i16>() {
@@ -82,7 +82,7 @@ impl TryFrom<String> for Action {
                         return Err(RSError::ActionBindingError(st.clone()));
                     }
                 };
-                Action::RequstChangeVolume(a)
+                Action::RequstChangeVolume(a, None)
             }
             "up" => {
                 let a = match a.parse::<u16>() {
@@ -108,7 +108,7 @@ impl TryFrom<String> for Action {
             "cycle_pages_backward" => Action::CyclePages(-1),
             "close_context_menu" => Action::CloseContextMenu,
             "confirm" => Action::Confirm,
-            "hide" => Action::Hide,
+            "hide" => Action::Hide(None),
             _ => {
                 return Err(RSError::ActionBindingError(st.clone()));
             }

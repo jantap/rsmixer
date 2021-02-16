@@ -4,7 +4,7 @@ mod misc;
 pub use entries::Entries;
 pub use misc::{EntryIdentifier, EntrySpaceLvl, EntryType};
 
-use crate::ui::widgets::VolumeWidget;
+use crate::{ui::widgets::VolumeWidget, unwrap_or_return};
 
 use screen_buffer_ui::Rect;
 
@@ -86,6 +86,7 @@ impl HiddenStatus {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Entry {
     pub entry_type: EntryType,
+    pub entry_ident: EntryIdentifier,
     pub index: u32,
     pub name: String,
     pub is_selected: bool,
@@ -121,6 +122,7 @@ impl Entry {
         suspended: bool,
     ) -> Self {
         Self {
+            entry_ident: EntryIdentifier::new(entry_type, index),
             entry_type,
             index,
             name: name.clone(),
@@ -152,6 +154,7 @@ impl Entry {
         selected_profile: Option<usize>,
     ) -> Self {
         Self {
+            entry_ident: EntryIdentifier::new(EntryType::Card, index),
             entry_type: EntryType::Card,
             index,
             name: name.clone(),
@@ -202,6 +205,21 @@ impl Entry {
             }
         } else {
             None
+        }
+    }
+
+    pub fn needs_redraw(&self, entries: &Entries) -> bool {
+        match &self.entry_kind {
+            EntryKind::CardEntry(card) => {
+                let old_card = unwrap_or_return!(entries.get_card_entry(&self.entry_ident), true);
+                old_card.name != card.name || old_card.selected_profile != card.selected_profile
+            }
+            EntryKind::PlayEntry(play) => {
+                let old_play = unwrap_or_return!(entries.get_play_entry(&self.entry_ident), true);
+                old_play.name != play.name
+                    || old_play.volume != play.volume
+                    || old_play.peak != play.peak
+            }
         }
     }
 }

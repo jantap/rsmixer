@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod context_menus;
+mod input_event;
 mod page_entries;
 mod page_type;
 mod redraw;
@@ -10,6 +11,7 @@ mod ui_mode;
 pub use self::state::RSState;
 pub use actions::Action;
 pub use context_menus::{ContextMenu, ContextMenuEffect, ContextMenuOption};
+pub use input_event::{InputEvent, InputEventKind};
 pub use page_entries::PageEntries;
 pub use page_type::PageType;
 pub use redraw::Redraw;

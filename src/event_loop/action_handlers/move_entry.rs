@@ -51,7 +51,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                 DISPATCH.event(Action::Redraw).await;
             }
         }
-        Action::OpenContextMenu => match state.ui_mode {
+        Action::Confirm => match state.ui_mode {
             UIMode::MoveEntry(ident, parent) => {
                 state.ui_mode = UIMode::Normal;
                 DISPATCH

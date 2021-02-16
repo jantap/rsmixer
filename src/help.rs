@@ -1,4 +1,4 @@
-use crate::{config::keys, models::PageType, repeat, Action, BINDINGS};
+use crate::{config::keys_mouse, models::PageType, repeat, Action, BINDINGS};
 
 use std::{collections::HashSet, mem::discriminant};
 
@@ -72,7 +72,7 @@ pub fn generate() -> Vec<HelpLine> {
     let mut volume_deltas = HashSet::new();
 
     for (_, v) in (*BINDINGS).get().iter() {
-        if let Action::RequstChangeVolume(x) = v {
+        if let Action::RequstChangeVolume(x, _) = v {
             volume_deltas.insert(x.abs());
         }
     }
@@ -89,14 +89,14 @@ pub fn generate() -> Vec<HelpLine> {
         categories.push((
             format!("Change volume by {}", vd),
             vec![
-                ActionMatcher::Concrete(Action::RequstChangeVolume(vd)),
-                ActionMatcher::Concrete(Action::RequstChangeVolume(-vd)),
+                ActionMatcher::Concrete(Action::RequstChangeVolume(vd, None)),
+                ActionMatcher::Concrete(Action::RequstChangeVolume(-vd, None)),
             ],
         ))
     }
     categories.push((
         "Mute/unmute".to_string(),
-        vec![ActionMatcher::Concrete(Action::RequestMute)],
+        vec![ActionMatcher::Concrete(Action::RequestMute(None))],
     ));
     categories.push((
         "Change page".to_string(),
@@ -108,7 +108,7 @@ pub fn generate() -> Vec<HelpLine> {
     ));
     categories.push((
         "Context menu".to_string(),
-        vec![ActionMatcher::Any(Action::OpenContextMenu)],
+        vec![ActionMatcher::Any(Action::OpenContextMenu(None))],
     ));
     categories.push((
         "Quit".to_string(),
@@ -125,7 +125,7 @@ pub fn generate() -> Vec<HelpLine> {
         for (k, v) in (*BINDINGS).get().iter() {
             for matcher in &category.1 {
                 if matcher.is_matching(v) {
-                    hl.key_events.push(keys::keyevent_to_string(k));
+                    hl.key_events.push(k.to_string());
                 }
             }
         }

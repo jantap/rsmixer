@@ -28,7 +28,11 @@ pub fn parent_child_types(page: PageType) -> (EntryType, EntryType) {
 
 pub fn prepare_terminal() -> Result<io::Stdout, RSError> {
     let mut stdout = io::stdout();
-    crossterm::execute!(stdout, crossterm::terminal::EnterAlternateScreen)?;
+    crossterm::execute!(
+        stdout,
+        crossterm::terminal::EnterAlternateScreen,
+        crossterm::event::EnableMouseCapture
+    )?;
     crossterm::terminal::enable_raw_mode()?;
     execute!(stdout, Hide)?;
 

@@ -2,9 +2,9 @@ use super::common::*;
 
 use crate::BINDINGS;
 
-use crossterm::event::KeyEvent;
+use crossterm::event::MouseEvent;
 
-pub async fn action_handler(key_event: KeyEvent, state: &mut RSState) {
+pub async fn action_handler(mouse_event: MouseEvent, state: &mut RSState) {
     if let Some(bindings) = (*BINDINGS).get().get_vec(&key_event) {
         let mut actions = bindings.clone();
 

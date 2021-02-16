@@ -17,11 +17,11 @@ pub use models::Action;
 
 use config::{RsMixerConfig, Variables};
 use ev_apple::{Dispatch, Senders};
-use models::Style;
+use models::{InputEvent, Style};
 
 use tokio::runtime;
 
-use crossterm::{event::KeyEvent, style::ContentStyle};
+use crossterm::style::ContentStyle;
 
 use log::LevelFilter;
 
@@ -39,7 +39,7 @@ lazy_static! {
     pub static ref SENDERS: Senders<Action> = Senders::default();
     pub static ref STYLES: Storage<Styles> = Storage::new();
     pub static ref VARIABLES: Storage<Variables> = Storage::new();
-    pub static ref BINDINGS: Storage<MultiMap<KeyEvent, Action>> = Storage::new();
+    pub static ref BINDINGS: Storage<MultiMap<InputEvent, Action>> = Storage::new();
 }
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -98,4 +98,19 @@ fn main() -> Result<(), RSError> {
     });
 
     Ok(())
+}
+
+#[macro_export]
+macro_rules! unwrap_or_return {
+    ($x:expr, $y:expr) => {
+        match $x {
+            Some(x) => x,
+            None => {
+                return $y;
+            }
+        }
+    };
+    ($x:expr) => {
+        unwrap_or_return!($x, ())
+    };
 }

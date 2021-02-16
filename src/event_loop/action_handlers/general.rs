@@ -13,6 +13,22 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
         }
         Action::EntryUpdate(ident, entry) => {
             let mut entry = entry.deref().to_owned();
+
+            if entry.needs_redraw(&state.entries) {
+                if let Some(i) = state
+                    .page_entries
+                    .iter_entries()
+                    .position(|id| *id == entry.entry_ident)
+                {
+                    state.redraw.affected_entries.insert(i);
+                }
+            }
+            if let EntryKind::CardEntry(card) = &mut entry.entry_kind {
+                if let Some(old_card) = state.entries.get_card_entry(&ident) {
+                    card.area = old_card.area;
+                }
+            }
+
             if let EntryKind::PlayEntry(play) = &mut entry.entry_kind {
                 if let Some(old_play) = state.entries.get_play_entry(&ident) {
                     play.area = old_play.area;

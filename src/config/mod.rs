@@ -1,18 +1,15 @@
 mod actions;
 mod colors;
-pub mod keys;
+pub mod keys_mouse;
 mod variables;
 
 pub use variables::Variables;
 
-use crate::{Action, RSError, Styles, VERSION};
+use crate::{models::InputEvent, Action, RSError, Styles, VERSION};
 
 use std::{collections::HashMap, convert::TryFrom};
 
-use crossterm::{
-    event::KeyEvent,
-    style::{Attribute, ContentStyle},
-};
+use crossterm::style::{Attribute, ContentStyle};
 
 use multimap::MultiMap;
 
@@ -45,7 +42,7 @@ impl RsMixerConfig {
 
     pub fn interpret(
         &mut self,
-    ) -> Result<(Styles, MultiMap<KeyEvent, Action>, Variables), RSError> {
+    ) -> Result<(Styles, MultiMap<InputEvent, Action>, Variables), RSError> {
         self.compatibility_layer()?;
 
         let bindings = self.bindings()?;
@@ -98,13 +95,13 @@ impl RsMixerConfig {
         Ok((styles, bindings, Variables::new(self)))
     }
 
-    fn bindings(&self) -> Result<MultiMap<KeyEvent, Action>, RSError> {
-        let mut bindings: MultiMap<KeyEvent, Action> = MultiMap::new();
+    fn bindings(&self) -> Result<MultiMap<InputEvent, Action>, RSError> {
+        let mut bindings: MultiMap<InputEvent, Action> = MultiMap::new();
 
         for (k, cs) in &self.bindings {
             for c in cs {
                 bindings.insert(
-                    keys::try_string_to_keyevent(&k)?,
+                    keys_mouse::try_string_to_event(&k)?,
                     Action::try_from(c.clone())?,
                 );
             }
@@ -135,12 +132,12 @@ impl RsMixerConfig {
             return Ok(());
         }
 
-        let mut parsed: MultiMap<KeyEvent, (Action, String)> = MultiMap::new();
+        let mut parsed: MultiMap<InputEvent, (Action, String)> = MultiMap::new();
 
         for (k, cs) in &self.bindings {
             for c in cs {
                 parsed.insert(
-                    keys::try_string_to_keyevent(&k)?,
+                    keys_mouse::try_string_to_event(&k)?,
                     (Action::try_from(c.clone())?, k.clone()),
                 );
             }
@@ -153,7 +150,7 @@ impl RsMixerConfig {
         {
             if let Some((_, (_, k))) = parsed
                 .iter()
-                .find(|(_, v)| (**v).0 == Action::OpenContextMenu)
+                .find(|(_, v)| (**v).0 == Action::OpenContextMenu(None))
             {
                 self.bindings.insert(k.clone(), Action::Confirm.to_string());
             }

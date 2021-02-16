@@ -5,6 +5,7 @@ pub use util::{clean_terminal, entry_height, prepare_terminal};
 use widgets::{BlockWidget, Widget};
 
 use crate::{
+    entry::EntryKind,
     models::{PageType, RSState, Style, UIMode},
     RSError,
 };
@@ -15,10 +16,7 @@ use std::{collections::HashSet, io::Write};
 
 pub type Screen = screen_buffer_ui::Screen<Style>;
 
-pub async fn redraw<W: Write>(
-    stdout: &mut W,
-    state: &mut RSState,
-) -> Result<(), RSError> {
+pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(), RSError> {
     if state.redraw.resize {
         state.ui.terminal_too_small = false;
         match resize(state) {
@@ -38,7 +36,9 @@ pub async fn redraw<W: Write>(
             ' ',
             Style::Normal,
         );
-        state.ui.screen
+        state
+            .ui
+            .screen
             .string(0, 0, "Terminal too small".to_string(), Style::Normal);
 
         state.ui.screen.draw_changes(stdout)?;
@@ -95,7 +95,7 @@ pub struct UI {
     border: BlockWidget,
     pub entries_area: Rect,
     terminal_too_small: bool,
-    pages_names: Vec<String>,
+    pub pages_names: Vec<String>,
 }
 
 impl Default for UI {
@@ -118,13 +118,20 @@ fn resize(state: &mut RSState) -> Result<(), RSError> {
     let (x, y) = crossterm::terminal::size()?;
     state.ui.screen.resize(x, y);
 
-    state.ui.border
-        .resize(Rect::new(0, 0, state.ui.screen.width, state.ui.screen.height))?;
+    state.ui.border.resize(Rect::new(
+        0,
+        0,
+        state.ui.screen.width,
+        state.ui.screen.height,
+    ))?;
 
     state.ui.entries_area = Rect::new(2, 2, state.ui.screen.width - 4, state.ui.screen.height - 4);
     let mut entry_area = state.ui.entries_area;
 
-    for i in state.page_entries.visible_range(state.ui.entries_area.height) {
+    for i in state
+        .page_entries
+        .visible_range(state.ui.entries_area.height)
+    {
         let ent = match state.entries.get_mut(&state.page_entries.get(i).unwrap()) {
             Some(x) => x,
             None => {
@@ -200,13 +207,18 @@ fn draw_page_names(state: &mut RSState) {
             }
         }
     } else {
-        state.ui.screen
+        state
+            .ui
+            .screen
             .string(1, 0, state.current_page.to_string(), Style::Bold);
     }
 }
 
 fn draw_entries(state: &mut RSState, only_affected: bool) -> Result<(), RSError> {
-    for i in state.page_entries.visible_range(state.ui.entries_area.height) {
+    for i in state
+        .page_entries
+        .visible_range(state.ui.entries_area.height)
+    {
         if only_affected && state.redraw.affected_entries.get(&i).is_none() {
             continue;
         }
@@ -221,6 +233,21 @@ fn draw_entries(state: &mut RSState, only_affected: bool) -> Result<(), RSError>
         ent.is_selected = state.page_entries.selected() == i;
 
         ent.render(&mut state.ui.screen)?;
+
+        if i + 1 == state.page_entries.len() {
+            let area = match &ent.entry_kind {
+                EntryKind::CardEntry(card) => card.area,
+                EntryKind::PlayEntry(play) => play.area,
+            };
+            let bottom = Rect::new(
+                area.x,
+                area.y + area.height,
+                area.width,
+                state.ui.entries_area.height - area.y - area.height,
+            );
+
+            state.ui.screen.rect(bottom, ' ', Style::Normal);
+        }
     }
 
     Ok(())

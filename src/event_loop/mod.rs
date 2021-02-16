@@ -22,14 +22,21 @@ pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw
 
-        log::debug!("Action: {:#?}", msg);
+        if let Action::PeakVolumeUpdate(_, _) = msg {
+        } else {
+            log::debug!("Action: {:#?}", msg);
+        }
 
         match msg {
             Action::ExitSignal => {
                 break;
             }
-            Action::KeyPress(key_event) => {
-                key_press::action_handler(key_event, &mut state).await;
+            Action::UserInput(event) => {
+                user_input::action_handler(event, &mut state).await?;
+
+                ui::redraw(&mut stdout, &mut state).await?;
+                state.redraw.reset();
+
                 continue;
             }
             _ => {}

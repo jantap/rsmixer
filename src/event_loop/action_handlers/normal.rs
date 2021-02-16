@@ -44,7 +44,13 @@ async fn normal_handler(msg: &Action, state: &mut RSState) {
                 )))
                 .await;
         }
-        Action::OpenContextMenu => {
+        Action::OpenContextMenu(ident) => {
+            if let Some(ident) = ident {
+                if let Some(index) = state.page_entries.iter_entries().position(|i| *i == ident) {
+                    state.page_entries.set_selected(index);
+                }
+            }
+
             if state.page_entries.selected() < state.page_entries.len() {
                 if let Some(entry) = state.entries.get(
                     &state

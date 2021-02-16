@@ -1,4 +1,4 @@
-use super::{Entry, EntryIdentifier, EntryKind, EntryType, PlayEntry};
+use super::{CardEntry, Entry, EntryIdentifier, EntryKind, EntryType, PlayEntry};
 
 use std::collections::BTreeMap;
 
@@ -36,6 +36,15 @@ impl Entries {
     }
     pub fn get_mut(&mut self, ident: &EntryIdentifier) -> Option<&mut Entry> {
         self.0.get_mut(ident)
+    }
+    pub fn get_card_entry(&self, entry_ident: &EntryIdentifier) -> Option<&CardEntry> {
+        match self.0.get(entry_ident) {
+            Some(e) => match &e.entry_kind {
+                EntryKind::CardEntry(p) => Some(p),
+                _ => None,
+            },
+            None => None,
+        }
     }
     pub fn get_play_entry(&self, entry_ident: &EntryIdentifier) -> Option<&PlayEntry> {
         match self.0.get(entry_ident) {

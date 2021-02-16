@@ -1,6 +1,9 @@
 use super::{ContextMenu, PageEntries, PageType, Redraw, UIMode};
 
-use crate::{entry::Entries, ui::{UI, widgets::HelpWidget}};
+use crate::{
+    entry::Entries,
+    ui::{widgets::HelpWidget, UI},
+};
 
 pub struct RSState {
     pub current_page: PageType,

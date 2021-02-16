@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use pulse::volume::ChannelVolumes;
 
-use crossterm::event::KeyEvent;
+use crossterm::event::Event;
 
 use statics::*;
 
@@ -34,27 +34,27 @@ messages!(Action,
     CyclePages(i8) => MAIN_MESSAGE,
 
     // volume changes
-    RequestMute => MAIN_MESSAGE,
+    RequestMute(Option<EntryIdentifier>) => MAIN_MESSAGE,
     InputVolumeValue => MAIN_MESSAGE,
     // request volume change where the argument is a
     // number of percentage points it should be changed by
-    RequstChangeVolume(i16) => MAIN_MESSAGE,
+    RequstChangeVolume(i16, Option<EntryIdentifier>) => MAIN_MESSAGE,
 
     // context menus
-    OpenContextMenu => MAIN_MESSAGE,
+    OpenContextMenu(Option<EntryIdentifier>) => MAIN_MESSAGE,
     CloseContextMenu => MAIN_MESSAGE,
     Confirm => MAIN_MESSAGE,
 
     ShowHelp => MAIN_MESSAGE,
 
-    Hide => MAIN_MESSAGE,
+    Hide(Option<EntryIdentifier>) => MAIN_MESSAGE,
 
     // PulseAudio connection status
     RetryIn(u64) => MAIN_MESSAGE,
     ConnectToPA => MAIN_MESSAGE,
     PADisconnected => MAIN_MESSAGE,
 
-    KeyPress(KeyEvent) => MAIN_MESSAGE,
+    UserInput(Event) => MAIN_MESSAGE,
 
     MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
     MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,

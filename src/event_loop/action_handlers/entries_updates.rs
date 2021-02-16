@@ -3,6 +3,7 @@ use super::common::*;
 use crate::{
     entry::{EntryIdentifier, EntryKind, HiddenStatus},
     ui::util::parent_child_types,
+    unwrap_or_return,
 };
 
 use screen_buffer_ui::Scrollable;
@@ -17,9 +18,12 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
         | Action::EntryUpdate(_, _)
         | Action::ChangePage(_) => {}
 
-        Action::Hide => {
-            if let Some(selected) = state.page_entries.get(state.page_entries.selected()) {
-                state.entries.hide(selected);
+        Action::Hide(Some(ident)) => {
+            state.entries.hide(*ident);
+        }
+        Action::Hide(None) => {
+            if let Some(ident) = state.page_entries.get_selected() {
+                state.entries.hide(ident);
             }
         }
         _ => {

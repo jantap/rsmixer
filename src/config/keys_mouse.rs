@@ -1,8 +1,13 @@
-use crate::RSError;
+use crate::{
+    models::{InputEvent, InputEventKind},
+    RSError,
+};
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{
+    Event, KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind,
+};
 
-pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
+pub fn try_string_to_event(key: &str) -> Result<InputEvent, RSError> {
     let s = String::from(key).to_lowercase();
     let mut modifiers = KeyModifiers::empty();
 
@@ -18,6 +23,29 @@ pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
     }
 
     let code = *parts.last().unwrap();
+
+    if let Ok(kind) = try_string_to_mouseevent(code) {
+        Ok(InputEvent::mouse(kind, modifiers))
+    } else {
+        try_string_to_keyevent(key, code, modifiers)
+    }
+}
+
+pub fn try_string_to_mouseevent(code: &str) -> Result<MouseEventKind, RSError> {
+    match code {
+        "scroll_down" => Ok(MouseEventKind::ScrollDown),
+        "scroll_up" => Ok(MouseEventKind::ScrollUp),
+        "mouse_right" => Ok(MouseEventKind::Up(MouseButton::Right)),
+        "mouse_middle" => Ok(MouseEventKind::Up(MouseButton::Middle)),
+        _ => Err(RSError::KeyCodeError(code.to_string())),
+    }
+}
+
+pub fn try_string_to_keyevent(
+    key: &str,
+    code: &str,
+    mut modifiers: KeyModifiers,
+) -> Result<InputEvent, RSError> {
     let code = match code {
         "backspace" => KeyCode::Backspace,
         "enter" => KeyCode::Enter,
@@ -65,48 +93,5 @@ pub fn try_string_to_keyevent(key: &str) -> Result<KeyEvent, RSError> {
         },
     };
 
-    Ok(KeyEvent { code, modifiers })
-}
-
-pub fn keyevent_to_string(key_ev: &KeyEvent) -> String {
-    let mut key_ev = *key_ev;
-
-    if key_ev.code == KeyCode::BackTab {
-        key_ev.code = KeyCode::Tab;
-        key_ev.modifiers |= KeyModifiers::SHIFT;
-    }
-
-    let mut s = "".to_string();
-    if key_ev.modifiers.contains(KeyModifiers::CONTROL) {
-        s = String::from("Ctrl+");
-    }
-    if key_ev.modifiers.contains(KeyModifiers::SHIFT) {
-        s = format!("{}Shift+", s);
-    }
-    if key_ev.modifiers.contains(KeyModifiers::ALT) {
-        s = format!("{}Alt+", s);
-    }
-
-    let code = match key_ev.code {
-        KeyCode::Backspace => "Backspace".to_string(),
-        KeyCode::Enter => "Enter".to_string(),
-        KeyCode::Left => "Left".to_string(),
-        KeyCode::Right => "Right".to_string(),
-        KeyCode::Up => "Up".to_string(),
-        KeyCode::Down => "Down".to_string(),
-        KeyCode::Home => "Home".to_string(),
-        KeyCode::End => "End".to_string(),
-        KeyCode::PageUp => "PageUp".to_string(),
-        KeyCode::PageDown => "PageDown".to_string(),
-        KeyCode::Tab => "Tab".to_string(),
-        KeyCode::BackTab => "Backtab".to_string(),
-        KeyCode::Delete => "Delete".to_string(),
-        KeyCode::Insert => "Insert".to_string(),
-        KeyCode::Null => "Null".to_string(),
-        KeyCode::Esc => "Esc".to_string(),
-        KeyCode::F(i) => format!("F{}", i),
-        KeyCode::Char(c) => format!("{}", c),
-    };
-
-    format!("{}{}", s, code)
+    Ok(InputEvent::key(code, modifiers))
 }

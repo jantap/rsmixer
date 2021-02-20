@@ -51,8 +51,8 @@ impl TryFrom<Event> for InputEvent {
 
 impl Display for InputEvent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut modifiers = self.modifiers.clone();
-        let mut kind = self.kind.clone();
+        let mut modifiers = self.modifiers;
+        let mut kind = self.kind;
 
         if let InputEventKind::Key(key) = kind {
             if key == KeyCode::BackTab {

@@ -1,4 +1,4 @@
-use crate::{config::keys_mouse, models::PageType, repeat, Action, BINDINGS};
+use crate::{models::PageType, repeat, Action, BINDINGS};
 
 use std::{collections::HashSet, mem::discriminant};
 

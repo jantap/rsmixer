@@ -66,6 +66,15 @@ Basically `key = ArrayOf(action)`. Key is either:
 - a special key. [Special keys supported](special_keys.md) (if anything is missing just create an issue)
 - a key combination, with plus signs between keys (one or more of shift, ctrl, alt and and a char/special key, seperated by plus signs)
 
+In the same way you can set behavior on right and middle clicks on entries
+
+```
+mouse_right = ['mute']
+mouse_middle = ['hide']
+```
+
+(left mouse click is automatically assigned to selecting entries and opening context menu when entry is already selected)
+
 When that key/key combination gets pressed rsmixer performs an action assigned to that keybinding. [Possible actions](actions.md)
 
 ## License

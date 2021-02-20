@@ -218,7 +218,7 @@ impl Entry {
                 let old_play = unwrap_or_return!(entries.get_play_entry(&self.entry_ident), true);
                 old_play.name != play.name
                     || old_play.volume != play.volume
-                    || old_play.peak != play.peak
+                    || (play.peak - old_play.peak).abs() < f32::EPSILON
             }
         }
     }

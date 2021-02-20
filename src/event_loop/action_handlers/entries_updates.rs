@@ -3,7 +3,6 @@ use super::common::*;
 use crate::{
     entry::{EntryIdentifier, EntryKind, HiddenStatus},
     ui::util::parent_child_types,
-    unwrap_or_return,
 };
 
 use screen_buffer_ui::Scrollable;

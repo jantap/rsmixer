@@ -62,7 +62,7 @@ fn handle_unbindable_mouse_actions(
                     .page_entries
                     .iter_entries()
                     .position(|i| *i == ident)
-                    .unwrap_or(state.page_entries.selected());
+                    .unwrap_or_else(|| state.page_entries.selected());
 
                 if state.page_entries.selected() == new_selected {
                     actions.push(Action::OpenContextMenu(None));

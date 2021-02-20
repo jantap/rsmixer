@@ -2,12 +2,12 @@ use crate::{
     entry::{CardEntry, Entry, EntryKind, EntrySpaceLvl, HiddenStatus, PlayEntry},
     ui::{
         widgets::{VolumeWidgetBorder, Widget},
-        Screen, Style,
+        Buffer, Style,
     },
     RSError,
 };
 
-use screen_buffer_ui::Rect;
+use crate::ui::Rect;
 
 use std::cmp::min;
 
@@ -27,7 +27,7 @@ impl Widget for Entry {
             EntryKind::CardEntry(card) => card.resize(area),
         }
     }
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         match &mut self.entry_kind {
             EntryKind::PlayEntry(play) => {
                 play.is_selected = self.is_selected;
@@ -98,7 +98,7 @@ impl Widget for CardEntry {
         Ok(())
     }
 
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         screen.rect(self.area, ' ', Style::Normal);
 
         let style = if self.is_selected {
@@ -170,7 +170,7 @@ impl Widget for PlayEntry {
         Ok(())
     }
 
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         if self.area.width < 5 || self.area.height < 2 {
             return Err(RSError::TerminalTooSmall);
         }

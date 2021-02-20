@@ -1,6 +1,6 @@
 use super::common::*;
 
-use screen_buffer_ui::Scrollable;
+use crate::ui::Scrollable;
 
 pub async fn action_handler(msg: &Action, state: &mut RSState) {
     match msg.clone() {

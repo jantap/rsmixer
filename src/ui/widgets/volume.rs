@@ -1,11 +1,11 @@
 use super::{
-    super::{Rect, Screen, Style},
+    super::{Buffer, Rect, Style},
     Widget,
 };
 
 use crate::RSError;
 
-use screen_buffer_ui::Pixel;
+use crate::ui::Pixel;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum VolumeWidgetBorder {
@@ -72,12 +72,12 @@ impl Widget for VolumeWidget {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         self.border.render(screen, &self.area);
 
         let filled = (self.percent * (self.area.width - 2) as f32).floor() as u16;
 
-        let mut pixels: Vec<Pixel<Style>> = (0..(self.area.width - 2))
+        let mut pixels: Vec<Pixel> = (0..(self.area.width - 2))
             .map(|i| Pixel {
                 text: if i < filled { Some('▮') } else { Some('-') },
                 style: Style::Muted,
@@ -105,7 +105,7 @@ impl Widget for VolumeWidget {
 }
 
 impl VolumeWidgetBorder {
-    fn render(&mut self, screen: &mut Screen, area: &Rect) {
+    fn render(&mut self, screen: &mut Buffer, area: &Rect) {
         if *self == VolumeWidgetBorder::None {
             return;
         }

@@ -6,7 +6,7 @@ pub use misc::{EntryIdentifier, EntrySpaceLvl, EntryType};
 
 use crate::{ui::widgets::VolumeWidget, unwrap_or_return};
 
-use screen_buffer_ui::Rect;
+use crate::ui::Rect;
 
 use pulse::volume::ChannelVolumes;
 

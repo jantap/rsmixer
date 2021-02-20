@@ -2,11 +2,11 @@ use super::{ToolWindowWidget, Widget};
 
 use crate::{
     help::{self, HelpLine},
-    ui::{Rect, Screen, Style},
+    ui::{Buffer, Rect, Style},
     RSError,
 };
 
-use screen_buffer_ui::{scrollable, Scrollable};
+use crate::{scrollable, ui::Scrollable};
 
 use itertools::Itertools;
 
@@ -89,7 +89,7 @@ impl Widget for HelpWidget {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         self.window.render(screen)?;
 
         let inside_height = self.window.area.height - self.window.padding.1 * 2;

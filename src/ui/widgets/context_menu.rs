@@ -2,7 +2,7 @@ use super::Widget;
 
 use crate::{
     models::ContextMenu,
-    ui::{Rect, Screen, Scrollable, Style},
+    ui::{Buffer, Rect, Scrollable, Style},
     RSError,
 };
 
@@ -39,7 +39,7 @@ impl Widget for ContextMenu {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         self.tool_window.render(screen)?;
 
         for (y, i) in self.visible_range(self.area.height).enumerate() {

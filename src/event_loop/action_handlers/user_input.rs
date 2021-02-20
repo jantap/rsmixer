@@ -6,7 +6,7 @@ use crate::{
     RSError, BINDINGS,
 };
 
-use screen_buffer_ui::{Rect, Scrollable};
+use crate::ui::{Rect, Scrollable};
 
 use std::convert::TryFrom;
 

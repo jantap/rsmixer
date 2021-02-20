@@ -10,11 +10,11 @@ pub use help::HelpWidget;
 pub use tool_window::ToolWindowWidget;
 pub use volume::{VolumeWidget, VolumeWidgetBorder};
 
-use super::{Rect, Screen};
+use super::{Buffer, Rect};
 
 use crate::RSError;
 
 pub trait Widget {
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError>;
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError>;
     fn resize(&mut self, area: Rect) -> Result<(), RSError>;
 }

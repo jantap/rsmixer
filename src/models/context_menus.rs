@@ -4,7 +4,10 @@ use crate::{
     Action, DISPATCH,
 };
 
-use screen_buffer_ui::{scrollable, Rect, Scrollable};
+use crate::{
+    scrollable,
+    ui::{Rect, Scrollable},
+};
 
 #[derive(PartialEq, Clone)]
 pub enum ContextMenuOption {

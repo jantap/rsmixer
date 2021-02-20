@@ -3,7 +3,7 @@ use crate::{
     ui::util::entry_height,
 };
 
-use screen_buffer_ui::{scrollable, Scrollable};
+use crate::{scrollable, ui::Scrollable};
 
 pub struct PageEntries {
     pub entries: Vec<EntryIdentifier>,

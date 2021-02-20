@@ -1,6 +1,12 @@
+mod buffer;
+mod rect;
+mod scrollable;
 pub mod util;
 pub mod widgets;
 
+use buffer::{Buffer, Pixel};
+pub use rect::Rect;
+pub use scrollable::Scrollable;
 pub use util::{clean_terminal, entry_height, prepare_terminal};
 use widgets::{BlockWidget, Widget};
 
@@ -10,11 +16,7 @@ use crate::{
     RSError,
 };
 
-use screen_buffer_ui::{Rect, Scrollable};
-
 use std::{collections::HashSet, io::Write};
-
-pub type Screen = screen_buffer_ui::Screen<Style>;
 
 pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(), RSError> {
     if state.redraw.resize {
@@ -91,7 +93,7 @@ pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(),
 }
 
 pub struct UI {
-    pub screen: Screen,
+    pub screen: Buffer,
     border: BlockWidget,
     pub entries_area: Rect,
     terminal_too_small: bool,
@@ -101,7 +103,7 @@ pub struct UI {
 impl Default for UI {
     fn default() -> Self {
         Self {
-            screen: Screen::default(),
+            screen: Buffer::default(),
             border: BlockWidget::default().clean_inside(true),
             entries_area: Rect::default(),
             terminal_too_small: false,

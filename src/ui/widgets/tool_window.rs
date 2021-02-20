@@ -1,7 +1,7 @@
 use super::{BlockWidget, Widget};
 
 use crate::{
-    ui::{Rect, Screen},
+    ui::{Buffer, Rect},
     RSError,
 };
 
@@ -53,7 +53,7 @@ impl Widget for ToolWindowWidget {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         self.border.render(screen)?;
 
         Ok(())

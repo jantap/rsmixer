@@ -5,7 +5,7 @@ use crate::{
     DISPATCH,
 };
 
-use screen_buffer_ui::Rect;
+use crate::ui::Rect;
 
 use pulse::{
     callbacks::ListResult,

@@ -5,7 +5,7 @@ use crate::{
     ui::util::parent_child_types,
 };
 
-use screen_buffer_ui::Scrollable;
+use crate::ui::Scrollable;
 
 use std::collections::{HashMap, HashSet};
 

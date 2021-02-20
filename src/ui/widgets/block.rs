@@ -1,8 +1,8 @@
 use super::Widget;
 
-use crate::{models::Style, repeat, ui::Screen, RSError};
+use crate::{models::Style, repeat, ui::Buffer, RSError};
 
-use screen_buffer_ui::Rect;
+use crate::ui::Rect;
 
 #[derive(Clone)]
 pub struct BlockWidget {
@@ -40,7 +40,7 @@ impl Widget for BlockWidget {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Screen) -> Result<(), RSError> {
+    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
         let top_border = format!(
             "┌{}",
             if self.title.len() < self.area.width as usize - 2 {

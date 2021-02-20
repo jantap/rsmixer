@@ -2,7 +2,7 @@ use super::common::*;
 
 use crate::{entry::EntryKind, models::ContextMenu};
 
-use screen_buffer_ui::Scrollable;
+use crate::ui::Scrollable;
 
 pub async fn action_handler(msg: &Action, state: &mut RSState) {
     normal_handler(msg, state).await;

@@ -1,8 +1,12 @@
+mod play_entry;
+mod card_entry;
 mod entries;
-mod misc;
+mod identifier;
 
 pub use entries::Entries;
-pub use misc::{EntryIdentifier, EntrySpaceLvl, EntryType};
+pub use identifier::EntryIdentifier;
+pub use card_entry::{CardProfile, CardEntry};
+pub use play_entry::PlayEntry;
 
 use crate::{ui::widgets::VolumeWidget, unwrap_or_return};
 
@@ -10,45 +14,24 @@ use crate::ui::Rect;
 
 use pulse::volume::ChannelVolumes;
 
-#[derive(PartialEq, Clone, Debug)]
-pub struct PlayEntry {
-    pub peak: f32,
-    pub mute: bool,
-    pub volume: ChannelVolumes,
-    pub monitor_source: Option<u32>,
-    pub sink: Option<u32>,
-    pub volume_bar: VolumeWidget,
-    pub peak_volume_bar: VolumeWidget,
-    pub suspended: bool,
-    pub area: Rect,
-    pub name: String,
-    pub is_selected: bool,
-    pub position: EntrySpaceLvl,
-    pub hidden: HiddenStatus,
-    pub parent: Option<u32>,
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum EntrySpaceLvl {
+    Empty,
+    Parent,
+    ParentNoChildren,
+    MidChild,
+    LastChild,
+    Card,
 }
-impl Eq for PlayEntry {}
 
-#[derive(PartialEq, Clone, Debug)]
-pub struct CardProfile {
-    pub name: String,
-    pub description: String,
-    #[cfg(any(feature = "pa_v13"))]
-    pub available: bool,
-    pub area: Rect,
-    pub is_selected: bool,
+#[derive(Clone, Copy, PartialEq, Hash, Eq, Debug)]
+pub enum EntryType {
+    Sink,
+    SinkInput,
+    Source,
+    SourceOutput,
+    Card,
 }
-impl Eq for CardProfile {}
-
-#[derive(PartialEq, Clone, Debug)]
-pub struct CardEntry {
-    pub profiles: Vec<CardProfile>,
-    pub selected_profile: Option<usize>,
-    pub area: Rect,
-    pub is_selected: bool,
-    pub name: String,
-}
-impl Eq for CardEntry {}
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum EntryKind {

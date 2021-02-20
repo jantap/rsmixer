@@ -1,21 +1,4 @@
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum EntrySpaceLvl {
-    Empty,
-    Parent,
-    ParentNoChildren,
-    MidChild,
-    LastChild,
-    Card,
-}
-
-#[derive(Clone, Copy, PartialEq, Hash, Eq, Debug)]
-pub enum EntryType {
-    Sink,
-    SinkInput,
-    Source,
-    SourceOutput,
-    Card,
-}
+use super::EntryType;
 
 #[derive(Clone, Copy, PartialEq, Hash, Debug)]
 pub struct EntryIdentifier {

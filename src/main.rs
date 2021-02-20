@@ -2,7 +2,6 @@ extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
 mod config;
-mod entry;
 mod errors;
 mod event_loop;
 mod help;
@@ -13,7 +12,7 @@ mod run;
 mod ui;
 
 pub use errors::RSError;
-pub use models::Action;
+pub use models::{entry, Action};
 
 use config::{RsMixerConfig, Variables};
 use ev_apple::{Dispatch, Senders};

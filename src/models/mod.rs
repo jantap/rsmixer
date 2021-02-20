@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod context_menus;
+pub mod entry;
 mod input_event;
 mod page_entries;
 mod page_type;

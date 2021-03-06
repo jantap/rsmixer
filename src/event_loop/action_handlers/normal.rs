@@ -20,11 +20,26 @@ async fn normal_handler(msg: &Action, state: &mut RSState) {
                 .redraw
                 .affected_entries
                 .insert(state.page_entries.selected());
+
+            if let Some(entry) = state
+                .entries
+                .get_mut(&state.page_entries.get_selected().unwrap())
+            {
+                entry.is_selected = false;
+            }
+
             state.page_entries.up(how_much as usize);
             state
                 .redraw
                 .affected_entries
                 .insert(state.page_entries.selected());
+
+            if let Some(entry) = state
+                .entries
+                .get_mut(&state.page_entries.get_selected().unwrap())
+            {
+                entry.is_selected = true;
+            }
         }
         Action::MoveDown(how_much) => {
             state

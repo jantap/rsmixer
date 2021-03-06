@@ -19,7 +19,7 @@ use pulse::{
 pub fn subscribe(
     context: &Rc<RefCell<Context>>,
     info_sx: mpsc::UnboundedSender<EntryIdentifier>,
-) -> Result<(), RSError> {
+) -> Result<(), RsError> {
     info!("[PAInterface] Registering pulseaudio callbacks");
 
     context.borrow_mut().subscribe(
@@ -79,7 +79,7 @@ pub fn subscribe(
 pub fn request_current_state(
     context: Rc<RefCell<Context>>,
     info_sxx: mpsc::UnboundedSender<EntryIdentifier>,
-) -> Result<(), RSError> {
+) -> Result<(), RsError> {
     info!("[PAInterface] Requesting starting state");
 
     let introspector = context.borrow_mut().introspect();

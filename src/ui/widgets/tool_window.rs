@@ -2,7 +2,7 @@ use super::{BlockWidget, Widget};
 
 use crate::{
     ui::{Buffer, Rect},
-    RSError,
+    RsError,
 };
 
 use std::cmp::{max, min};
@@ -30,7 +30,7 @@ impl Default for ToolWindowWidget {
 }
 
 impl Widget for ToolWindowWidget {
-    fn resize(&mut self, mut area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, mut area: Rect) -> Result<(), RsError> {
         let target_h = min(self.inner_height + self.padding.1 * 2, area.height);
 
         let target_w = min(
@@ -53,8 +53,8 @@ impl Widget for ToolWindowWidget {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
-        self.border.render(screen)?;
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+        self.border.render(buffer)?;
 
         Ok(())
     }

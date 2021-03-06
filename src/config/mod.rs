@@ -5,7 +5,7 @@ mod variables;
 
 pub use variables::Variables;
 
-use crate::{models::InputEvent, Action, RSError, Styles, VERSION};
+use crate::{models::InputEvent, Action, RsError, Styles, VERSION};
 
 use std::{collections::HashMap, convert::TryFrom};
 
@@ -35,14 +35,14 @@ pub struct ConfigColor {
 }
 
 impl RsMixerConfig {
-    pub fn load() -> Result<Self, RSError> {
+    pub fn load() -> Result<Self, RsError> {
         let config: RsMixerConfig = confy::load("rsmixer")?;
         Ok(config)
     }
 
     pub fn interpret(
         &mut self,
-    ) -> Result<(Styles, MultiMap<InputEvent, Action>, Variables), RSError> {
+    ) -> Result<(Styles, MultiMap<InputEvent, Action>, Variables), RsError> {
         self.compatibility_layer()?;
 
         let bindings = self.bindings()?;
@@ -56,14 +56,14 @@ impl RsMixerConfig {
                 if let Some(color) = colors::str_to_color(q) {
                     c = c.foreground(color);
                 } else {
-                    return Err(RSError::InvalidColor(q.clone()));
+                    return Err(RsError::InvalidColor(q.clone()));
                 }
             }
             if let Some(q) = &v.bg {
                 if let Some(color) = colors::str_to_color(q) {
                     c = c.background(color);
                 } else {
-                    return Err(RSError::InvalidColor(q.clone()));
+                    return Err(RsError::InvalidColor(q.clone()));
                 }
             }
             if let Some(attrs) = &v.attributes {
@@ -95,7 +95,7 @@ impl RsMixerConfig {
         Ok((styles, bindings, Variables::new(self)))
     }
 
-    fn bindings(&self) -> Result<MultiMap<InputEvent, Action>, RSError> {
+    fn bindings(&self) -> Result<MultiMap<InputEvent, Action>, RsError> {
         let mut bindings: MultiMap<InputEvent, Action> = MultiMap::new();
 
         for (k, cs) in &self.bindings {
@@ -110,7 +110,7 @@ impl RsMixerConfig {
         Ok(bindings)
     }
 
-    fn compatibility_layer(&mut self) -> Result<(), RSError> {
+    fn compatibility_layer(&mut self) -> Result<(), RsError> {
         let current_ver = Version::parse(VERSION)?;
 
         let config_ver = match &self.version {

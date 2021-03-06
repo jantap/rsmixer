@@ -1,7 +1,7 @@
 use crate::{
     entry::{EntrySpaceLvl, EntryType},
     models::PageType,
-    RSError,
+    RsError,
 };
 
 use std::io;
@@ -26,7 +26,7 @@ pub fn parent_child_types(page: PageType) -> (EntryType, EntryType) {
     }
 }
 
-pub fn prepare_terminal() -> Result<io::Stdout, RSError> {
+pub fn prepare_terminal() -> Result<io::Stdout, RsError> {
     let mut stdout = io::stdout();
     crossterm::execute!(
         stdout,
@@ -39,7 +39,7 @@ pub fn prepare_terminal() -> Result<io::Stdout, RSError> {
     Ok(stdout)
 }
 
-pub fn clean_terminal() -> Result<(), RSError> {
+pub fn clean_terminal() -> Result<(), RsError> {
     let mut stdout = std::io::stdout();
     crossterm::execute!(
         stdout,

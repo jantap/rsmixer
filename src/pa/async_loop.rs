@@ -15,16 +15,16 @@ use tokio::{
 pub async fn start_async(
     internal_sx: cb_channel::Sender<PAInternal>,
     mut info_rx: mpsc::UnboundedReceiver<EntryIdentifier>,
-) -> Result<(), RSError> {
+) -> Result<(), RsError> {
     let (sx, mut command_receiver) = channel(CHANNEL_CAPACITY);
     SENDERS.register(PA_MESSAGE, sx).await;
 
     let mut interval = tokio::time::interval(Duration::from_millis(50));
 
-    let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RSError> {
+    let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RsError> {
         match ch.send(msg) {
             Ok(()) => Ok(()),
-            Err(err) => Err(RSError::ChannelError(err)),
+            Err(err) => Err(RsError::ChannelError(err)),
         }
     };
 

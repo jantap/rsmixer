@@ -11,9 +11,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
             state.help.down(how_much as usize);
         }
         Action::CloseContextMenu => {
-            state.ui_mode = UIMode::Normal;
-            state.redraw.full = true;
-            state.redraw.resize = true;
+            state.change_ui_mode(UIMode::Normal);
         }
         _ => {}
     };

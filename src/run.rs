@@ -1,5 +1,5 @@
 use crate::{
-    event_loop::event_loop, input, models::actions::statics::*, pa, ui, Action, RSError, DISPATCH,
+    event_loop::event_loop, input, models::actions::statics::*, pa, ui, Action, RsError, DISPATCH,
     SENDERS, VARIABLES,
 };
 
@@ -13,7 +13,7 @@ use tokio::{
     task,
 };
 
-pub async fn run() -> Result<(), RSError> {
+pub async fn run() -> Result<(), RsError> {
     let events = run_events().await;
 
     task::spawn(events);
@@ -38,43 +38,43 @@ pub async fn run() -> Result<(), RSError> {
     }
 }
 
-async fn run_events() -> impl Future<Output = Result<(), RSError>> {
+async fn run_events() -> impl Future<Output = Result<(), RsError>> {
     let ev_manager = EventsManager::prepare(&DISPATCH, EXIT_MESSAGE_ID).await;
 
     async move {
         match task::spawn(ev_apple::start(ev_manager, SENDERS.clone())).await {
             Ok(_) => Ok(()),
-            Err(e) => Err(RSError::TaskHandleError(e)),
+            Err(e) => Err(RsError::TaskHandleError(e)),
         }
     }
 }
 
-async fn run_event_loop() -> impl Future<Output = Result<(), RSError>> {
+async fn run_event_loop() -> impl Future<Output = Result<(), RsError>> {
     let (sx, rx) = channel(CHANNEL_CAPACITY);
     SENDERS.register(MAIN_MESSAGE, sx).await;
 
     async move {
         match task::spawn(event_loop(rx)).await {
             Ok(r) => r,
-            Err(e) => Err(RSError::TaskHandleError(e)),
+            Err(e) => Err(RsError::TaskHandleError(e)),
         }
     }
 }
 
-async fn run_input_loop() -> Result<(), RSError> {
+async fn run_input_loop() -> Result<(), RsError> {
     let (sx, rx) = channel(CHANNEL_CAPACITY);
     SENDERS.register(INPUT_MESSAGE, sx).await;
 
     match task::spawn(input::start(rx)).await {
         Ok(_) => Ok(()),
-        Err(e) => Err(RSError::TaskHandleError(e)),
+        Err(e) => Err(RsError::TaskHandleError(e)),
     }
 }
-async fn run_pa() -> impl Future<Output = Result<(), RSError>> {
+async fn run_pa() -> impl Future<Output = Result<(), RsError>> {
     async move { run_pa_internal().await }
 }
 
-async fn run_pa_internal() -> Result<(), RSError> {
+async fn run_pa_internal() -> Result<(), RsError> {
     let (sx, mut rx) = channel(32);
     SENDERS.register(RUN_PA_MESSAGE, sx).await;
 
@@ -86,17 +86,17 @@ async fn run_pa_internal() -> Result<(), RSError> {
 
         let async_pa = task::spawn(async move { pa::start_async(pa_sx.clone(), info_rx).await });
         let sync_pa = task::spawn_blocking(move || pa::start(pa_rx, info_sx));
-        DISPATCH.event(Action::ConnectToPA).await;
+        DISPATCH.event(Action::ConnectToPulseAudio).await;
 
         let result = tokio::select! {
             res = async_pa => match res {
                 Ok(r) => r,
-                Err(e) => { return Err(RSError::TaskHandleError(e)); },
+                Err(e) => { return Err(RsError::TaskHandleError(e)); },
             },
             res = sync_pa => {
                 match res {
                     Ok(r) => r,
-                    Err(e) => { return Err(RSError::TaskHandleError(e)); },
+                    Err(e) => { return Err(RsError::TaskHandleError(e)); },
                 }
             },
         };
@@ -105,8 +105,8 @@ async fn run_pa_internal() -> Result<(), RSError> {
             break;
         }
 
-        DISPATCH.event(Action::PADisconnected).await;
-        DISPATCH.event(Action::PADisconnected2).await;
+        DISPATCH.event(Action::PulseAudioDisconnected).await;
+        DISPATCH.event(Action::PulseAudioDisconnected2).await;
 
         for i in 0..retry_time {
             DISPATCH.event(Action::RetryIn(retry_time - i)).await;
@@ -124,5 +124,5 @@ async fn run_pa_internal() -> Result<(), RSError> {
         }
     }
 
-    Ok::<(), RSError>(())
+    Ok::<(), RsError>(())
 }

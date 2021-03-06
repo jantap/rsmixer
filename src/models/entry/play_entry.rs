@@ -1,9 +1,8 @@
-use super::{HiddenStatus, EntrySpaceLvl};
+use super::{EntrySpaceLvl, HiddenStatus};
 
-use crate::ui::{Rect, widgets::VolumeWidget};
+use crate::ui::{widgets::VolumeWidget, Rect};
 
 use pulse::volume::ChannelVolumes;
-
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct PlayEntry {
@@ -23,4 +22,3 @@ pub struct PlayEntry {
     pub parent: Option<u32>,
 }
 impl Eq for PlayEntry {}
-

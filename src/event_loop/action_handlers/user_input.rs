@@ -3,7 +3,7 @@ use super::common::*;
 use crate::{
     entry::{EntryIdentifier, EntryKind},
     models::InputEvent,
-    RSError, BINDINGS,
+    RsError, BINDINGS,
 };
 
 use crate::ui::{Rect, Scrollable};
@@ -12,7 +12,7 @@ use std::convert::TryFrom;
 
 use crossterm::event::{Event, MouseButton, MouseEvent, MouseEventKind};
 
-pub async fn action_handler(event: Event, state: &mut RSState) -> Result<(), RSError> {
+pub async fn action_handler(event: Event, state: &mut RSState) -> Result<(), RsError> {
     let input_event = InputEvent::try_from(event)?;
     let mut actions;
 

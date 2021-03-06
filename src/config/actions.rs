@@ -1,4 +1,4 @@
-use crate::{models::PageType, Action, RSError};
+use crate::{models::PageType, Action, RsError};
 
 use std::convert::TryFrom;
 
@@ -36,7 +36,7 @@ impl ToString for Action {
 }
 
 impl TryFrom<String> for Action {
-    type Error = RSError;
+    type Error = RsError;
 
     fn try_from(st: String) -> Result<Action, Self::Error> {
         let mut s = &st[..];
@@ -46,7 +46,7 @@ impl TryFrom<String> for Action {
             let rparen = match st.chars().position(|c| c == ')') {
                 Some(r) => r,
                 None => {
-                    return Err(RSError::ActionBindingError(st.clone()));
+                    return Err(RsError::ActionBindingError(st.clone()));
                 }
             };
             a = st
@@ -70,7 +70,7 @@ impl TryFrom<String> for Action {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,
                     Err(_) => {
-                        return Err(RSError::ActionBindingError(st.clone()));
+                        return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
                 Action::RequstChangeVolume(-a, None)
@@ -79,7 +79,7 @@ impl TryFrom<String> for Action {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,
                     Err(_) => {
-                        return Err(RSError::ActionBindingError(st.clone()));
+                        return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
                 Action::RequstChangeVolume(a, None)
@@ -88,7 +88,7 @@ impl TryFrom<String> for Action {
                 let a = match a.parse::<u16>() {
                     Ok(x) => x,
                     Err(_) => {
-                        return Err(RSError::ActionBindingError(st.clone()));
+                        return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
                 Action::MoveUp(a)
@@ -97,7 +97,7 @@ impl TryFrom<String> for Action {
                 let a = match a.parse::<u16>() {
                     Ok(x) => x,
                     Err(_) => {
-                        return Err(RSError::ActionBindingError(st.clone()));
+                        return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
                 Action::MoveDown(a)
@@ -110,7 +110,7 @@ impl TryFrom<String> for Action {
             "confirm" => Action::Confirm,
             "hide" => Action::Hide(None),
             _ => {
-                return Err(RSError::ActionBindingError(st.clone()));
+                return Err(RsError::ActionBindingError(st.clone()));
             }
         };
         Ok(x)

@@ -1,6 +1,6 @@
 use super::Widget;
 
-use crate::{models::Style, repeat, ui::Buffer, RSError};
+use crate::{models::Style, repeat, ui::Buffer, RsError};
 
 use crate::ui::Rect;
 
@@ -31,16 +31,16 @@ impl BlockWidget {
 }
 
 impl Widget for BlockWidget {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         if area.width < 2 || area.height < 2 {
-            return Err(RSError::TerminalTooSmall);
+            return Err(RsError::TerminalTooSmall);
         }
 
         self.area = area;
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
         let top_border = format!(
             "┌{}",
             if self.title.len() < self.area.width as usize - 2 {
@@ -58,8 +58,8 @@ impl Widget for BlockWidget {
 
         let bottom_border = format!("└{}┘", repeat!("─", self.area.width - 2));
 
-        screen.string(self.area.x, self.area.y, top_border, Style::Normal);
-        screen.string(
+        buffer.string(self.area.x, self.area.y, top_border, Style::Normal);
+        buffer.string(
             self.area.x,
             self.area.y + self.area.height - 1,
             bottom_border,
@@ -67,8 +67,8 @@ impl Widget for BlockWidget {
         );
 
         for i in 1..(self.area.height - 1) {
-            screen.string(self.area.x, self.area.y + i, "│".to_string(), Style::Normal);
-            screen.string(
+            buffer.string(self.area.x, self.area.y + i, "│".to_string(), Style::Normal);
+            buffer.string(
                 self.area.x + self.area.width - 1,
                 self.area.y + i,
                 "│".to_string(),
@@ -77,7 +77,7 @@ impl Widget for BlockWidget {
         }
 
         if self.clean_inside {
-            screen.rect(
+            buffer.rect(
                 Rect::new(
                     self.area.x + 1,
                     self.area.y + 1,

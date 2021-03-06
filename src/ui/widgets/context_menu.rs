@@ -3,20 +3,20 @@ use super::Widget;
 use crate::{
     models::ContextMenu,
     ui::{Buffer, Rect, Scrollable, Style},
-    RSError,
+    RsError,
 };
 
 use std::cmp::max;
 
 impl Widget for ContextMenu {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         let mut longest_word = 0;
         self.options.iter().for_each(|o| {
             longest_word = max(longest_word, String::from(o.clone()).len());
         });
 
         if area.height < 3 || area.width < 4 {
-            return Err(RSError::TerminalTooSmall);
+            return Err(RsError::TerminalTooSmall);
         }
         self.tool_window.padding.0 = if area.width < longest_word as u16 + 6 {
             1
@@ -39,8 +39,8 @@ impl Widget for ContextMenu {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
-        self.tool_window.render(screen)?;
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+        self.tool_window.render(buffer)?;
 
         for (y, i) in self.visible_range(self.area.height).enumerate() {
             let text: String = self.options[i].clone().into();
@@ -56,7 +56,7 @@ impl Widget for ContextMenu {
             } else {
                 self.area.x + self.area.width / 2 - text.len() as u16 / 2
             };
-            screen.string(
+            buffer.string(
                 text_x,
                 self.area.y + y as u16,
                 text,
@@ -71,7 +71,7 @@ impl Widget for ContextMenu {
         let (first, last) = self.visible_start_end(self.area.height);
         if last - first != self.len() {
             if first != 0 {
-                screen.string(
+                buffer.string(
                     self.area.x + self.area.width / 2,
                     self.area.y - 1,
                     "▲".to_string(),
@@ -79,7 +79,7 @@ impl Widget for ContextMenu {
                 );
             }
             if last != self.len() {
-                screen.string(
+                buffer.string(
                     self.area.x + self.area.width / 2,
                     self.area.y + self.area.height,
                     "▼".to_string(),
@@ -90,7 +90,7 @@ impl Widget for ContextMenu {
 
         let max_horizontal_scroll = self.max_horizontal_scroll();
         if self.horizontal_scroll < max_horizontal_scroll {
-            screen.string(
+            buffer.string(
                 self.area.x + self.area.width,
                 self.area.y + self.area.height / 2,
                 "▶".to_string(),
@@ -98,7 +98,7 @@ impl Widget for ContextMenu {
             );
         }
         if self.horizontal_scroll > 0 {
-            screen.string(
+            buffer.string(
                 self.area.x - 1,
                 self.area.y + self.area.height / 2,
                 "◀".to_string(),

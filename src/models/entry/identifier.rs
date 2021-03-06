@@ -1,5 +1,7 @@
 use super::EntryType;
 
+use std::cmp::Ordering;
+
 #[derive(Clone, Copy, PartialEq, Hash, Debug)]
 pub struct EntryIdentifier {
     pub entry_type: EntryType,
@@ -16,28 +18,14 @@ impl std::cmp::PartialOrd for EntryIdentifier {
 
 impl std::cmp::Ord for EntryIdentifier {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let num = |x| match x {
-            EntryType::Sink => 1,
-            EntryType::Source => 2,
-            EntryType::SinkInput => 3,
-            EntryType::SourceOutput => 4,
-            EntryType::Card => 5,
-        };
-
-        if self.entry_type == other.entry_type && self.index == other.index {
+        if self == other {
             return std::cmp::Ordering::Equal;
         }
 
-        let a = num(self.entry_type);
-        let b = num(other.entry_type);
-
-        if let std::cmp::Ordering::Equal = a.cmp(&b) {
-            if self.index > other.index {
-                return std::cmp::Ordering::Greater;
-            }
-            std::cmp::Ordering::Less
-        } else {
-            a.cmp(&b)
+        let result = self.entry_type.cmp(&other.entry_type);
+        match result {
+            Ordering::Equal => Ordering::Greater,
+            _ => result,
         }
     }
 }
@@ -45,5 +33,9 @@ impl std::cmp::Ord for EntryIdentifier {
 impl EntryIdentifier {
     pub fn new(entry_type: EntryType, index: u32) -> Self {
         Self { entry_type, index }
+    }
+
+    pub fn is_card(&self) -> bool {
+        self.entry_type == EntryType::Card
     }
 }

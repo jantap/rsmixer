@@ -3,7 +3,7 @@ use super::{ToolWindowWidget, Widget};
 use crate::{
     help::{self, HelpLine},
     ui::{Buffer, Rect, Style},
-    RSError,
+    RsError,
 };
 
 use crate::{scrollable, ui::Scrollable};
@@ -65,9 +65,9 @@ impl Default for HelpWidget {
 }
 
 impl Widget for HelpWidget {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         if area.height < 3 || area.width < self.min_line + 2 {
-            return Err(RSError::TerminalTooSmall);
+            return Err(RsError::TerminalTooSmall);
         }
         self.window.padding.0 = if area.width < self.min_line + 6 { 1 } else { 3 };
         self.window.padding.1 = if area.height < 8 { 1 } else { 2 };
@@ -89,8 +89,8 @@ impl Widget for HelpWidget {
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
-        self.window.render(screen)?;
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+        self.window.render(buffer)?;
 
         let inside_height = self.window.area.height - self.window.padding.1 * 2;
         let inside_width = self.window.area.width - self.window.padding.0 * 2;
@@ -104,7 +104,7 @@ impl Widget for HelpWidget {
         let (start, end) = self.visible_start_end(inside_height);
 
         for (i, l) in lines.iter().skip(start).take(end - start).enumerate() {
-            screen.string(
+            buffer.string(
                 self.window.area.x + self.window.padding.0,
                 self.window.area.y + self.window.padding.1 + i as u16,
                 l.clone(),
@@ -125,7 +125,7 @@ impl Widget for HelpWidget {
                 self.window.area.height - self.window.padding.1 * 2,
             );
             if first != 0 {
-                screen.string(
+                buffer.string(
                     area.x + area.width / 2,
                     area.y + 2,
                     "▲".to_string(),
@@ -133,7 +133,7 @@ impl Widget for HelpWidget {
                 );
             }
             if last != self.len() {
-                screen.string(
+                buffer.string(
                     area.x + area.width / 2,
                     area.y + area.height - 2,
                     "▲".to_string(),

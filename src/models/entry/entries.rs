@@ -37,6 +37,9 @@ impl Entries {
     pub fn get_mut(&mut self, ident: &EntryIdentifier) -> Option<&mut Entry> {
         self.0.get_mut(ident)
     }
+    pub fn _get_mut(&mut self, ident: EntryIdentifier) -> Option<&mut Entry> {
+        self.0.get_mut(&ident)
+    }
     pub fn get_card_entry(&self, entry_ident: &EntryIdentifier) -> Option<&CardEntry> {
         match self.0.get(entry_ident) {
             Some(e) => match &e.entry_kind {

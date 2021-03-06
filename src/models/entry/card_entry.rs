@@ -20,4 +20,3 @@ pub struct CardEntry {
     pub name: String,
 }
 impl Eq for CardEntry {}
-

@@ -11,7 +11,7 @@ mod pa;
 mod run;
 mod ui;
 
-pub use errors::RSError;
+pub use errors::RsError;
 pub use models::{entry, Action};
 
 use config::{RsMixerConfig, Variables};
@@ -57,7 +57,7 @@ struct CliOptions {
     help: bool,
 }
 
-async fn launch() -> Result<(), RSError> {
+async fn launch() -> Result<(), RsError> {
     let opts = CliOptions::parse_args_default_or_exit();
 
     if opts.help {
@@ -85,7 +85,7 @@ async fn launch() -> Result<(), RSError> {
     run::run().await
 }
 
-fn main() -> Result<(), RSError> {
+fn main() -> Result<(), RsError> {
     let mut threaded_rt = runtime::Builder::new()
         .threaded_scheduler()
         .enable_time()

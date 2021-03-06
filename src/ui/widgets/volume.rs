@@ -3,7 +3,7 @@ use super::{
     Widget,
 };
 
-use crate::RSError;
+use crate::RsError;
 
 use crate::ui::Pixel;
 
@@ -63,17 +63,17 @@ impl VolumeWidget {
 }
 
 impl Widget for VolumeWidget {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         if area.width < 3 || area.height < 1 {
-            return Err(RSError::TerminalTooSmall);
+            return Err(RsError::TerminalTooSmall);
         }
 
         self.area = area;
 
         Ok(())
     }
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
-        self.border.render(screen, &self.area);
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+        self.border.render(buffer, &self.area);
 
         let filled = (self.percent * (self.area.width - 2) as f32).floor() as u16;
 
@@ -98,14 +98,14 @@ impl Widget for VolumeWidget {
             }
         }
 
-        screen.pixels(self.area.x + 1, self.area.y, pixels);
+        buffer.pixels(self.area.x + 1, self.area.y, pixels);
 
         Ok(())
     }
 }
 
 impl VolumeWidgetBorder {
-    fn render(&mut self, screen: &mut Buffer, area: &Rect) {
+    fn render(&mut self, buffer: &mut Buffer, area: &Rect) {
         if *self == VolumeWidgetBorder::None {
             return;
         }
@@ -123,8 +123,8 @@ impl VolumeWidgetBorder {
             _ => "",
         };
 
-        screen.string(area.x, area.y, ch1.to_string(), Style::Normal);
-        screen.string(
+        buffer.string(area.x, area.y, ch1.to_string(), Style::Normal);
+        buffer.string(
             area.x + area.width - 1,
             area.y,
             ch2.to_string(),

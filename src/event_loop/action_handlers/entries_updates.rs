@@ -30,7 +30,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
         }
     };
 
-    let last_sel = state.page_entries.get(state.page_entries.selected());
+    let last_sel = state.page_entries.get_selected();
 
     let (p, c) = parent_child_types(state.current_page);
 
@@ -89,7 +89,6 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
             ))
             .await;
 
-        state.redraw.entries = true;
         state.redraw.resize = true;
     }
 }
@@ -107,3 +106,4 @@ fn monitor_list(state: &mut RSState) -> HashMap<EntryIdentifier, Option<u32>> {
 
     monitors
 }
+

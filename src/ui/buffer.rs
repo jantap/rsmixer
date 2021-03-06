@@ -61,11 +61,7 @@ impl Buffer {
         let mut changes = self.changes.clone();
         changes.retain(|k, v| {
             if let Some(pixel) = self.pixels.get(*k) {
-                if *pixel == *v {
-                    false
-                } else {
-                    true
-                }
+                *pixel != *v
             } else {
                 false
             }

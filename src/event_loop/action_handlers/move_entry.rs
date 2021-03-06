@@ -53,12 +53,10 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
         }
         Action::Confirm => match state.ui_mode {
             UIMode::MoveEntry(ident, parent) => {
-                state.ui_mode = UIMode::Normal;
+                state.change_ui_mode(UIMode::Normal);
                 DISPATCH
                     .event(Action::MoveEntryToParent(ident, parent))
                     .await;
-                state.redraw.full = true;
-                state.redraw.resize = true;
             }
             _ => {
                 return;

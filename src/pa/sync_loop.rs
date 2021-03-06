@@ -7,7 +7,7 @@ use pulse::proplist::Proplist;
 pub fn start(
     internal_rx: cb_channel::Receiver<PAInternal>,
     info_sx: mpsc::UnboundedSender<EntryIdentifier>,
-) -> Result<(), RSError> {
+) -> Result<(), RsError> {
     // Create new mainloop and context
     let mut proplist = Proplist::new().unwrap();
     proplist
@@ -19,7 +19,7 @@ pub fn start(
         Some(ml) => ml,
         None => {
             error!("[PAInterface] Error while creating new mainloop");
-            return Err(RSError::MainloopCreateError);
+            return Err(RsError::MainloopCreateError);
         }
     }));
 
@@ -33,7 +33,7 @@ pub fn start(
             Some(ctx) => ctx,
             None => {
                 error!("[PAInterface] Error while creating new context");
-                return Err(RSError::MainloopCreateError);
+                return Err(RsError::MainloopCreateError);
             }
         },
     ));
@@ -68,7 +68,7 @@ pub fn start(
         Ok(_) => {}
         Err(_) => {
             error!("[PAInterface] Error while connecting context");
-            return Err(RSError::MainloopConnectError);
+            return Err(RsError::MainloopConnectError);
         }
     };
 
@@ -79,7 +79,7 @@ pub fn start(
     match mainloop.borrow_mut().start() {
         Ok(_) => {}
         Err(_) => {
-            return Err(RSError::MainloopConnectError);
+            return Err(RsError::MainloopConnectError);
         }
     }
 
@@ -94,7 +94,7 @@ pub fn start(
                 mainloop.borrow_mut().unlock();
                 mainloop.borrow_mut().stop();
                 error!("[PAInterface] Connection failed or context terminated");
-                return Err(RSError::MainloopConnectError);
+                return Err(RsError::MainloopConnectError);
             }
             _ => {
                 mainloop.borrow_mut().wait();
@@ -138,7 +138,7 @@ pub fn start(
             pulse::context::State::Ready => {}
             _ => {
                 mainloop.borrow_mut().unlock();
-                return Err(RSError::PulseAudioDisconnected);
+                return Err(RsError::PulseAudioDisconnected);
             }
         }
 

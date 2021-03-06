@@ -1,11 +1,13 @@
-mod play_entry;
 mod card_entry;
 mod entries;
+mod entry_type;
 mod identifier;
+mod play_entry;
 
+pub use card_entry::{CardEntry, CardProfile};
 pub use entries::Entries;
+pub use entry_type::EntryType;
 pub use identifier::EntryIdentifier;
-pub use card_entry::{CardProfile, CardEntry};
 pub use play_entry::PlayEntry;
 
 use crate::{ui::widgets::VolumeWidget, unwrap_or_return};
@@ -21,15 +23,6 @@ pub enum EntrySpaceLvl {
     ParentNoChildren,
     MidChild,
     LastChild,
-    Card,
-}
-
-#[derive(Clone, Copy, PartialEq, Hash, Eq, Debug)]
-pub enum EntryType {
-    Sink,
-    SinkInput,
-    Source,
-    SourceOutput,
     Card,
 }
 
@@ -203,6 +196,30 @@ impl Entry {
                     || old_play.volume != play.volume
                     || (play.peak - old_play.peak).abs() < f32::EPSILON
             }
+        }
+    }
+
+    pub fn inherit_area(&mut self, entries: &Entries) {
+        match &mut self.entry_kind {
+            EntryKind::CardEntry(card) => {
+                if let Some(old_card) = entries.get_card_entry(&self.entry_ident) {
+                    card.area = old_card.area;
+                }
+            }
+            EntryKind::PlayEntry(play) => {
+                if let Some(old_play) = entries.get_play_entry(&self.entry_ident) {
+                    play.area = old_play.area;
+                    play.volume_bar = old_play.volume_bar;
+                    play.peak_volume_bar = old_play.peak_volume_bar;
+                }
+            }
+        };
+    }
+
+    pub fn area(&self) -> Rect {
+        match &self.entry_kind {
+            EntryKind::CardEntry(card) => card.area,
+            EntryKind::PlayEntry(play) => play.area,
         }
     }
 }

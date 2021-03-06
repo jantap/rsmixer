@@ -1,4 +1,4 @@
-use crate::RSError;
+use crate::RsError;
 
 use std::{
     convert::TryFrom,
@@ -37,12 +37,12 @@ impl InputEvent {
 }
 
 impl TryFrom<Event> for InputEvent {
-    type Error = RSError;
+    type Error = RsError;
     fn try_from(value: Event) -> Result<Self, Self::Error> {
         match value {
             Event::Key(key) => Ok(InputEvent::key(key.code, key.modifiers)),
             Event::Mouse(mouse) => Ok(InputEvent::mouse(mouse.kind, mouse.modifiers)),
-            _ => Err(RSError::KeyCodeError(
+            _ => Err(RsError::KeyCodeError(
                 "Event::Redraw cannot be converted to InputEvent".to_string(),
             )),
         }

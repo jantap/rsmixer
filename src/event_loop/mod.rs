@@ -4,20 +4,19 @@ use action_handlers::*;
 
 use crate::{
     models::{PageType, RSState, UIMode},
-    ui, Action, RSError, STYLES,
+    ui, Action, RsError, STYLES,
 };
 
 use tokio::{stream::StreamExt, sync::broadcast::Receiver};
 
-pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RSError> {
+pub async fn event_loop(mut rx: Receiver<Action>) -> Result<(), RsError> {
     let mut stdout = ui::prepare_terminal()?;
 
     let mut state = RSState::default();
 
-    state.ui.screen.set_styles((*STYLES).get().clone());
+    state.ui.buffer.set_styles((*STYLES).get().clone());
 
     state.redraw.resize = true;
-    state.redraw.full = true;
 
     while let Some(Ok(msg)) = rx.next().await {
         // run action handlers which will decide what to redraw

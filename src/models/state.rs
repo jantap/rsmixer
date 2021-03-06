@@ -2,7 +2,10 @@ use super::{ContextMenu, PageEntries, PageType, Redraw, UIMode};
 
 use crate::{
     entry::Entries,
-    ui::{widgets::HelpWidget, UI},
+    ui::{
+        widgets::{HelpWidget, WarningTextWidget},
+        UI,
+    },
 };
 
 pub struct RSState {
@@ -13,6 +16,7 @@ pub struct RSState {
     pub ui_mode: UIMode,
     pub redraw: Redraw,
     pub help: HelpWidget,
+    pub warning_text: WarningTextWidget,
     pub ui: UI,
 }
 
@@ -26,7 +30,17 @@ impl Default for RSState {
             ui_mode: UIMode::Normal,
             redraw: Redraw::default(),
             help: HelpWidget::default(),
+            warning_text: WarningTextWidget {
+                text: "".to_string(),
+            },
             ui: UI::default(),
         }
+    }
+}
+
+impl RSState {
+    pub fn change_ui_mode(&mut self, mode: UIMode) {
+        self.ui_mode = mode;
+        self.redraw.resize = true;
     }
 }

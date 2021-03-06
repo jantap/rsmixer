@@ -51,8 +51,8 @@ messages!(Action,
 
     // PulseAudio connection status
     RetryIn(u64) => MAIN_MESSAGE,
-    ConnectToPA => MAIN_MESSAGE,
-    PADisconnected => MAIN_MESSAGE,
+    ConnectToPulseAudio => MAIN_MESSAGE,
+    PulseAudioDisconnected => MAIN_MESSAGE,
 
     UserInput(Event) => MAIN_MESSAGE,
 
@@ -63,7 +63,7 @@ messages!(Action,
     CreateMonitors(HashMap<EntryIdentifier, Option<u32>>) => PA_MESSAGE,
     SetSuspend(EntryIdentifier, bool) => PA_MESSAGE,
     KillEntry(EntryIdentifier) => PA_MESSAGE,
-    PADisconnected2 => PA_MESSAGE,
+    PulseAudioDisconnected2 => PA_MESSAGE,
 );
 
 pub mod statics {

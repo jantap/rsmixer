@@ -4,7 +4,7 @@ use crate::{
         widgets::{VolumeWidgetBorder, Widget},
         Buffer, Style,
     },
-    RSError,
+    RsError,
 };
 
 use crate::ui::Rect;
@@ -14,9 +14,9 @@ use std::cmp::min;
 use pulse::volume;
 
 impl Widget for Entry {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         if area.width < 7 || area.height < 1 {
-            return Err(RSError::TerminalTooSmall);
+            return Err(RsError::TerminalTooSmall);
         }
 
         match &mut self.entry_kind {
@@ -27,18 +27,18 @@ impl Widget for Entry {
             EntryKind::CardEntry(card) => card.resize(area),
         }
     }
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
         match &mut self.entry_kind {
             EntryKind::PlayEntry(play) => {
                 play.is_selected = self.is_selected;
                 play.position = self.position;
 
-                play.render(screen)
+                play.render(buffer)
             }
             EntryKind::CardEntry(card) => {
                 card.is_selected = self.is_selected;
 
-                card.render(screen)
+                card.render(buffer)
             }
         }
     }
@@ -93,13 +93,13 @@ impl PlayEntry {
 }
 
 impl Widget for CardEntry {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         self.area = area;
         Ok(())
     }
 
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
-        screen.rect(self.area, ' ', Style::Normal);
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+        buffer.rect(self.area, ' ', Style::Normal);
 
         let style = if self.is_selected {
             Style::Bold
@@ -114,7 +114,7 @@ impl Widget for CardEntry {
 
         let name_len = min(self.name.len(), (self.area.width / 2).into());
 
-        screen.string(
+        buffer.string(
             self.area.x,
             self.area.y,
             (&self.name[0..name_len]).to_string(),
@@ -127,7 +127,7 @@ impl Widget for CardEntry {
                 (self.area.width / 2).into(),
             );
 
-            screen.string(
+            buffer.string(
                 self.area.x + self.area.width - profile_len as u16,
                 self.area.y,
                 (&self.profiles[index].description[0..profile_len]).to_string(),
@@ -139,7 +139,7 @@ impl Widget for CardEntry {
     }
 }
 impl Widget for PlayEntry {
-    fn resize(&mut self, area: Rect) -> Result<(), RSError> {
+    fn resize(&mut self, area: Rect) -> Result<(), RsError> {
         self.area = area;
         let (text_width, w) = self.text_volume_widths();
 
@@ -170,12 +170,12 @@ impl Widget for PlayEntry {
         Ok(())
     }
 
-    fn render(&mut self, screen: &mut Buffer) -> Result<(), RSError> {
+    fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
         if self.area.width < 5 || self.area.height < 2 {
-            return Err(RSError::TerminalTooSmall);
+            return Err(RsError::TerminalTooSmall);
         }
 
-        screen.rect(self.area, ' ', Style::Normal);
+        buffer.rect(self.area, ' ', Style::Normal);
 
         let style = if self.is_selected {
             Style::Bold
@@ -199,7 +199,7 @@ impl Widget for PlayEntry {
             })
             .collect::<String>();
 
-        screen.string(text_area.x, text_area.y, short_name, name_style);
+        buffer.string(text_area.x, text_area.y, short_name, name_style);
 
         let avg = self.volume.avg().0;
         let base_delta = (volume::Volume::NORMAL.0 as f32 - volume::Volume::MUTED.0 as f32) / 100.0;
@@ -213,27 +213,27 @@ impl Widget for PlayEntry {
                 .mute(self.mute)
                 .border(VolumeWidgetBorder::Upper);
 
-            self.volume_bar.render(screen)?;
+            self.volume_bar.render(buffer)?;
 
             self.volume_bar.area = self.volume_bar.area.y(volume_area.y + 1);
 
             self.volume_bar = self.volume_bar.border(VolumeWidgetBorder::Lower);
 
-            self.volume_bar.render(screen)?;
+            self.volume_bar.render(buffer)?;
 
             self.volume_bar.area = self.volume_bar.area.y(volume_area.y);
 
             if self.is_selected {
                 let c = "-".to_string();
-                screen.string(volume_area.x - 1, volume_area.y, c.clone(), style);
-                screen.string(volume_area.x - 1, volume_area.y + 1, c.clone(), style);
-                screen.string(
+                buffer.string(volume_area.x - 1, volume_area.y, c.clone(), style);
+                buffer.string(volume_area.x - 1, volume_area.y + 1, c.clone(), style);
+                buffer.string(
                     volume_area.x + volume_area.width,
                     volume_area.y,
                     c.clone(),
                     style,
                 );
-                screen.string(
+                buffer.string(
                     volume_area.x + volume_area.width,
                     volume_area.y + 1,
                     c,
@@ -256,36 +256,36 @@ impl Widget for PlayEntry {
                 vol_perc
             );
 
-            screen.string(text_area.x + 1, text_area.y + 1, vol_str, style);
+            buffer.string(text_area.x + 1, text_area.y + 1, vol_str, style);
         }
 
         self.peak_volume_bar.mute = self.mute;
-        self.peak_volume_bar.render(screen)?;
+        self.peak_volume_bar.render(buffer)?;
 
         match self.position {
             EntrySpaceLvl::Parent => {
-                screen.string(self.area.x, self.area.y, "▼".to_string(), style);
-                screen.string(self.area.x, self.area.y + 1, "│".to_string(), style);
-                screen.string(self.area.x, self.area.y + 2, "│".to_string(), style);
+                buffer.string(self.area.x, self.area.y, "▼".to_string(), style);
+                buffer.string(self.area.x, self.area.y + 1, "│".to_string(), style);
+                buffer.string(self.area.x, self.area.y + 2, "│".to_string(), style);
             }
             EntrySpaceLvl::ParentNoChildren => match self.hidden {
                 HiddenStatus::HiddenKids => {
-                    screen.string(self.area.x, self.area.y, "▲".to_string(), style);
+                    buffer.string(self.area.x, self.area.y, "▲".to_string(), style);
                 }
                 HiddenStatus::NoKids => {
-                    screen.string(self.area.x, self.area.y, "▶".to_string(), style);
+                    buffer.string(self.area.x, self.area.y, "▶".to_string(), style);
                 }
                 _ => {}
             },
             EntrySpaceLvl::MidChild => {
-                screen.string(self.area.x, self.area.y, "│".to_string(), style);
-                screen.string(self.area.x, self.area.y + 1, "│".to_string(), style);
-                screen.string(self.area.x, self.area.y + 2, "├───".to_string(), style);
+                buffer.string(self.area.x, self.area.y, "│".to_string(), style);
+                buffer.string(self.area.x, self.area.y + 1, "│".to_string(), style);
+                buffer.string(self.area.x, self.area.y + 2, "├───".to_string(), style);
             }
             EntrySpaceLvl::LastChild => {
-                screen.string(self.area.x, self.area.y, "│".to_string(), style);
-                screen.string(self.area.x, self.area.y + 1, "│".to_string(), style);
-                screen.string(self.area.x, self.area.y + 2, "└───".to_string(), style);
+                buffer.string(self.area.x, self.area.y, "│".to_string(), style);
+                buffer.string(self.area.x, self.area.y + 1, "│".to_string(), style);
+                buffer.string(self.area.x, self.area.y + 2, "└───".to_string(), style);
             }
             _ => {}
         };

@@ -32,6 +32,10 @@ impl PageEntries {
         self.entries.len()
     }
 
+    pub fn ident_position(&self, ident: EntryIdentifier) -> Option<usize> {
+        self.iter_entries().position(|i| *i == ident)
+    }
+
     pub fn get(&self, i: usize) -> Option<EntryIdentifier> {
         if i < self.len() {
             Some(self.entries[i])

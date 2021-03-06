@@ -111,7 +111,7 @@ fn create(
     ident: EntryIdentifier,
     source_index: Option<u32>,
     close_rx: cb_channel::Receiver<u32>,
-) -> Result<Rc<RefCell<Stream>>, RSError> {
+) -> Result<Rc<RefCell<Stream>>, RsError> {
     info!("[PADataInterface] Attempting to create new monitor stream");
 
     let stream_index = if ident.entry_type == EntryType::SinkInput {
@@ -124,7 +124,7 @@ fn create(
         match Stream::new(&mut p_context.borrow_mut(), "RsMixer monitor", p_spec, None) {
             Some(stream) => stream,
             None => {
-                return Err(RSError::StreamCreateError);
+                return Err(RsError::StreamCreateError);
             }
         },
     ));
@@ -175,7 +175,7 @@ fn create(
     ) {
         Ok(_) => {}
         Err(_) => {
-            return Err(RSError::StreamCreateError);
+            return Err(RsError::StreamCreateError);
         }
     };
 
@@ -187,7 +187,7 @@ fn create(
             }
             pulse::stream::State::Failed | pulse::stream::State::Terminated => {
                 error!("[PADataInterface] Stream state failed/terminated");
-                return Err(RSError::StreamCreateError);
+                return Err(RsError::StreamCreateError);
             }
             _ => {
                 p_mainloop.borrow_mut().wait();

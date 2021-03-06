@@ -10,9 +10,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
     match msg.clone() {
         Action::EntryRemoved(ident) => {
             if state.context_menu.entry_ident == ident {
-                state.ui_mode = UIMode::Normal;
-                state.redraw.full = true;
-                state.redraw.resize = true;
+                state.change_ui_mode(UIMode::Normal);
             }
         }
         Action::MoveUp(how_much) => {
@@ -36,45 +34,36 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
             }
         }
         Action::CloseContextMenu => {
-            state.ui_mode = UIMode::Normal;
-            state.redraw.full = true;
-            state.redraw.resize = true;
+            state.change_ui_mode(UIMode::Normal);
         }
         Action::Confirm => {
-            if state.page_entries.selected() >= state.page_entries.len() {
-                state.ui_mode = UIMode::ContextMenu;
-                state.redraw.full = true;
-                state.redraw.resize = true;
+            let selected = match state.page_entries.get_selected() {
+                Some(ident) => ident,
+                None => {
+                    state.change_ui_mode(UIMode::Normal);
 
-                return;
-            }
+                    return;
+                }
+            };
 
-            let answer = state
-                .context_menu
-                .resolve(state.page_entries.get_selected().unwrap())
-                .await;
+            let answer = state.context_menu.resolve(selected).await;
 
             match answer {
                 ContextMenuEffect::None => {
-                    state.ui_mode = UIMode::Normal;
-                    state.redraw.full = true;
-                    state.redraw.resize = true;
+                    state.change_ui_mode(UIMode::Normal);
                 }
                 ContextMenuEffect::MoveEntry => {
                     let (parent_type, _) = parent_child_types(state.current_page);
-                    let entry_ident = state.page_entries.get_selected().unwrap();
+                    let entry_ident = selected;
 
-                    if let Some(parent_id) =
-                        state.entries.get_play_entry(&entry_ident).unwrap().parent
-                    {
+                    if let Some(parent_id) = state.entries.get_play_entry(&entry_ident).unwrap().parent {
                         let entry_parent = EntryIdentifier::new(parent_type, parent_id);
                         let parent_ident = match state.entries.find(|(&i, _)| i == entry_parent) {
                             Some((i, _)) => *i,
                             None => EntryIdentifier::new(parent_type, 0),
                         };
-                        state.ui_mode = UIMode::MoveEntry(entry_ident, parent_ident);
-                        state.redraw.full = true;
-                        state.redraw.resize = true;
+
+                        state.change_ui_mode(UIMode::MoveEntry(entry_ident, parent_ident));
                     }
                 }
             };

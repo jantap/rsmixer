@@ -1,11 +1,9 @@
-mod async_loop;
 mod callbacks;
-mod common;
+pub mod common;
 mod monitor;
 mod pa_actions;
 mod sync_loop;
 
-pub use async_loop::start_async;
 pub use sync_loop::start;
 
 use common::*;

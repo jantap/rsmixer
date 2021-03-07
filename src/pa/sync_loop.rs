@@ -4,10 +4,21 @@ use std::ops::Deref;
 
 use pulse::proplist::Proplist;
 
+use lazy_static::lazy_static;
+
+use state::Storage;
+
+lazy_static! {
+    pub static ref ACTIONS_SX: Storage<mpsc::UnboundedSender<Action>> = Storage::new();
+}
+
 pub fn start(
     internal_rx: cb_channel::Receiver<PAInternal>,
     info_sx: mpsc::UnboundedSender<EntryIdentifier>,
+    actions_sx: mpsc::UnboundedSender<Action>,
 ) -> Result<(), RsError> {
+    (*ACTIONS_SX).set(actions_sx);
+
     // Create new mainloop and context
     let mut proplist = Proplist::new().unwrap();
     proplist
@@ -153,6 +164,7 @@ pub fn start(
             PAInternal::Command(cmd) => {
                 let cmd = cmd.deref();
                 if pa_actions::handle_command(cmd.clone(), &context, &info_sx).is_none() {
+                    mainloop.borrow_mut().unlock();
                     break;
                 }
 

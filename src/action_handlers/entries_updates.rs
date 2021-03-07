@@ -9,7 +9,7 @@ use crate::ui::Scrollable;
 
 use std::collections::{HashMap, HashSet};
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
+pub async fn action_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
     // we only need to update page entries if entries changed
     match msg {
         Action::Redraw
@@ -79,15 +79,14 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
     };
 
     if entries_changed {
-        DISPATCH
-            .event(Action::CreateMonitors(
-                if state.current_page != PageType::Cards {
-                    monitor_list(state)
-                } else {
-                    HashMap::new()
-                },
-            ))
-            .await;
+        ctx.send_to(
+            "pulseaudio",
+            Action::CreateMonitors(if state.current_page != PageType::Cards {
+                monitor_list(state)
+            } else {
+                HashMap::new()
+            }),
+        );
 
         state.redraw.resize = true;
     }
@@ -106,4 +105,3 @@ fn monitor_list(state: &mut RSState) -> HashMap<EntryIdentifier, Option<u32>> {
 
     monitors
 }
-

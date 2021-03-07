@@ -2,7 +2,7 @@ use super::common::*;
 
 use crate::unwrap_or_return;
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
+pub async fn action_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
     match msg.clone() {
         Action::RequestMute(ident) => {
             let ident = ident.unwrap_or(unwrap_or_return!(state.page_entries.get_selected()));
@@ -13,7 +13,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                     return;
                 }
             };
-            DISPATCH.event(Action::MuteEntry(ident, !mute)).await;
+            ctx.send_to("pulseaudio", Action::MuteEntry(ident, !mute));
         }
         Action::RequstChangeVolume(how_much, ident) => {
             let ident = ident.unwrap_or(unwrap_or_return!(state.page_entries.get_selected()));
@@ -44,7 +44,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                 for v in vols.get_mut() {
                     v.0 = target;
                 }
-                DISPATCH.event(Action::SetVolume(ident, vols)).await;
+                ctx.send_to("pulseaudio", Action::SetVolume(ident, vols));
             }
         }
         _ => {}

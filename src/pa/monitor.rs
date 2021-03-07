@@ -1,6 +1,4 @@
-use super::common::*;
-
-use crate::DISPATCH;
+use super::{common::*, sync_loop::ACTIONS_SX};
 
 use std::convert::TryInto;
 
@@ -70,7 +68,10 @@ impl Monitors {
         if let Some(count) = self.errors.get(&ident) {
             if *count >= 5 {
                 self.errors.remove(&ident);
-                DISPATCH.sync_event(Action::EntryRemoved(ident));
+                (*ACTIONS_SX)
+                    .get()
+                    .send(Action::EntryRemoved(ident))
+                    .unwrap();
             }
         }
         if self.monitors.contains_key(&ident) {
@@ -233,7 +234,7 @@ fn create(
                                 let data_slice = slice_to_4_bytes(&data[(size-4) .. size]);
                                 let peak = f32::from_ne_bytes(data_slice).abs();
 
-                                DISPATCH.sync_event(Action::PeakVolumeUpdate(ident, peak));
+                                (*ACTIONS_SX).get().send(Action::PeakVolumeUpdate(ident, peak)).unwrap();
 
                                 unsafe { (*(*stream_ref.as_ptr()).as_ptr()).discard().unwrap(); };
                             },

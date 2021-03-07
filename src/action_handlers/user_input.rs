@@ -12,7 +12,7 @@ use std::convert::TryFrom;
 
 use crossterm::event::{Event, MouseButton, MouseEvent, MouseEventKind};
 
-pub async fn action_handler(event: Event, state: &mut RSState) -> Result<(), RsError> {
+pub async fn action_handler(event: Event, state: &mut RSState, ctx: &Ctx) -> Result<(), RsError> {
     let input_event = InputEvent::try_from(event)?;
     let mut actions;
 
@@ -33,7 +33,7 @@ pub async fn action_handler(event: Event, state: &mut RSState) -> Result<(), RsE
     }
 
     for action in actions {
-        DISPATCH.event(action).await;
+        ctx.send_to("event_loop", action);
     }
 
     Ok(())

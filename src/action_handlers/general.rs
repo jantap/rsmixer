@@ -2,7 +2,7 @@ use super::common::*;
 
 use std::{collections::HashMap, ops::Deref};
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
+pub async fn action_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
     match msg.clone() {
         Action::Redraw => {
             state.redraw.resize = true;
@@ -45,7 +45,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
             state.redraw.resize = true;
         }
         Action::PulseAudioDisconnected => {
-            DISPATCH.event(Action::CreateMonitors(HashMap::new())).await;
+            ctx.send_to("pulseaudio", Action::CreateMonitors(HashMap::new()));
             *state = RSState::default();
             state.redraw.resize = true;
         }

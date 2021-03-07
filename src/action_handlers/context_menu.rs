@@ -6,7 +6,7 @@ use crate::{
 
 use crate::ui::Scrollable;
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
+pub async fn action_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
     match msg.clone() {
         Action::EntryRemoved(ident) => {
             if state.context_menu.entry_ident == ident {
@@ -46,7 +46,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                 }
             };
 
-            let answer = state.context_menu.resolve(selected).await;
+            let answer = state.context_menu.resolve(selected, &ctx).await;
 
             match answer {
                 ContextMenuEffect::None => {
@@ -56,7 +56,9 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                     let (parent_type, _) = parent_child_types(state.current_page);
                     let entry_ident = selected;
 
-                    if let Some(parent_id) = state.entries.get_play_entry(&entry_ident).unwrap().parent {
+                    if let Some(parent_id) =
+                        state.entries.get_play_entry(&entry_ident).unwrap().parent
+                    {
                         let entry_parent = EntryIdentifier::new(parent_type, parent_id);
                         let parent_ident = match state.entries.find(|(&i, _)| i == entry_parent) {
                             Some((i, _)) => *i,

@@ -3,76 +3,62 @@ use crate::{
     models::PageType,
 };
 
-use ev_apple::{messages, Message};
-
 use std::collections::HashMap;
 
 use pulse::volume::ChannelVolumes;
 
 use crossterm::event::Event;
 
-use statics::*;
-
-messages!(Action,
-    ExitSignal => EXIT_MESSAGE_ID,
+#[derive(Clone, PartialEq, Debug)]
+pub enum Action {
+    ExitSignal,
 
     // redraw the whole screen (called every window resize)
-    Redraw => MAIN_MESSAGE,
+    Redraw,
 
     // entry updates
-    EntryRemoved(EntryIdentifier) => MAIN_MESSAGE,
-    EntryUpdate(EntryIdentifier, Box<Entry>) => MAIN_MESSAGE,
-    PeakVolumeUpdate(EntryIdentifier, f32) => MAIN_MESSAGE,
+    EntryRemoved(EntryIdentifier),
+    EntryUpdate(EntryIdentifier, Box<Entry>),
+    PeakVolumeUpdate(EntryIdentifier, f32),
 
     // move around the UI
-    MoveUp(u16) => MAIN_MESSAGE,
-    MoveDown(u16) => MAIN_MESSAGE,
-    MoveLeft => MAIN_MESSAGE,
-    MoveRight => MAIN_MESSAGE,
-    ChangePage(PageType) => MAIN_MESSAGE,
+    MoveUp(u16),
+    MoveDown(u16),
+    MoveLeft,
+    MoveRight,
+    ChangePage(PageType),
     // positive - forwards, negative - backwards
-    CyclePages(i8) => MAIN_MESSAGE,
+    CyclePages(i8),
 
     // volume changes
-    RequestMute(Option<EntryIdentifier>) => MAIN_MESSAGE,
-    InputVolumeValue => MAIN_MESSAGE,
+    RequestMute(Option<EntryIdentifier>),
+    InputVolumeValue,
     // request volume change where the argument is a
     // number of percentage points it should be changed by
-    RequstChangeVolume(i16, Option<EntryIdentifier>) => MAIN_MESSAGE,
+    RequstChangeVolume(i16, Option<EntryIdentifier>),
 
     // context menus
-    OpenContextMenu(Option<EntryIdentifier>) => MAIN_MESSAGE,
-    CloseContextMenu => MAIN_MESSAGE,
-    Confirm => MAIN_MESSAGE,
+    OpenContextMenu(Option<EntryIdentifier>),
+    CloseContextMenu,
+    Confirm,
 
-    ShowHelp => MAIN_MESSAGE,
+    ShowHelp,
 
-    Hide(Option<EntryIdentifier>) => MAIN_MESSAGE,
+    Hide(Option<EntryIdentifier>),
 
     // PulseAudio connection status
-    RetryIn(u64) => MAIN_MESSAGE,
-    ConnectToPulseAudio => MAIN_MESSAGE,
-    PulseAudioDisconnected => MAIN_MESSAGE,
+    RetryIn(u64),
+    ConnectToPulseAudio,
+    PulseAudioDisconnected,
 
-    UserInput(Event) => MAIN_MESSAGE,
+    UserInput(Event),
 
-    MuteEntry(EntryIdentifier, bool) => PA_MESSAGE,
-    MoveEntryToParent(EntryIdentifier, EntryIdentifier) => PA_MESSAGE,
-    ChangeCardProfile(EntryIdentifier, String) => PA_MESSAGE,
-    SetVolume(EntryIdentifier, ChannelVolumes) => PA_MESSAGE,
-    CreateMonitors(HashMap<EntryIdentifier, Option<u32>>) => PA_MESSAGE,
-    SetSuspend(EntryIdentifier, bool) => PA_MESSAGE,
-    KillEntry(EntryIdentifier) => PA_MESSAGE,
-    PulseAudioDisconnected2 => PA_MESSAGE,
-);
-
-pub mod statics {
-    pub static CHANNEL_CAPACITY: usize = 32;
-
-    pub static MAIN_MESSAGE: u32 = 1;
-    pub static PA_MESSAGE: u32 = 2;
-    pub static RUN_PA_MESSAGE: u32 = 3;
-    pub static INPUT_MESSAGE: u32 = 4;
-
-    pub static EXIT_MESSAGE_ID: u32 = 0;
+    MuteEntry(EntryIdentifier, bool),
+    MoveEntryToParent(EntryIdentifier, EntryIdentifier),
+    ChangeCardProfile(EntryIdentifier, String),
+    SetVolume(EntryIdentifier, ChannelVolumes),
+    CreateMonitors(HashMap<EntryIdentifier, Option<u32>>),
+    SetSuspend(EntryIdentifier, bool),
+    KillEntry(EntryIdentifier),
+    PulseAudioDisconnected2,
 }

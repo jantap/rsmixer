@@ -1,9 +1,6 @@
-use super::common::*;
+use super::{common::*, sync_loop::ACTIONS_SX};
 
-use crate::{
-    entry::{CardProfile, Entry},
-    DISPATCH,
-};
+use crate::entry::{CardProfile, Entry};
 
 use crate::ui::Rect;
 
@@ -63,9 +60,12 @@ pub fn subscribe(
                     }
                     Some(Operation::Removed) => {
                         info!("[PAInterface] {:?} removed", entry_type);
-                        DISPATCH.sync_event(Action::EntryRemoved(EntryIdentifier::new(
-                            entry_type, index,
-                        )));
+                        (*ACTIONS_SX)
+                            .get()
+                            .send(Action::EntryRemoved(EntryIdentifier::new(
+                                entry_type, index,
+                            )))
+                            .unwrap();
                     }
                     _ => {}
                 };
@@ -196,7 +196,10 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
         let ident = EntryIdentifier::new(EntryType::Card, i.index);
         let entry = Entry::new_card_entry(i.index, n, profiles, selected_profile);
 
-        DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
+        (*ACTIONS_SX)
+            .get()
+            .send(Action::EntryUpdate(ident, Box::new(entry)))
+            .unwrap();
     }
 }
 
@@ -223,7 +226,10 @@ pub fn on_sink_info(
                 i.state == SinkState::Suspended,
             );
 
-            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
+            (*ACTIONS_SX)
+                .get()
+                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .unwrap();
         }
     }
 }
@@ -259,7 +265,10 @@ pub fn on_sink_input_info(
                 false,
             );
 
-            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
+            (*ACTIONS_SX)
+                .get()
+                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .unwrap();
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Sink, i.sink));
         }
     }
@@ -288,7 +297,10 @@ pub fn on_source_info(
                 i.state == SourceState::Suspended,
             );
 
-            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
+            (*ACTIONS_SX)
+                .get()
+                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .unwrap();
         }
     }
 }
@@ -323,7 +335,10 @@ pub fn on_source_output_info(
                 false,
             );
 
-            DISPATCH.sync_event(Action::EntryUpdate(ident, Box::new(entry)));
+            (*ACTIONS_SX)
+                .get()
+                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .unwrap();
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Source, i.index));
         }
     }

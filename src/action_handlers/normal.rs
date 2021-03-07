@@ -4,11 +4,11 @@ use crate::{entry::EntryKind, models::ContextMenu};
 
 use crate::ui::Scrollable;
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
-    normal_handler(msg, state).await;
+pub async fn action_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
+    normal_handler(msg, state, ctx).await;
 }
 
-async fn normal_handler(msg: &Action, state: &mut RSState) {
+async fn normal_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
     match msg.clone() {
         Action::EntryUpdate(ident, _) => {
             if state.page_entries.iter_entries().any(|&i| i == ident) {
@@ -53,11 +53,10 @@ async fn normal_handler(msg: &Action, state: &mut RSState) {
                 .insert(state.page_entries.selected());
         }
         Action::CyclePages(which_way) => {
-            DISPATCH
-                .event(Action::ChangePage(PageType::from(
-                    i8::from(state.current_page) + which_way,
-                )))
-                .await;
+            ctx.send_to(
+                "event_loop",
+                Action::ChangePage(PageType::from(i8::from(state.current_page) + which_way)),
+            );
         }
         Action::OpenContextMenu(ident) => {
             if let Some(ident) = ident {

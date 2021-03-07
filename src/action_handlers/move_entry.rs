@@ -2,7 +2,7 @@ use super::common::*;
 
 use crate::ui::Scrollable;
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
+pub async fn action_handler(msg: &Action, state: &mut RSState, ctx: &Ctx) {
     match msg.clone() {
         Action::MoveUp(how_much) => {
             if let UIMode::MoveEntry(_, _) = state.ui_mode {
@@ -27,7 +27,7 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                 let new_parent = state.page_entries.get(j as usize).unwrap();
                 state.ui_mode = UIMode::MoveEntry(entry_ident, new_parent);
 
-                DISPATCH.event(Action::Redraw).await;
+                ctx.send_to("event_loop", Action::Redraw);
             }
         }
         Action::MoveDown(how_much) => {
@@ -48,15 +48,13 @@ pub async fn action_handler(msg: &Action, state: &mut RSState) {
                 let new_parent = state.page_entries.get(j as usize).unwrap();
                 state.ui_mode = UIMode::MoveEntry(entry_ident, new_parent);
 
-                DISPATCH.event(Action::Redraw).await;
+                ctx.send_to("event_loop", Action::Redraw);
             }
         }
         Action::Confirm => match state.ui_mode {
             UIMode::MoveEntry(ident, parent) => {
                 state.change_ui_mode(UIMode::Normal);
-                DISPATCH
-                    .event(Action::MoveEntryToParent(ident, parent))
-                    .await;
+                ctx.send_to("pulseaudio", Action::MoveEntryToParent(ident, parent));
             }
             _ => {
                 return;

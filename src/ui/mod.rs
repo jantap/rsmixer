@@ -219,4 +219,3 @@ fn draw_page_names(state: &mut RSState) {
             .string(1, 0, state.current_page.to_string(), Style::Bold);
     }
 }
-

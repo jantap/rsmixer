@@ -2,7 +2,7 @@ use super::common::*;
 
 use crate::ui::Scrollable;
 
-pub async fn action_handler(msg: &Action, state: &mut RSState) {
+pub async fn action_handler(msg: &Action, state: &mut RSState, _ctx: &Ctx) {
     match msg.clone() {
         Action::MoveUp(how_much) => {
             state.help.up(how_much as usize);

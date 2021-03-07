@@ -1,7 +1,8 @@
 use crate::{
+    actor_system::Ctx,
     entry::{Entry, EntryIdentifier, EntryKind, EntryType},
     ui::widgets::ToolWindowWidget,
-    Action, DISPATCH,
+    Action,
 };
 
 use crate::{
@@ -110,29 +111,25 @@ impl ContextMenu {
         }
     }
 
-    pub async fn resolve(&self, ident: EntryIdentifier) -> ContextMenuEffect {
+    pub async fn resolve(&self, ident: EntryIdentifier, ctx: &Ctx) -> ContextMenuEffect {
         match &self.options[self.selected] {
             ContextMenuOption::Move => {
                 return ContextMenuEffect::MoveEntry;
             }
             ContextMenuOption::MoveToEntry(entry, _) => {
-                DISPATCH
-                    .event(Action::MoveEntryToParent(ident, *entry))
-                    .await;
+                ctx.send_to("event_loop", Action::MoveEntryToParent(ident, *entry));
             }
             ContextMenuOption::ChangeCardProfile(name, _) => {
-                DISPATCH
-                    .event(Action::ChangeCardProfile(ident, name.clone()))
-                    .await;
+                ctx.send_to("event_loop", Action::ChangeCardProfile(ident, name.clone()));
             }
             ContextMenuOption::Suspend => {
-                DISPATCH.event(Action::SetSuspend(ident, true)).await;
+                ctx.send_to("event_loop", Action::SetSuspend(ident, true));
             }
             ContextMenuOption::Resume => {
-                DISPATCH.event(Action::SetSuspend(ident, false)).await;
+                ctx.send_to("event_loop", Action::SetSuspend(ident, false));
             }
             ContextMenuOption::Kill => {
-                DISPATCH.event(Action::KillEntry(ident)).await;
+                ctx.send_to("event_loop", Action::KillEntry(ident));
             }
             _ => {}
         };

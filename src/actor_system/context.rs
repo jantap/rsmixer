@@ -34,12 +34,14 @@ impl Ctx {
     }
     pub fn actor(&mut self, id: &'static str, actor_factory: ActorFactory) {
         let actor = actor_factory();
+
         let _ = self
             .internal_sx
             .send(Arc::new(SystemMessage::ActorRegistered(id, actor_factory)));
+        
         let _ = self.internal_sx.send(Arc::new(SystemMessage::ActorUpdate(
             id,
-            ActorEntry::new(None, ActorStatus::Starting),
+            ActorEntry::new(None, ActorStatus::Starting, None),
         )));
 
         let sx = self.internal_sx.clone();

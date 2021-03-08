@@ -12,7 +12,6 @@ use std::{collections::HashMap, convert::TryFrom};
 use crossterm::style::{Attribute, ContentStyle};
 
 use multimap::MultiMap;
-
 use linked_hash_map::LinkedHashMap;
 
 use serde::{Deserialize, Serialize};

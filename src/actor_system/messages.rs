@@ -15,3 +15,5 @@ pub enum SystemMessage {
     Shutdown,
     // Broadcast(BoxedMessage),
 }
+
+pub struct Shutdown {}

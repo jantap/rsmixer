@@ -16,13 +16,13 @@ pub struct EventLoop {
 }
 
 impl EventLoop {
-    pub fn new() -> BoxedActor {
-        Box::new(Self::default())
+    pub fn new() -> Actor {
+        Actor::Eventful(Box::new(Self::default()))
     }
 }
 
 #[async_trait]
-impl Actor for EventLoop {
+impl EventfulActor for EventLoop {
     async fn start(&mut self, _ctx: Ctx) -> Result<()> {
         self.stdout = Some(ui::prepare_terminal().unwrap());
         self.state = RSState::default();

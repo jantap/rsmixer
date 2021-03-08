@@ -1,8 +1,8 @@
 use super::{
-    actor::{ActorFactory, ActorStatus},
+    actor::{ActorFactory, ActorStatus, ActorType, Actor},
     actor_entry::{self, ActorEntry},
     error::Error,
-    messages::{BoxedMessage, SystemMessage},
+    messages::{BoxedMessage, SystemMessage, Shutdown},
     Receiver, Sender,
 };
 
@@ -33,7 +33,7 @@ impl Worker {
         let i_rx = Arc::clone(&self.internal_rx);
         task::spawn(async move {
             let mut i_rx = i_rx.write().await;
-            while let Ok(msg) = i_rx.recv().await {
+            while let Some(msg) = i_rx.recv().await {
                 let msg = match Arc::try_unwrap(msg) {
                     Ok(x) => x,
                     Err(_) => {
@@ -68,6 +68,19 @@ impl Worker {
     }
 
     async fn send_to(&mut self, id: &'static str, msg: BoxedMessage) {
+        if let Some(entry) = self.entries.get(id) {
+            if let Some(ActorType::Continous) = entry.actor_type {
+                if let Some(sx) = &entry.event_sx {
+                    let _ = sx.send(msg);
+                    return;
+                }
+            }
+        }
+
+        self.send_to_eventful(id, msg).await;
+    }
+
+    async fn send_to_eventful(&mut self, id: &'static str, msg: BoxedMessage) {
         {
             let cached = self.cached_messages_for(id);
             let mut cached = cached.write().await;
@@ -76,7 +89,7 @@ impl Worker {
         }
 
         if let Some(act_entry) = self.entries.get_mut(id) {
-            if act_entry.actor.is_some() {
+            if act_entry.actor.is_some() && act_entry.actor_type == Some(ActorType::Eventful) {
                 let ready = {
                     let status = act_entry.status.read().await;
                     *status == ActorStatus::Ready
@@ -106,33 +119,13 @@ impl Worker {
         }
 
         for (_, entry) in &mut self.entries {
-            if let Some(actor) = &mut entry.actor {
-                {
-                    let mut status = entry.status.write().await;
-                    *status = ActorStatus::Stopping;
-                }
-
-                {
-                    let mut actor = actor.write().await;
-                    actor.stop().await;
-                }
-            }
+            super::actor::stop_actor(entry).await;
         }
     }
 
     async fn restart_actor(&mut self, id: &'static str) {
         if let Some(entry) = self.entries.get_mut(id) {
-            if let Some(actor) = &mut entry.actor {
-                {
-                    let mut status = entry.status.write().await;
-                    *status = ActorStatus::Stopping;
-                }
-
-                {
-                    let mut actor = actor.write().await;
-                    actor.stop().await;
-                }
-            }
+            super::actor::stop_actor(entry).await;
         }
 
         match self.factories.get(id) {
@@ -149,7 +142,7 @@ impl Worker {
 
         if !j {
             self.entries
-                .insert(id, ActorEntry::new(None, ActorStatus::NotRegistered));
+                .insert(id, ActorEntry::new(None, ActorStatus::NotRegistered, None));
         }
 
         Arc::clone(&self.entries.get(id).unwrap().cached_messages)

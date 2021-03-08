@@ -1,7 +1,9 @@
 use super::{
-    actor::{ActorStatus, BoxedActor},
+    actor::{ActorStatus, Actor, ActorType},
     context::Ctx,
     messages::BoxedMessage,
+    prelude::MessageSender,
+    Sender,
 };
 
 use std::sync::Arc;
@@ -9,13 +11,19 @@ use std::sync::Arc;
 use tokio::{sync::RwLock, task};
 
 pub struct ActorEntry {
-    pub actor: Option<Arc<RwLock<BoxedActor>>>,
+    pub actor: Option<Arc<RwLock<Actor>>>,
     pub status: Arc<RwLock<ActorStatus>>,
     pub cached_messages: Arc<RwLock<Vec<BoxedMessage>>>,
+    pub event_sx: Option<Sender<BoxedMessage>>,
+    pub actor_type: Option<ActorType>,
 }
 
 impl ActorEntry {
-    pub fn new(actor: Option<BoxedActor>, status: ActorStatus) -> Self {
+    pub fn new(actor: Option<Actor>, status: ActorStatus, event_sx: Option<MessageSender>) -> Self {
+        let actor_type = match &actor {
+            Some(actor) => Some(actor.actor_type()),
+            None => None,
+        };
         Self {
             actor: match actor {
                 None => None,
@@ -23,13 +31,15 @@ impl ActorEntry {
             },
             status: Arc::new(RwLock::new(status)),
             cached_messages: Arc::new(RwLock::new(Vec::new())),
+            actor_type,
+            event_sx,
         }
     }
 }
 
 pub async fn handle_until_queue_empty(
     actor_id: &'static str,
-    actor: Arc<RwLock<BoxedActor>>,
+    actor: Arc<RwLock<Actor>>,
     cached_messages: Arc<RwLock<Vec<BoxedMessage>>>,
     status: Arc<RwLock<ActorStatus>>,
     context: Ctx,
@@ -53,7 +63,10 @@ pub async fn handle_until_queue_empty(
             };
 
             let mut actor = actor.write().await;
-            actor.handle_message(context.clone(), next_message).await?;
+            match &mut (*actor) {
+                Actor::Eventful(actor) => actor.handle_message(context.clone(), next_message).await?,
+                _ => {},
+            }
         }
 
         Ok::<(), anyhow::Error>(())

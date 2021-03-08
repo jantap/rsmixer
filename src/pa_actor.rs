@@ -11,51 +11,35 @@ use tokio::{
 use anyhow::Result;
 
 pub struct PulseActor {
-    external_sx: mpsc::UnboundedSender<Action>,
-    external_rx: Option<mpsc::UnboundedReceiver<Action>>,
-
     task_handle: Option<JoinHandle<Result<()>>>,
 }
 
 impl PulseActor {
-    pub fn new() -> BoxedActor {
-        let external = mpsc::unbounded_channel::<Action>();
-        Box::new(Self {
-            external_sx: external.0,
-            external_rx: Some(external.1),
-
+    pub fn new() -> Actor {
+        Actor::Continous(Box::new(Self {
             task_handle: None,
-        })
+        }))
     }
 }
 
 #[async_trait]
-impl Actor for PulseActor {
-    async fn start(&mut self, ctx: Ctx) -> Result<()> {
-        let rx = self.external_rx.take().unwrap();
-        self.task_handle = Some(task::spawn(async move { start_async(rx, ctx).await }));
+impl ContinousActor for PulseActor {
+    async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<()> {
+        self.task_handle = Some(task::spawn(async move { start_async(events_rx, ctx).await }));
 
         Ok(())
     }
     async fn stop(&mut self) {
-        if self.task_handle.is_some() {
-            let _ = self.external_sx.send(Action::ExitSignal);
-            let _ = self.task_handle.take().unwrap().await;
-        }
     }
-    async fn handle_message(&mut self, _ctx: Ctx, msg: BoxedMessage) -> Result<()> {
-        if !msg.is::<Action>() {
-            return Ok(());
-        }
-
-        let msg = msg.downcast::<Action>().unwrap().as_ref().clone();
-        self.external_sx.send(msg)?;
-
-        Ok(())
+    async fn join_handle(&mut self) -> JoinHandle<Result<(), anyhow::Error>> {
+        self.task_handle.take().unwrap()
+    }
+    async fn has_join_handle(&mut self) -> bool {
+        self.task_handle.is_some()
     }
 }
 
-pub async fn start_async(mut external_rx: mpsc::UnboundedReceiver<Action>, ctx: Ctx) -> Result<()> {
+pub async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
     let mut interval = tokio::time::interval(Duration::from_millis(50));
 
     let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RsError> {
@@ -89,9 +73,14 @@ pub async fn start_async(mut external_rx: mpsc::UnboundedReceiver<Action>, ctx: 
             tokio::select! {
                 r = res => {
                     if let Some(cmd) = r {
-                        internal_sx.send(PAInternal::Command(Box::new(cmd.clone())))?;
-
-                        if let Action::ExitSignal = cmd {
+                        if cmd.is::<Action>() {
+                            if let Ok(cmd) = cmd.downcast::<Action>() {
+                                internal_sx.send(PAInternal::Command(cmd.clone()))?;
+                            }
+                            continue;
+                        }
+                        if let Ok(_) = cmd.downcast::<Shutdown>() {
+                            internal_sx.send(PAInternal::Command(Box::new(Action::ExitSignal)))?;
                             sync_pa.await.unwrap();
                             return Ok(());
                         }
@@ -125,8 +114,10 @@ pub async fn start_async(mut external_rx: mpsc::UnboundedReceiver<Action>, ctx: 
             tokio::select! {
                 _ = timeout_part => {},
                 ev = event => {
-                    if let Some(Action::ExitSignal) = ev {
-                        return Ok(());
+                    if let Some(x) = ev {
+                        if x.is::<Shutdown>() {
+                            return Ok(());
+                        }
                     }
                 }
             };

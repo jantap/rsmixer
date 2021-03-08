@@ -12,51 +12,35 @@ use tokio::{
 use anyhow::Result;
 
 pub struct InputActor {
-    external_sx: mpsc::UnboundedSender<Action>,
-    external_rx: Option<mpsc::UnboundedReceiver<Action>>,
-
     task_handle: Option<JoinHandle<Result<()>>>,
 }
 
 impl InputActor {
-    pub fn new() -> BoxedActor {
-        let external = mpsc::unbounded_channel();
-        Box::new(Self {
-            external_sx: external.0,
-            external_rx: Some(external.1),
-
+    pub fn new() -> Actor {
+        Actor::Continous(Box::new(Self {
             task_handle: None,
-        })
+        }))
     }
 }
 
 #[async_trait]
-impl Actor for InputActor {
-    async fn start(&mut self, ctx: Ctx) -> Result<()> {
-        let rx = self.external_rx.take().unwrap();
-        self.task_handle = Some(task::spawn(async move { start(rx, ctx).await }));
+impl ContinousActor for InputActor {
+    async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<()> {
+        self.task_handle = Some(task::spawn(async move { start(events_rx, ctx).await }));
 
         Ok(())
     }
     async fn stop(&mut self) {
-        if self.task_handle.is_some() {
-            let _ = self.external_sx.send(Action::ExitSignal);
-            let _ = self.task_handle.take().unwrap().await;
-        }
     }
-    async fn handle_message(&mut self, _ctx: Ctx, msg: BoxedMessage) -> Result<()> {
-        if !msg.is::<Action>() {
-            return Ok(());
-        }
-
-        let msg = msg.downcast::<Action>().unwrap().as_ref().clone();
-        self.external_sx.send(msg)?;
-
-        Ok(())
+    async fn join_handle(&mut self) -> JoinHandle<Result<(), anyhow::Error>> {
+        self.task_handle.take().unwrap()
+    }
+    async fn has_join_handle(&mut self) -> bool {
+        self.task_handle.is_some()
     }
 }
 
-pub async fn start(mut rx: mpsc::UnboundedReceiver<Action>, ctx: Ctx) -> Result<()> {
+pub async fn start(mut rx: MessageReceiver, ctx: Ctx) -> Result<()> {
     let mut reader = EventStream::new();
 
     loop {
@@ -84,7 +68,7 @@ pub async fn start(mut rx: mpsc::UnboundedReceiver<Action>, ctx: Ctx) -> Result<
             }
             ev = recv_event => {
                 let ev = if let Some(ev) = ev { ev } else { continue; };
-                if ev == Action::ExitSignal {
+                if ev.is::<Shutdown>() {
                     return Ok(());
                 }
             }

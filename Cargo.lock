@@ -602,15 +602,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "multimap"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1255076139a83bb467426e7f8d0134968a8118844faa755985e077cf31850333"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "net2"
 version = "0.2.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -826,7 +817,6 @@ dependencies = [
  "libpulse-binding",
  "linked-hash-map",
  "log",
- "multimap",
  "semver 0.11.0",
  "serde",
  "simple-logging",

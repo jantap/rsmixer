@@ -1,5 +1,5 @@
 use super::{
-    actor::{ActorStatus, Actor, ActorType},
+    actor::{Actor, ActorStatus, ActorType},
     context::Ctx,
     messages::BoxedMessage,
     prelude::MessageSender,
@@ -64,8 +64,10 @@ pub async fn handle_until_queue_empty(
 
             let mut actor = actor.write().await;
             match &mut (*actor) {
-                Actor::Eventful(actor) => actor.handle_message(context.clone(), next_message).await?,
-                _ => {},
+                Actor::Eventful(actor) => {
+                    actor.handle_message(context.clone(), next_message).await?
+                }
+                _ => {}
             }
         }
 

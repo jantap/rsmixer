@@ -3,7 +3,7 @@ pub use async_trait::async_trait;
 pub use super::{
     actor::{Actor, ActorStatus, ContinousActor, EventfulActor},
     context::Ctx,
-    messages::{Shutdown, BoxedMessage},
+    messages::{BoxedMessage, Shutdown},
     worker::Worker,
 };
 

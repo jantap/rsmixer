@@ -17,9 +17,7 @@ pub struct InputActor {
 
 impl InputActor {
     pub fn new() -> Actor {
-        Actor::Continous(Box::new(Self {
-            task_handle: None,
-        }))
+        Actor::Continous(Box::new(Self { task_handle: None }))
     }
 }
 
@@ -30,8 +28,7 @@ impl ContinousActor for InputActor {
 
         Ok(())
     }
-    async fn stop(&mut self) {
-    }
+    async fn stop(&mut self) {}
     async fn join_handle(&mut self) -> JoinHandle<Result<(), anyhow::Error>> {
         self.task_handle.take().unwrap()
     }

@@ -1,7 +1,7 @@
 use super::{
     actor_entry::ActorEntry,
     context::Ctx,
-    messages::{BoxedMessage, SystemMessage, Shutdown},
+    messages::{BoxedMessage, Shutdown, SystemMessage},
     prelude::MessageReceiver,
     Sender,
 };

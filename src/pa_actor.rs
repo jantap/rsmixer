@@ -1,4 +1,8 @@
-use crate::{pa::{self, common::*}, actor_system::prelude::*, VARIABLES};
+use crate::{
+    actor_system::prelude::*,
+    pa::{self, common::*},
+    VARIABLES,
+};
 
 use std::time::Duration;
 
@@ -16,21 +20,20 @@ pub struct PulseActor {
 
 impl PulseActor {
     pub fn new() -> Actor {
-        Actor::Continous(Box::new(Self {
-            task_handle: None,
-        }))
+        Actor::Continous(Box::new(Self { task_handle: None }))
     }
 }
 
 #[async_trait]
 impl ContinousActor for PulseActor {
     async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<()> {
-        self.task_handle = Some(task::spawn(async move { start_async(events_rx, ctx).await }));
+        self.task_handle = Some(task::spawn(
+            async move { start_async(events_rx, ctx).await },
+        ));
 
         Ok(())
     }
-    async fn stop(&mut self) {
-    }
+    async fn stop(&mut self) {}
     async fn join_handle(&mut self) -> JoinHandle<Result<(), anyhow::Error>> {
         self.task_handle.take().unwrap()
     }

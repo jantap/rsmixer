@@ -5,13 +5,12 @@ mod variables;
 
 pub use variables::Variables;
 
-use crate::{models::InputEvent, Action, RsError, Styles, VERSION};
+use crate::{models::InputEvent, multimap::MultiMap, Action, RsError, Styles, VERSION};
 
 use std::{collections::HashMap, convert::TryFrom};
 
 use crossterm::style::{Attribute, ContentStyle};
 
-use multimap::MultiMap;
 use linked_hash_map::LinkedHashMap;
 
 use serde::{Deserialize, Serialize};
@@ -97,7 +96,7 @@ impl RsMixerConfig {
     fn bindings(&self) -> Result<MultiMap<InputEvent, Action>, RsError> {
         let mut bindings: MultiMap<InputEvent, Action> = MultiMap::new();
 
-        for (k, cs) in &self.bindings {
+        for (k, cs) in self.bindings.iter_vecs() {
             for c in cs {
                 bindings.insert(
                     keys_mouse::try_string_to_event(&k)?,
@@ -133,7 +132,7 @@ impl RsMixerConfig {
 
         let mut parsed: MultiMap<InputEvent, (Action, String)> = MultiMap::new();
 
-        for (k, cs) in &self.bindings {
+        for (k, cs) in self.bindings.iter_vecs() {
             for c in cs {
                 parsed.insert(
                     keys_mouse::try_string_to_event(&k)?,

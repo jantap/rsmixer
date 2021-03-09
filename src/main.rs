@@ -9,6 +9,7 @@ mod event_loop_actor;
 mod help;
 mod input_actor;
 mod models;
+mod multimap;
 mod pa;
 mod pa_actor;
 mod ui;

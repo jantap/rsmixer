@@ -38,7 +38,7 @@ impl Ctx {
         let _ = self
             .internal_sx
             .send(Arc::new(SystemMessage::ActorRegistered(id, actor_factory)));
-        
+
         let _ = self.internal_sx.send(Arc::new(SystemMessage::ActorUpdate(
             id,
             ActorEntry::new(None, ActorStatus::Starting, None),

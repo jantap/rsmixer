@@ -38,8 +38,6 @@ pub trait EventfulActor {
 pub trait ContinousActor {
     async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<(), anyhow::Error>;
     async fn stop(&mut self);
-    async fn join_handle(&mut self) -> JoinHandle<Result<(), anyhow::Error>>;
-    async fn has_join_handle(&mut self) -> bool;
 }
 
 pub enum Actor {
@@ -114,10 +112,6 @@ pub async fn stop_actor(entry: &mut ActorEntry) {
                     }
 
                     actor.stop().await;
-
-                    if actor.has_join_handle().await {
-                        actor.join_handle().await;
-                    }
                 }
             };
         }

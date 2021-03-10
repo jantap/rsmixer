@@ -33,12 +33,10 @@ impl ContinousActor for PulseActor {
 
         Ok(())
     }
-    async fn stop(&mut self) {}
-    async fn join_handle(&mut self) -> JoinHandle<Result<(), anyhow::Error>> {
-        self.task_handle.take().unwrap()
-    }
-    async fn has_join_handle(&mut self) -> bool {
-        self.task_handle.is_some()
+    async fn stop(&mut self) {
+        if let Some(handle) = &mut self.task_handle {
+            handle.await;
+        }
     }
 }
 

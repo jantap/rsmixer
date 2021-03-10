@@ -4,13 +4,14 @@ use super::{
     error::Error,
     messages::{BoxedMessage, SystemMessage},
     Receiver, Sender,
+    LOGGING_MODULE,
 };
+
+use crate::prelude::*;
 
 use std::{collections::HashMap, sync::Arc};
 
 use tokio::{sync::RwLock, task};
-
-use anyhow::{Context, Result};
 
 pub struct Worker {
     entries: HashMap<&'static str, ActorEntry>,
@@ -32,13 +33,15 @@ impl Worker {
     pub fn start(mut self) -> tokio::task::JoinHandle<Result<()>> {
         let i_rx = Arc::clone(&self.internal_rx);
         task::spawn(async move {
+            debug!("Starting worker task");
+
             let mut i_rx = i_rx.write().await;
             while let Some(msg) = i_rx.recv().await {
                 let msg = match Arc::try_unwrap(msg) {
                     Ok(x) => x,
                     Err(_) => {
-                        return Err(Error::WrongSystemMessage)
-                            .context("When receiving message from Context object");
+                        error!("Failed to unwrap Arc<SystemMessage>. Skipping message. This may be very bad news");
+                        continue;
                     }
                 };
                 match msg {
@@ -111,6 +114,7 @@ impl Worker {
     }
 
     async fn shutdown(&mut self) {
+        info!("Shutting down");
         for (_, entry) in &mut self.entries {
             {
                 let mut cached = entry.cached_messages.write().await;
@@ -118,14 +122,17 @@ impl Worker {
             }
         }
 
-        for (_, entry) in &mut self.entries {
-            super::actor::stop_actor(entry).await;
+        for (id, entry) in &mut self.entries {
+            super::actor::stop_actor(id, entry).await;
         }
+        info!("Finished");
     }
 
     async fn restart_actor(&mut self, id: &'static str) {
+        info!("Restarting actor {}", id);
+
         if let Some(entry) = self.entries.get_mut(id) {
-            super::actor::stop_actor(entry).await;
+            super::actor::stop_actor(id, entry).await;
         }
 
         match self.factories.get(id) {

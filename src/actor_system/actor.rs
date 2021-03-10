@@ -3,8 +3,11 @@ use super::{
     context::Ctx,
     messages::{BoxedMessage, Shutdown, SystemMessage},
     prelude::MessageReceiver,
+    LOGGING_MODULE,
     Sender,
 };
+
+use crate::prelude::*;
 
 use std::sync::Arc;
 
@@ -29,14 +32,14 @@ pub enum ActorStatus {
 
 #[async_trait]
 pub trait EventfulActor {
-    async fn start(&mut self, ctx: Ctx) -> Result<(), anyhow::Error>;
+    async fn start(&mut self, ctx: Ctx) -> Result<()>;
     async fn stop(&mut self);
-    async fn handle_message(&mut self, ctx: Ctx, msg: BoxedMessage) -> Result<(), anyhow::Error>;
+    async fn handle_message(&mut self, ctx: Ctx, msg: BoxedMessage) -> Result<()>;
 }
 
 #[async_trait]
 pub trait ContinousActor {
-    async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<(), anyhow::Error>;
+    async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<()>;
     async fn stop(&mut self);
 }
 
@@ -62,6 +65,8 @@ pub enum ActorType {
 
 pub fn spawn_actor(sx: Sender<Arc<SystemMessage>>, id: &'static str, mut actor: Actor) {
     task::spawn(async move {
+        info!("Spawning actor '{}'", id);
+
         let (res, ssx) = {
             match &mut actor {
                 Actor::Eventful(actor) => (actor.start(sx.clone().into()).await, None),
@@ -84,6 +89,8 @@ pub fn spawn_actor(sx: Sender<Arc<SystemMessage>>, id: &'static str, mut actor: 
             ),
         )));
 
+        info!("Started actor '{}'", id);
+
         match r {
             Err(_) => Err(()),
             Ok(_) => Ok(()),
@@ -92,7 +99,8 @@ pub fn spawn_actor(sx: Sender<Arc<SystemMessage>>, id: &'static str, mut actor: 
     });
 }
 
-pub async fn stop_actor(entry: &mut ActorEntry) {
+pub async fn stop_actor(id: &'static str, entry: &mut ActorEntry) {
+    info!("Stopping actor '{}'", id);
     if let Some(actor) = &mut entry.actor {
         {
             let mut status = entry.status.write().await;
@@ -116,4 +124,5 @@ pub async fn stop_actor(entry: &mut ActorEntry) {
             };
         }
     }
+    info!("Stopped actor '{}'", id);
 }

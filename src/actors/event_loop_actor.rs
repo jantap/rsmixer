@@ -5,24 +5,26 @@ use crate::{
     ui, Action, STYLES,
 };
 
+use std::any::Any;
+
 use std::io::Stdout;
 
 use anyhow::Result;
 
 #[derive(Default)]
-pub struct EventLoop {
+pub struct EventLoopActor {
     stdout: Option<Stdout>,
     state: RSState,
 }
 
-impl EventLoop {
+impl EventLoopActor {
     pub fn new() -> Actor {
         Actor::Eventful(Box::new(Self::default()))
     }
 }
 
 #[async_trait]
-impl EventfulActor for EventLoop {
+impl EventfulActor for EventLoopActor {
     async fn start(&mut self, _ctx: Ctx) -> Result<()> {
         self.stdout = Some(ui::prepare_terminal().unwrap());
         self.state = RSState::default();
@@ -41,7 +43,7 @@ impl EventfulActor for EventLoop {
             return Ok(());
         }
 
-        let msg = msg.downcast::<Action>().unwrap().as_ref().clone();
+        let msg = msg.downcast_ref::<Action>().unwrap().clone();
 
         if let Action::PeakVolumeUpdate(_, _) = msg {
         } else {

@@ -1,8 +1,8 @@
 use super::{
-    actor::{Actor, ActorFactory, ActorStatus, ActorType},
+    actor::{ActorFactory, ActorStatus, ActorType},
     actor_entry::{self, ActorEntry},
     error::Error,
-    messages::{BoxedMessage, Shutdown, SystemMessage},
+    messages::{BoxedMessage, SystemMessage},
     Receiver, Sender,
 };
 

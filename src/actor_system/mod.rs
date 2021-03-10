@@ -13,11 +13,11 @@ pub use messages::BoxedMessage;
 pub use worker::Worker;
 
 use tokio::sync::mpsc::{
-    unbounded_channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
+    unbounded_channel as channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
 };
 
 pub fn new() -> (Ctx, Worker) {
-    let (sx, rx) = unbounded_channel();
+    let (sx, rx) = channel();
 
     (sx.clone().into(), Worker::new(sx, rx))
 }

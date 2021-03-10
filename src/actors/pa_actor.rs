@@ -42,7 +42,7 @@ impl ContinousActor for PulseActor {
     }
 }
 
-pub async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
+async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
     let mut interval = tokio::time::interval(Duration::from_millis(50));
 
     let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RsError> {
@@ -77,12 +77,12 @@ pub async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<(
                 r = res => {
                     if let Some(cmd) = r {
                         if cmd.is::<Action>() {
-                            if let Ok(cmd) = cmd.downcast::<Action>() {
-                                internal_sx.send(PAInternal::Command(cmd.clone()))?;
+                            if let Some(cmd) = cmd.downcast_ref::<Action>() {
+                                internal_sx.send(PAInternal::Command(Box::new(cmd.clone())))?;
                             }
                             continue;
                         }
-                        if let Ok(_) = cmd.downcast::<Shutdown>() {
+                        if let Some(_) = cmd.downcast_ref::<Shutdown>() {
                             internal_sx.send(PAInternal::Command(Box::new(Action::ExitSignal)))?;
                             sync_pa.await.unwrap();
                             return Ok(());

@@ -1,36 +1,38 @@
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
+static LOGGING_MODULE: &'static str = "Main";
+
 mod action_handlers;
 mod actor_system;
+mod actors;
+mod cli_options;
 mod config;
 mod errors;
-mod event_loop_actor;
 mod help;
-mod input_actor;
 mod models;
 mod multimap;
 mod pa;
-mod pa_actor;
+mod prelude;
 mod ui;
+mod util;
 
 pub use errors::RsError;
 pub use models::{entry, Action};
 
+use prelude::*;
+use cli_options::CliOptions;
 use config::{RsMixerConfig, Variables};
+use actors::*;
 use models::{InputEvent, Style};
 
 use tokio::runtime;
 
 use crossterm::style::ContentStyle;
 
-use log::LevelFilter;
-
 use lazy_static::lazy_static;
 
 use state::Storage;
-
-use gumdrop::Options;
 
 use multimap::MultiMap;
 use std::collections::HashMap;
@@ -45,77 +47,54 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub type Styles = HashMap<Style, ContentStyle>;
 
-#[derive(Debug, Options)]
-struct CliOptions {
-    #[options(help = "filepath to log to (if left empty the program doesn't log)")]
-    log_file: Option<String>,
+fn load_config_and_options() -> Result<()> {
+    info!("Checking command line options and config");
 
-    #[options(count, help = "verbosity. Once - info, twice - debug")]
-    verbose: usize,
-
-    #[options(help = "show this text")]
-    help: bool,
-}
-
-async fn launch() -> Result<(), RsError> {
-    let opts = CliOptions::parse_args_default_or_exit();
-
-    if opts.help {
-        println!("{}", CliOptions::usage());
-        return Ok(());
-    }
-
-    if let Some(file) = opts.log_file {
-        let lvl = match opts.verbose {
-            2 => LevelFilter::Debug,
-            1 => LevelFilter::Info,
-            _ => LevelFilter::Warn,
-        };
-        simple_logging::log_to_file(file, lvl).unwrap();
-    }
+    CliOptions::check()?;
+    debug!("CLI options checked");
 
     let mut config = RsMixerConfig::load()?;
-
     let (styles, bindings, variables) = config.interpret()?;
 
     STYLES.set(styles);
     BINDINGS.set(bindings);
     VARIABLES.set(variables);
+    debug!("Config loaded");
 
     Ok(())
 }
 
-fn main() -> Result<(), RsError> {
+async fn run() -> Result<()> {
+    load_config_and_options()?;
+
+    debug!("Starting actor system");
     let (mut context, worker) = actor_system::new();
+
+    let actor_system_handle = worker.start();
+
+    context.actor("event_loop", &EventLoopActor::new);
+    context.actor("pulseaudio", &PulseActor::new);
+    context.actor("input", &InputActor::new);
+
+    debug!("Actor system started");
+    actor_system_handle.await?
+}
+
+fn main() -> Result<()> {
+    info!("Starting RsMixer");
 
     let mut threaded_rt = runtime::Builder::new()
         .threaded_scheduler()
         .enable_time()
         .build()?;
     threaded_rt.block_on(async {
-        launch().await.unwrap();
-        let x = worker.start();
-        context.actor("event_loop", &event_loop_actor::EventLoop::new);
-        context.actor("pulseaudio", &pa_actor::PulseActor::new);
-        context.actor("input", &input_actor::InputActor::new);
-
-        x.await.unwrap().unwrap();
+        debug!("Tokio runtime started");
+        
+        match run().await {
+            Err(e) => println!("{:#?}", e),
+            _ => {}
+        }
     });
 
     Ok(())
-}
-
-#[macro_export]
-macro_rules! unwrap_or_return {
-    ($x:expr, $y:expr) => {
-        match $x {
-            Some(x) => x,
-            None => {
-                return $y;
-            }
-        }
-    };
-    ($x:expr) => {
-        unwrap_or_return!($x, ())
-    };
 }

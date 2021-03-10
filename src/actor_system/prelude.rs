@@ -1,5 +1,3 @@
-pub use async_trait::async_trait;
-
 pub use super::{
     actor::{Actor, ActorStatus, ContinousActor, EventfulActor},
     context::Ctx,
@@ -7,5 +5,9 @@ pub use super::{
     worker::Worker,
 };
 
-pub type MessageReceiver = tokio::sync::mpsc::UnboundedReceiver<BoxedMessage>;
-pub type MessageSender = tokio::sync::mpsc::UnboundedSender<BoxedMessage>;
+pub use async_trait::async_trait;
+
+use super::{Sender, Receiver};
+
+pub type MessageReceiver = Receiver<BoxedMessage>;
+pub type MessageSender = Sender<BoxedMessage>;

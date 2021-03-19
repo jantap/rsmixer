@@ -6,8 +6,9 @@ use crate::{
 
 use std::time::Duration;
 
+use tokio_stream::StreamExt;
+use tokio_stream::wrappers::{IntervalStream, UnboundedReceiverStream};
 use tokio::{
-    stream::StreamExt,
     sync::mpsc,
     task,
 };
@@ -38,8 +39,8 @@ impl ContinousActor for PulseActor {
     }
 }
 
-async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
-    let mut interval = tokio::time::interval(Duration::from_millis(50));
+async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
+    let mut interval = IntervalStream::new(tokio::time::interval(Duration::from_millis(50)));
 
     let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RsError> {
         match ch.send(msg) {
@@ -48,17 +49,22 @@ async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
         }
     };
     let retry_time = (*VARIABLES).get().pa_retry_time;
+    let mut external_rx = UnboundedReceiverStream::new(external_rx);
 
     loop {
-        let (info_sx, mut info_rx) = mpsc::unbounded_channel();
-        let (internal_actions_sx, mut internal_actions_rx) = mpsc::unbounded_channel();
+        let (info_sx, info_rx) = mpsc::unbounded_channel();
+        let (internal_actions_sx, internal_actions_rx) = mpsc::unbounded_channel();
         let (internal_sx, internal_rx) = cb_channel::unbounded();
-        let (pa_finished_sx, mut pa_finished_rx) = mpsc::unbounded_channel();
+        let (pa_finished_sx, pa_finished_rx) = mpsc::unbounded_channel();
 
         let sync_pa = task::spawn_blocking(move || {
             let res = pa::start(internal_rx, info_sx, internal_actions_sx);
             let _ = pa_finished_sx.send(res);
         });
+
+        let mut pa_finished_rx = UnboundedReceiverStream::new(pa_finished_rx);
+        let mut internal_actions_rx = UnboundedReceiverStream::new(internal_actions_rx);
+        let mut info_rx = UnboundedReceiverStream::new(info_rx);
 
         ctx.send_to("event_loop", Action::ConnectToPulseAudio);
 
@@ -108,7 +114,7 @@ async fn start_async(mut external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
         for i in 0..retry_time {
             ctx.send_to("event_loop", Action::RetryIn(retry_time - i));
 
-            let timeout_part = tokio::time::delay_for(std::time::Duration::from_secs(1));
+            let timeout_part = tokio::time::sleep(std::time::Duration::from_secs(1));
             let event = external_rx.next();
             tokio::select! {
                 _ = timeout_part => {},

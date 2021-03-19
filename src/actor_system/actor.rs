@@ -13,7 +13,6 @@ use crate::prelude::*;
 use std::sync::Arc;
 
 use tokio::{
-    stream::StreamExt,
     sync::RwLock,
     task,
 };
@@ -132,7 +131,7 @@ fn eventful_actor_msg_handler(
     status: ActorStatusLocked,
 ) {
     task::spawn(async move {
-        while let Some(msg) = rx.next().await {
+        while let Some(msg) = rx.recv().await {
             if msg.is::<Shutdown>() {
                 break;
             }

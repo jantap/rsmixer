@@ -85,8 +85,7 @@ async fn run() -> Result<()> {
 fn main() -> Result<()> {
     info!("Starting RsMixer");
 
-    let mut threaded_rt = runtime::Builder::new()
-        .threaded_scheduler()
+    let threaded_rt = runtime::Builder::new_multi_thread()
         .enable_time()
         .build()?;
     threaded_rt.block_on(async {

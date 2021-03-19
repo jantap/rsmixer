@@ -1,6 +1,6 @@
 use crate::{actor_system::prelude::*, Action};
 
-use tokio::stream::StreamExt;
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
 use crossterm::event::{Event, EventStream, MouseEventKind};
 
@@ -32,8 +32,9 @@ impl ContinousActor for InputActor {
     }
 }
 
-pub async fn start(mut rx: MessageReceiver, ctx: Ctx) -> Result<()> {
+pub async fn start(rx: MessageReceiver, ctx: Ctx) -> Result<()> {
     let mut reader = EventStream::new();
+    let mut rx = UnboundedReceiverStream::new(rx);
 
     loop {
         let input_event = reader.next();

@@ -133,7 +133,6 @@ pub fn start(
     // }
 
     callbacks::subscribe(&context, info_sx.clone())?;
-    callbacks::request_current_state(Rc::clone(&context), info_sx.clone())?;
 
     mainloop.borrow_mut().unlock();
 

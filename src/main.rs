@@ -1,3 +1,5 @@
+#![feature(async_closure)]
+
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
@@ -20,11 +22,11 @@ mod util;
 pub use errors::RsError;
 pub use models::{entry, Action};
 
-use prelude::*;
+use actors::*;
 use cli_options::CliOptions;
 use config::{RsMixerConfig, Variables};
-use actors::*;
 use models::{InputEvent, Style};
+use prelude::*;
 
 use tokio::runtime;
 
@@ -72,9 +74,9 @@ async fn run() -> Result<()> {
 
     let actor_system_handle = worker.start();
 
-    context.actor("event_loop", &EventLoopActor::new);
-    context.actor("pulseaudio", &PulseActor::new);
-    context.actor("input", &InputActor::new);
+    EventLoopActor::blueprint().start(&mut context);
+    PulseActor::blueprint().start(&mut context);
+    InputActor::blueprint().start(&mut context);
 
     debug!("Actor system started");
     actor_system_handle.await?
@@ -89,7 +91,7 @@ fn main() -> Result<()> {
         .build()?;
     threaded_rt.block_on(async {
         debug!("Tokio runtime started");
-        
+
         match run().await {
             Err(e) => println!("{:#?}", e),
             _ => {}

@@ -2,8 +2,11 @@ use super::{
     actor::{ActorFactory, ActorStatus},
     actor_entry::ActorEntry,
     messages::SystemMessage,
+    retry_strategy::RetryStrategy,
     Sender,
 };
+
+use crate::prelude::*;
 
 use std::{any::Any, sync::Arc};
 
@@ -33,11 +36,24 @@ impl Ctx {
             .send(Arc::new(SystemMessage::RestartActor(id)));
     }
     pub fn actor(&mut self, id: &'static str, actor_factory: ActorFactory) {
+        self.actor_with_retry_strategy(id, actor_factory, RetryStrategy::default());
+    }
+
+    pub fn actor_with_retry_strategy(
+        &mut self,
+        id: &'static str,
+        actor_factory: ActorFactory,
+        retry_strategy: RetryStrategy,
+    ) {
         let actor = actor_factory();
 
         let _ = self
             .internal_sx
-            .send(Arc::new(SystemMessage::ActorRegistered(id, actor_factory)));
+            .send(Arc::new(SystemMessage::ActorRegistered(
+                id,
+                actor_factory,
+                retry_strategy,
+            )));
 
         let _ = self.internal_sx.send(Arc::new(SystemMessage::ActorUpdate(
             id,
@@ -47,5 +63,15 @@ impl Ctx {
         let sx = self.internal_sx.clone();
 
         super::actor::spawn_actor(sx, id, actor);
+    }
+    pub fn actor_panicked(&self, id: &'static str) {
+        let _ = self
+            .internal_sx
+            .send(Arc::new(SystemMessage::ActorPanicked(id)));
+    }
+    pub fn actor_returned_err(&self, id: &'static str, result: Result<()>) {
+        let _ = self
+            .internal_sx
+            .send(Arc::new(SystemMessage::ActorReturnedErr(id, result)));
     }
 }

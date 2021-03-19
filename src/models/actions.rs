@@ -53,6 +53,7 @@ pub enum Action {
 
     UserInput(Event),
 
+    RequestPulseAudioState,
     MuteEntry(EntryIdentifier, bool),
     MoveEntryToParent(EntryIdentifier, EntryIdentifier),
     ChangeCardProfile(EntryIdentifier, String),

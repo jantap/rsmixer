@@ -4,34 +4,31 @@ use tokio::stream::StreamExt;
 
 use crossterm::event::{Event, EventStream, MouseEventKind};
 
-use tokio::{
-    sync::mpsc,
-    task::{self, JoinHandle},
-};
-
 use anyhow::Result;
 
-pub struct InputActor {
-    task_handle: Option<JoinHandle<Result<()>>>,
-}
+pub struct InputActor {}
 
 impl InputActor {
     pub fn new() -> Actor {
-        Actor::Continous(Box::new(Self { task_handle: None }))
+        Actor::Continous(Box::new(Self {}))
+    }
+
+    pub fn blueprint() -> ActorBlueprint {
+        ActorBlueprint::new("input", &Self::new)
+            .on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
+            .on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
     }
 }
 
 #[async_trait]
 impl ContinousActor for InputActor {
-    async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<()> {
-        self.task_handle = Some(task::spawn(async move { start(events_rx, ctx).await }));
-
+    async fn start(&mut self, _ctx: Ctx) -> Result<()> {
         Ok(())
     }
-    async fn stop(&mut self) {
-        if let Some(handle) = &mut self.task_handle {
-            handle.await;
-        }
+    async fn stop(&mut self) {}
+
+    fn run(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> BoxedResultFuture {
+        Box::pin(start(events_rx, ctx))
     }
 }
 

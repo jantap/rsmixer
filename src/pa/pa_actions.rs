@@ -1,4 +1,4 @@
-use super::common::*;
+use super::{callbacks, common::*};
 
 pub fn handle_command(
     cmd: Action,
@@ -6,6 +6,9 @@ pub fn handle_command(
     info_sx: &mpsc::UnboundedSender<EntryIdentifier>,
 ) -> Option<()> {
     match cmd {
+        Action::RequestPulseAudioState => {
+            callbacks::request_current_state(Rc::clone(&context), info_sx.clone()).unwrap();
+        }
         Action::MuteEntry(ident, mute) => {
             set_mute(ident, mute, &context);
         }

@@ -5,8 +5,6 @@ use crate::{
     ui, Action, STYLES,
 };
 
-use std::any::Any;
-
 use std::io::Stdout;
 
 use anyhow::Result;
@@ -21,15 +19,23 @@ impl EventLoopActor {
     pub fn new() -> Actor {
         Actor::Eventful(Box::new(Self::default()))
     }
+
+    pub fn blueprint() -> ActorBlueprint {
+        ActorBlueprint::new("event_loop", &Self::new)
+            .on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
+            .on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
+    }
 }
 
 #[async_trait]
 impl EventfulActor for EventLoopActor {
-    async fn start(&mut self, _ctx: Ctx) -> Result<()> {
+    async fn start(&mut self, ctx: Ctx) -> Result<()> {
         self.stdout = Some(ui::prepare_terminal().unwrap());
         self.state = RSState::default();
         self.state.ui.buffer.set_styles((*STYLES).get().clone());
         self.state.redraw.resize = true;
+
+        ctx.send_to("pulseaudio", Action::RequestPulseAudioState);
 
         Ok(())
     }

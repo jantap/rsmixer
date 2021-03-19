@@ -1,10 +1,10 @@
 use super::{
     actor::{ActorFactory, ActorStatus, ActorType},
-    actor_entry::{self, ActorEntry},
-    error::Error,
+    actor_entry::ActorEntry,
+    context::Ctx,
     messages::{BoxedMessage, SystemMessage},
-    Receiver, Sender,
-    LOGGING_MODULE,
+    retry_strategy::RetryStrategy,
+    Receiver, Sender, LOGGING_MODULE,
 };
 
 use crate::prelude::*;
@@ -13,11 +13,15 @@ use std::{collections::HashMap, sync::Arc};
 
 use tokio::{sync::RwLock, task};
 
+use futures::future::{AbortHandle, Abortable};
+
 pub struct Worker {
     entries: HashMap<&'static str, ActorEntry>,
     factories: HashMap<&'static str, ActorFactory>,
+    retry_strategies: HashMap<&'static str, RetryStrategy>,
     internal_rx: Arc<RwLock<Receiver<Arc<SystemMessage>>>>,
     internal_sx: Sender<Arc<SystemMessage>>,
+    tasks: Vec<AbortHandle>,
 }
 
 impl Worker {
@@ -25,8 +29,10 @@ impl Worker {
         Self {
             entries: HashMap::new(),
             factories: HashMap::new(),
+            retry_strategies: HashMap::new(),
             internal_sx: sx,
             internal_rx: Arc::new(RwLock::new(rx)),
+            tasks: Vec::new(),
         }
     }
 
@@ -45,8 +51,9 @@ impl Worker {
                     }
                 };
                 match msg {
-                    SystemMessage::ActorRegistered(id, factory) => {
+                    SystemMessage::ActorRegistered(id, factory, retry_strategy) => {
                         self.factories.insert(id, factory);
+                        self.retry_strategies.insert(id, retry_strategy);
                     }
                     SystemMessage::ActorUpdate(id, mut actor) => {
                         if let Some(a) = self.entries.get(id) {
@@ -56,6 +63,12 @@ impl Worker {
                     }
                     SystemMessage::SendMsg(id, m) => {
                         self.send_to(id, m).await;
+                    }
+                    SystemMessage::ActorPanicked(id) => {
+                        self.handle_actor_panic(id);
+                    }
+                    SystemMessage::ActorReturnedErr(id, result) => {
+                        self.handle_actor_returned_err(id, result);
                     }
                     SystemMessage::RestartActor(id) => {
                         self.restart_actor(id).await;
@@ -84,37 +97,43 @@ impl Worker {
     }
 
     async fn send_to_eventful(&mut self, id: &'static str, msg: BoxedMessage) {
-        {
-            let cached = self.cached_messages_for(id);
-            let mut cached = cached.write().await;
-
-            cached.push(msg);
-        }
-
+        let mut sx = None;
         if let Some(act_entry) = self.entries.get_mut(id) {
-            if act_entry.actor.is_some() && act_entry.actor_type == Some(ActorType::Eventful) {
-                let ready = {
-                    let status = act_entry.status.read().await;
-                    *status == ActorStatus::Ready
-                };
-                if ready {
-                    if let Some(a) = &mut act_entry.actor {
-                        let ctx = self.internal_sx.clone().into();
-                        let a = Arc::clone(a);
-                        let c = Arc::clone(&act_entry.cached_messages);
-                        let s = Arc::clone(&act_entry.status);
-
-                        task::spawn(async move {
-                            actor_entry::handle_until_queue_empty(id, a, c, s, ctx).await;
-                        });
-                    }
+            if act_entry.actor.is_some()
+                && act_entry.actor_type == Some(ActorType::Eventful)
+                && act_entry.status.get().await == ActorStatus::Ready
+            {
+                if let Some(s) = &act_entry.event_sx {
+                    sx = Some(s.clone());
                 }
             }
         }
+        if let Some(sx) = sx {
+            let cached = self.cached_messages_for(id);
+            let mut cached = cached.write().await;
+            let mut to_send = vec![msg];
+
+            while let Some(c) = cached.pop() {
+                to_send.push(c);
+            }
+
+            while let Some(c) = to_send.pop() {
+                let _ = sx.send(c);
+            }
+            return;
+        }
+
+        let cached = self.cached_messages_for(id);
+        let mut cached = cached.write().await;
+
+        cached.push(msg);
     }
 
     async fn shutdown(&mut self) {
         info!("Shutting down");
+        for h in &mut self.tasks {
+            h.abort();
+        }
         for (_, entry) in &mut self.entries {
             {
                 let mut cached = entry.cached_messages.write().await;
@@ -142,6 +161,47 @@ impl Worker {
             }
             None => {}
         };
+    }
+
+    fn handle_actor_panic(&mut self, id: &'static str) {
+        if let Some(strategy_orig) = self.retry_strategies.get_mut(id) {
+            let ctx: Ctx = self.internal_sx.clone().into();
+            let strategy = (strategy_orig.on_panic)(strategy_orig.retry_count);
+
+            strategy_orig.retry_count += 1;
+
+            let (handle, registration) = AbortHandle::new_pair();
+            self.tasks.push(handle);
+
+            task::spawn(Abortable::new(
+                async move {
+                    if strategy.await {
+                        ctx.restart_actor(id);
+                    }
+                },
+                registration,
+            ));
+        }
+    }
+    fn handle_actor_returned_err(&mut self, id: &'static str, result: Result<()>) {
+        if let Some(strategy_orig) = self.retry_strategies.get_mut(id) {
+            let ctx: Ctx = self.internal_sx.clone().into();
+            let strategy = (strategy_orig.on_error)((strategy_orig.retry_count, result));
+
+            strategy_orig.retry_count += 1;
+
+            let (handle, registration) = AbortHandle::new_pair();
+            self.tasks.push(handle);
+
+            task::spawn(Abortable::new(
+                async move {
+                    if strategy.await {
+                        ctx.restart_actor(id);
+                    }
+                },
+                registration,
+            ));
+        }
     }
 
     fn cached_messages_for(&mut self, id: &'static str) -> Arc<RwLock<Vec<BoxedMessage>>> {

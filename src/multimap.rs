@@ -1,7 +1,5 @@
 use linked_hash_map::LinkedHashMap;
-use serde::de::{SeqAccess, Visitor};
-use serde::private::de::{Content, ContentRefDeserializer};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{private::de::{Content, ContentRefDeserializer}, Deserialize, Deserializer, Serialize, Serializer};
 use std::hash::Hash;
 
 #[derive(Clone)]

@@ -1,3 +1,2 @@
-
-pub use crate::{error, warn, info, debug};
+pub use crate::{debug, error, info, warn};
 pub use anyhow::{Context, Result};

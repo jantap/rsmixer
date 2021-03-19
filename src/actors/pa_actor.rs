@@ -9,34 +9,32 @@ use std::time::Duration;
 use tokio::{
     stream::StreamExt,
     sync::mpsc,
-    task::{self, JoinHandle},
+    task,
 };
 
 use anyhow::Result;
 
-pub struct PulseActor {
-    task_handle: Option<JoinHandle<Result<()>>>,
-}
+pub struct PulseActor {}
 
 impl PulseActor {
     pub fn new() -> Actor {
-        Actor::Continous(Box::new(Self { task_handle: None }))
+        Actor::Continous(Box::new(Self {}))
+    }
+    pub fn blueprint() -> ActorBlueprint {
+        ActorBlueprint::new("pulseaudio", &Self::new)
+            .on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
+            .on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
     }
 }
 
 #[async_trait]
 impl ContinousActor for PulseActor {
-    async fn start(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> Result<()> {
-        self.task_handle = Some(task::spawn(
-            async move { start_async(events_rx, ctx).await },
-        ));
-
+    async fn start(&mut self, _ctx: Ctx) -> Result<()> {
         Ok(())
     }
-    async fn stop(&mut self) {
-        if let Some(handle) = &mut self.task_handle {
-            handle.await;
-        }
+    async fn stop(&mut self) {}
+    fn run(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> BoxedResultFuture {
+        Box::pin(start_async(events_rx, ctx))
     }
 }
 

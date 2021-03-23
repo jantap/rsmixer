@@ -1,44 +1,43 @@
-use crate::{models::PageType, Action, RsError};
+use crate::{models::PageType, models::UserAction, RsError};
 
 use std::convert::TryFrom;
 
-impl ToString for Action {
+impl ToString for UserAction {
     fn to_string(&self) -> String {
         match self {
-            Action::ExitSignal => "exit".to_string(),
-            Action::RequestMute(_) => "mute".to_string(),
-            Action::ChangePage(PageType::Output) => "show_output".to_string(),
-            Action::ChangePage(PageType::Input) => "show_input".to_string(),
-            Action::ChangePage(PageType::Cards) => "show_cards".to_string(),
-            Action::OpenContextMenu(_) => "context_menu".to_string(),
-            Action::ShowHelp => "help".to_string(),
-            Action::InputVolumeValue => "input_volume_value".to_string(),
-            Action::RequstChangeVolume(num, _) => {
+            UserAction::RequestQuit => "exit".to_string(),
+            UserAction::RequestMute(_) => "mute".to_string(),
+            UserAction::ChangePage(PageType::Output) => "show_output".to_string(),
+            UserAction::ChangePage(PageType::Input) => "show_input".to_string(),
+            UserAction::ChangePage(PageType::Cards) => "show_cards".to_string(),
+            UserAction::OpenContextMenu(_) => "context_menu".to_string(),
+            UserAction::ShowHelp => "help".to_string(),
+            UserAction::RequstChangeVolume(num, _) => {
                 if *num < 0 {
                     format!("lower_volume({})", num)
                 } else {
                     format!("raise_volume({})", num)
                 }
             }
-            Action::MoveUp(num) => format!("up({})", num),
-            Action::MoveDown(num) => format!("down({})", num),
-            Action::MoveLeft => "left".to_string(),
-            Action::MoveRight => "right".to_string(),
-            Action::CyclePages(1) => "cycle_pages_forward".to_string(),
-            Action::CyclePages(-1) => "cycle_pages_backward".to_string(),
-            Action::CloseContextMenu => "close_context_menu".to_string(),
-            Action::Confirm => "confirm".to_string(),
-            Action::Hide(_) => "hide".to_string(),
-
-            _ => "".to_string(),
+            UserAction::MoveUp(num) => format!("up({})", num),
+            UserAction::MoveDown(num) => format!("down({})", num),
+            UserAction::MoveLeft => "left".to_string(),
+            UserAction::MoveRight => "right".to_string(),
+            UserAction::CyclePages(x) => if *x > 0 {
+                "cycle_pages_forward".to_string()
+            }else{ "cycle_pages_backward".to_string()}
+            UserAction::CloseContextMenu => "close_context_menu".to_string(),
+            UserAction::Confirm => "confirm".to_string(),
+            UserAction::Hide(_) => "hide".to_string(),
+            UserAction::SetSelected(_) => "unsupported".to_string(),
         }
     }
 }
 
-impl TryFrom<String> for Action {
+impl TryFrom<String> for UserAction {
     type Error = RsError;
 
-    fn try_from(st: String) -> Result<Action, Self::Error> {
+    fn try_from(st: String) -> Result<UserAction, Self::Error> {
         let mut s = &st[..];
         let mut a = String::new();
 
@@ -58,14 +57,13 @@ impl TryFrom<String> for Action {
         }
 
         let x = match s {
-            "exit" => Action::ExitSignal,
-            "mute" => Action::RequestMute(None),
-            "show_output" => Action::ChangePage(PageType::Output),
-            "show_input" => Action::ChangePage(PageType::Input),
-            "show_cards" => Action::ChangePage(PageType::Cards),
-            "context_menu" => Action::OpenContextMenu(None),
-            "help" => Action::ShowHelp,
-            "input_volume_value" => Action::InputVolumeValue,
+            "exit" => UserAction::RequestQuit,
+            "mute" => UserAction::RequestMute(None),
+            "show_output" => UserAction::ChangePage(PageType::Output),
+            "show_input" => UserAction::ChangePage(PageType::Input),
+            "show_cards" => UserAction::ChangePage(PageType::Cards),
+            "context_menu" => UserAction::OpenContextMenu(None),
+            "help" => UserAction::ShowHelp,
             "lower_volume" => {
                 let a = match a.parse::<i16>() {
                     Ok(x) => x,
@@ -73,7 +71,7 @@ impl TryFrom<String> for Action {
                         return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
-                Action::RequstChangeVolume(-a, None)
+                UserAction::RequstChangeVolume(-a, None)
             }
             "raise_volume" => {
                 let a = match a.parse::<i16>() {
@@ -82,7 +80,7 @@ impl TryFrom<String> for Action {
                         return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
-                Action::RequstChangeVolume(a, None)
+                UserAction::RequstChangeVolume(a, None)
             }
             "up" => {
                 let a = match a.parse::<u16>() {
@@ -91,7 +89,7 @@ impl TryFrom<String> for Action {
                         return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
-                Action::MoveUp(a)
+                UserAction::MoveUp(a)
             }
             "down" => {
                 let a = match a.parse::<u16>() {
@@ -100,15 +98,15 @@ impl TryFrom<String> for Action {
                         return Err(RsError::ActionBindingError(st.clone()));
                     }
                 };
-                Action::MoveDown(a)
+                UserAction::MoveDown(a)
             }
-            "left" => Action::MoveLeft,
-            "right" => Action::MoveRight,
-            "cycle_pages_forward" => Action::CyclePages(1),
-            "cycle_pages_backward" => Action::CyclePages(-1),
-            "close_context_menu" => Action::CloseContextMenu,
-            "confirm" => Action::Confirm,
-            "hide" => Action::Hide(None),
+            "left" => UserAction::MoveLeft,
+            "right" => UserAction::MoveRight,
+            "cycle_pages_forward" => UserAction::CyclePages(1),
+            "cycle_pages_backward" => UserAction::CyclePages(-1),
+            "close_context_menu" => UserAction::CloseContextMenu,
+            "confirm" => UserAction::Confirm,
+            "hide" => UserAction::Hide(None),
             _ => {
                 return Err(RsError::ActionBindingError(st.clone()));
             }

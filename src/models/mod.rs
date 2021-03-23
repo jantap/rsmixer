@@ -10,7 +10,7 @@ mod style;
 mod ui_mode;
 
 pub use self::state::RSState;
-pub use actions::Action;
+pub use actions::*;
 pub use context_menus::{ContextMenu, ContextMenuEffect, ContextMenuOption};
 pub use input_event::{InputEvent, InputEventKind};
 pub use page_entries::PageEntries;

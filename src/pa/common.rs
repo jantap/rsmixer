@@ -2,7 +2,8 @@ pub use super::{monitor::Monitors, PAInternal, SPEC};
 
 pub use crate::{
     entry::{EntryIdentifier, EntryType},
-    Action, RsError,
+    models::{EntryUpdate, PulseAudioAction},
+    RsError,
 };
 
 pub use std::{cell::RefCell, collections::HashMap, rc::Rc};

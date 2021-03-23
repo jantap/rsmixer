@@ -9,13 +9,13 @@ use lazy_static::lazy_static;
 use state::Storage;
 
 lazy_static! {
-    pub static ref ACTIONS_SX: Storage<mpsc::UnboundedSender<Action>> = Storage::new();
+    pub static ref ACTIONS_SX: Storage<mpsc::UnboundedSender<EntryUpdate>> = Storage::new();
 }
 
 pub fn start(
     internal_rx: cb_channel::Receiver<PAInternal>,
     info_sx: mpsc::UnboundedSender<EntryIdentifier>,
-    actions_sx: mpsc::UnboundedSender<Action>,
+    actions_sx: mpsc::UnboundedSender<EntryUpdate>,
 ) -> Result<(), RsError> {
     (*ACTIONS_SX).set(actions_sx);
 
@@ -133,6 +133,7 @@ pub fn start(
     // }
 
     callbacks::subscribe(&context, info_sx.clone())?;
+    callbacks::request_current_state(context.clone(), info_sx.clone())?;
 
     mainloop.borrow_mut().unlock();
 
@@ -167,7 +168,7 @@ pub fn start(
                     break;
                 }
 
-                if let Action::CreateMonitors(mons) = cmd.clone() {
+                if let PulseAudioAction::CreateMonitors(mons) = cmd.clone() {
                     last_targets = mons;
                     monitors.filter(&mainloop, &context, &last_targets);
                 }

@@ -2,7 +2,7 @@ use crate::{
     actor_system::Ctx,
     entry::{Entry, EntryIdentifier, EntryKind, EntryType},
     ui::widgets::ToolWindowWidget,
-    Action,
+    models::PulseAudioAction
 };
 
 use crate::{
@@ -111,25 +111,25 @@ impl ContextMenu {
         }
     }
 
-    pub async fn resolve(&self, ident: EntryIdentifier, ctx: &Ctx) -> ContextMenuEffect {
+    pub fn resolve(&self, ident: EntryIdentifier, ctx: &Ctx) -> ContextMenuEffect {
         match &self.options[self.selected] {
             ContextMenuOption::Move => {
                 return ContextMenuEffect::MoveEntry;
             }
             ContextMenuOption::MoveToEntry(entry, _) => {
-                ctx.send_to("event_loop", Action::MoveEntryToParent(ident, *entry));
+                ctx.send_to("pulseaudio", PulseAudioAction::MoveEntryToParent(ident, *entry));
             }
             ContextMenuOption::ChangeCardProfile(name, _) => {
-                ctx.send_to("event_loop", Action::ChangeCardProfile(ident, name.clone()));
+                ctx.send_to("pulseaudio", PulseAudioAction::ChangeCardProfile(ident, name.clone()));
             }
             ContextMenuOption::Suspend => {
-                ctx.send_to("event_loop", Action::SetSuspend(ident, true));
+                ctx.send_to("pulseaudio", PulseAudioAction::SetSuspend(ident, true));
             }
             ContextMenuOption::Resume => {
-                ctx.send_to("event_loop", Action::SetSuspend(ident, false));
+                ctx.send_to("pulseaudio", PulseAudioAction::SetSuspend(ident, false));
             }
             ContextMenuOption::Kill => {
-                ctx.send_to("event_loop", Action::KillEntry(ident));
+                ctx.send_to("pulseaudio", PulseAudioAction::KillEntry(ident));
             }
             _ => {}
         };

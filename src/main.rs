@@ -1,11 +1,12 @@
 #![feature(async_closure)]
+#![feature(btree_retain)]
 
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
 static LOGGING_MODULE: &'static str = "Main";
 
-mod action_handlers;
+mod action_handlers2;
 mod actor_system;
 mod actors;
 mod cli_options;
@@ -20,12 +21,12 @@ mod ui;
 mod util;
 
 pub use errors::RsError;
-pub use models::{entry, Action};
+pub use models::entry;
 
 use actors::*;
 use cli_options::CliOptions;
 use config::{RsMixerConfig, Variables};
-use models::{InputEvent, Style};
+use models::{InputEvent, Style, UserAction};
 use prelude::*;
 
 use tokio::runtime;
@@ -42,7 +43,7 @@ use std::collections::HashMap;
 lazy_static! {
     pub static ref STYLES: Storage<Styles> = Storage::new();
     pub static ref VARIABLES: Storage<Variables> = Storage::new();
-    pub static ref BINDINGS: Storage<MultiMap<InputEvent, Action>> = Storage::new();
+    pub static ref BINDINGS: Storage<MultiMap<InputEvent, UserAction>> = Storage::new();
 }
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");

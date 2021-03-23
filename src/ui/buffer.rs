@@ -2,7 +2,7 @@ use crate::models::Style;
 
 use super::Rect;
 
-use std::{collections::HashMap, io::Write};
+use std::{collections::{HashMap, BTreeMap}, io::Write};
 
 use crossterm::{
     cursor, queue,
@@ -30,7 +30,7 @@ pub struct Buffer {
     pub width: u16,
     pub height: u16,
     pixels: Vec<Pixel>,
-    changes: HashMap<usize, Pixel>,
+    changes: BTreeMap<usize, Pixel>,
     pub styles: HashMap<Style, ContentStyle>,
 }
 
@@ -40,7 +40,7 @@ impl Default for Buffer {
             width: 0,
             height: 0,
             pixels: Vec::new(),
-            changes: HashMap::new(),
+            changes: BTreeMap::new(),
             styles: HashMap::new(),
         }
     }
@@ -69,7 +69,7 @@ impl Buffer {
 
         self.changes = changes;
 
-        let changes = self.changes.keys().sorted().collect_vec();
+        let changes = self.changes.keys().collect_vec();
 
         let mut last = None;
         let mut i = 0;

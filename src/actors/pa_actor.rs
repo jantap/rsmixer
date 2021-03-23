@@ -1,5 +1,6 @@
 use crate::{
     actor_system::prelude::*,
+    models::{PAStatus, PulseAudioAction, EntryUpdate},
     pa::{self, common::*},
     VARIABLES,
 };
@@ -53,7 +54,7 @@ async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
 
     loop {
         let (info_sx, info_rx) = mpsc::unbounded_channel();
-        let (internal_actions_sx, internal_actions_rx) = mpsc::unbounded_channel();
+        let (internal_actions_sx, internal_actions_rx) = mpsc::unbounded_channel::<EntryUpdate>();
         let (internal_sx, internal_rx) = cb_channel::unbounded();
         let (pa_finished_sx, pa_finished_rx) = mpsc::unbounded_channel();
 
@@ -66,7 +67,7 @@ async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
         let mut internal_actions_rx = UnboundedReceiverStream::new(internal_actions_rx);
         let mut info_rx = UnboundedReceiverStream::new(info_rx);
 
-        ctx.send_to("event_loop", Action::ConnectToPulseAudio);
+        ctx.send_to("event_loop", PAStatus::ConnectToPulseAudio);
 
         loop {
             let res = external_rx.next();
@@ -78,14 +79,14 @@ async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
             tokio::select! {
                 r = res => {
                     if let Some(cmd) = r {
-                        if cmd.is::<Action>() {
-                            if let Some(cmd) = cmd.downcast_ref::<Action>() {
+                        if cmd.is::<PulseAudioAction>() {
+                            if let Some(cmd) = cmd.downcast_ref::<PulseAudioAction>() {
                                 internal_sx.send(PAInternal::Command(Box::new(cmd.clone())))?;
                             }
                             continue;
                         }
                         if let Some(_) = cmd.downcast_ref::<Shutdown>() {
-                            internal_sx.send(PAInternal::Command(Box::new(Action::ExitSignal)))?;
+                            internal_sx.send(PAInternal::Command(Box::new(PulseAudioAction::Shutdown)))?;
                             sync_pa.await.unwrap();
                             return Ok(());
                         }
@@ -109,10 +110,9 @@ async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
                 }
             };
         }
-        ctx.send_to("event_loop", Action::PulseAudioDisconnected);
-        ctx.send_to("event_loop", Action::PulseAudioDisconnected2);
+        ctx.send_to("event_loop", PAStatus::PulseAudioDisconnected);
         for i in 0..retry_time {
-            ctx.send_to("event_loop", Action::RetryIn(retry_time - i));
+            ctx.send_to("event_loop", PAStatus::RetryIn(retry_time - i));
 
             let timeout_part = tokio::time::sleep(std::time::Duration::from_secs(1));
             let event = external_rx.next();

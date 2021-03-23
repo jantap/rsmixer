@@ -5,7 +5,7 @@ mod variables;
 
 pub use variables::Variables;
 
-use crate::{models::InputEvent, multimap::MultiMap, Action, RsError, Styles, VERSION};
+use crate::{models::{UserAction, InputEvent}, multimap::MultiMap, RsError, Styles, VERSION};
 
 use std::{collections::HashMap, convert::TryFrom};
 
@@ -40,7 +40,7 @@ impl RsMixerConfig {
 
     pub fn interpret(
         &mut self,
-    ) -> Result<(Styles, MultiMap<InputEvent, Action>, Variables), RsError> {
+    ) -> Result<(Styles, MultiMap<InputEvent, UserAction>, Variables), RsError> {
         self.compatibility_layer()?;
 
         let bindings = self.bindings()?;
@@ -93,14 +93,14 @@ impl RsMixerConfig {
         Ok((styles, bindings, Variables::new(self)))
     }
 
-    fn bindings(&self) -> Result<MultiMap<InputEvent, Action>, RsError> {
-        let mut bindings: MultiMap<InputEvent, Action> = MultiMap::new();
+    fn bindings(&self) -> Result<MultiMap<InputEvent, UserAction>, RsError> {
+        let mut bindings: MultiMap<InputEvent, UserAction> = MultiMap::new();
 
         for (k, cs) in self.bindings.iter_vecs() {
             for c in cs {
                 bindings.insert(
                     keys_mouse::try_string_to_event(&k)?,
-                    Action::try_from(c.clone())?,
+                    UserAction::try_from(c.clone())?,
                 );
             }
         }
@@ -130,27 +130,27 @@ impl RsMixerConfig {
             return Ok(());
         }
 
-        let mut parsed: MultiMap<InputEvent, (Action, String)> = MultiMap::new();
+        let mut parsed: MultiMap<InputEvent, (UserAction, String)> = MultiMap::new();
 
         for (k, cs) in self.bindings.iter_vecs() {
             for c in cs {
                 parsed.insert(
                     keys_mouse::try_string_to_event(&k)?,
-                    (Action::try_from(c.clone())?, k.clone()),
+                    (UserAction::try_from(c.clone())?, k.clone()),
                 );
             }
         }
 
         if parsed
             .iter()
-            .find(|(_, v)| (**v).0 == Action::Confirm)
+            .find(|(_, v)| (**v).0 == UserAction::Confirm)
             .is_none()
         {
             if let Some((_, (_, k))) = parsed
                 .iter()
-                .find(|(_, v)| (**v).0 == Action::OpenContextMenu(None))
+                .find(|(_, v)| (**v).0 == UserAction::OpenContextMenu(None))
             {
-                self.bindings.insert(k.clone(), Action::Confirm.to_string());
+                self.bindings.insert(k.clone(), UserAction::Confirm.to_string());
             }
         }
 
@@ -179,8 +179,6 @@ impl std::default::Default for RsMixerConfig {
         bindings.insert("shift+l".to_string(), "raise_volume(15)".to_string());
 
         bindings.insert("m".to_string(), "mute".to_string());
-
-        bindings.insert("e".to_string(), "input_volume_value".to_string());
 
         bindings.insert("1".to_string(), "show_output".to_string());
         bindings.insert("2".to_string(), "show_input".to_string());

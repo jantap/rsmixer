@@ -70,7 +70,7 @@ impl Monitors {
                 self.errors.remove(&ident);
                 (*ACTIONS_SX)
                     .get()
-                    .send(Action::EntryRemoved(ident))
+                    .send(EntryUpdate::EntryRemoved(ident))
                     .unwrap();
             }
         }
@@ -234,7 +234,7 @@ fn create(
                                 let data_slice = slice_to_4_bytes(&data[(size-4) .. size]);
                                 let peak = f32::from_ne_bytes(data_slice).abs();
 
-                                (*ACTIONS_SX).get().send(Action::PeakVolumeUpdate(ident, peak)).unwrap();
+                                (*ACTIONS_SX).get().send(EntryUpdate::PeakVolumeUpdate(ident, peak)).unwrap();
 
                                 unsafe { (*(*stream_ref.as_ptr()).as_ptr()).discard().unwrap(); };
                             },

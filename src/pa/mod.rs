@@ -13,7 +13,7 @@ use lazy_static::lazy_static;
 #[derive(Debug)]
 pub enum PAInternal {
     Tick,
-    Command(Box<Action>),
+    Command(Box<PulseAudioAction>),
     AskInfo(EntryIdentifier),
 }
 

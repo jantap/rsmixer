@@ -1,6 +1,6 @@
 use super::{common::*, sync_loop::ACTIONS_SX};
 
-use crate::entry::{CardProfile, Entry};
+use crate::{models::EntryUpdate, entry::{CardProfile, Entry}};
 
 use crate::ui::Rect;
 
@@ -62,7 +62,7 @@ pub fn subscribe(
                         info!("[PAInterface] {:?} removed", entry_type);
                         (*ACTIONS_SX)
                             .get()
-                            .send(Action::EntryRemoved(EntryIdentifier::new(
+                            .send(EntryUpdate::EntryRemoved(EntryIdentifier::new(
                                 entry_type, index,
                             )))
                             .unwrap();
@@ -198,7 +198,7 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
 
         (*ACTIONS_SX)
             .get()
-            .send(Action::EntryUpdate(ident, Box::new(entry)))
+            .send(EntryUpdate::EntryUpdate(ident, Box::new(entry)))
             .unwrap();
     }
 }
@@ -228,7 +228,7 @@ pub fn on_sink_info(
 
             (*ACTIONS_SX)
                 .get()
-                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .send(EntryUpdate::EntryUpdate(ident, Box::new(entry)))
                 .unwrap();
         }
     }
@@ -267,7 +267,7 @@ pub fn on_sink_input_info(
 
             (*ACTIONS_SX)
                 .get()
-                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .send(EntryUpdate::EntryUpdate(ident, Box::new(entry)))
                 .unwrap();
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Sink, i.sink));
         }
@@ -299,7 +299,7 @@ pub fn on_source_info(
 
             (*ACTIONS_SX)
                 .get()
-                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .send(EntryUpdate::EntryUpdate(ident, Box::new(entry)))
                 .unwrap();
         }
     }
@@ -337,7 +337,7 @@ pub fn on_source_output_info(
 
             (*ACTIONS_SX)
                 .get()
-                .send(Action::EntryUpdate(ident, Box::new(entry)))
+                .send(EntryUpdate::EntryUpdate(ident, Box::new(entry)))
                 .unwrap();
             let _ = info_sx.send(EntryIdentifier::new(EntryType::Source, i.index));
         }

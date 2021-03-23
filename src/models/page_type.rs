@@ -1,9 +1,6 @@
 use super::UIMode;
 
-use crate::{
-    entry::{Entries, Entry, EntryIdentifier, EntryKind, EntryType, HiddenStatus},
-    ui::util::parent_child_types,
-};
+use crate:: entry::{Entries, Entry, EntryIdentifier, EntryKind, EntryType, HiddenStatus};
 
 use std::{fmt::Display, iter};
 
@@ -40,6 +37,13 @@ impl From<i8> for PageType {
     }
 }
 impl PageType {
+    pub fn parent_child_types(&self) -> (EntryType, EntryType) {
+        match self {
+            Self::Output => (EntryType::Sink, EntryType::SinkInput),
+            Self::Input => (EntryType::Source, EntryType::SourceOutput),
+            Self::Cards => (EntryType::Card, EntryType::Card),
+        }
+    }
     pub fn as_str(&self) -> &'static str {
         match self {
             PageType::Output => "Output",
@@ -77,7 +81,7 @@ impl PageType {
             return Box::new(entries.iter_type(EntryType::Card));
         }
 
-        let (parent, child) = parent_child_types(*self);
+        let (parent, child) = self.parent_child_types();
 
         if let UIMode::MoveEntry(ident, parent) = ui_mode {
             let en = entries.get(ident).unwrap();

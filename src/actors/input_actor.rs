@@ -1,4 +1,4 @@
-use crate::{actor_system::prelude::*, Action};
+use crate::{actor_system::prelude::*, models::{UserInput, ResizeScreen}};
 
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
@@ -47,15 +47,15 @@ pub async fn start(rx: MessageReceiver, ctx: Ctx) -> Result<()> {
 
                 match ev {
                     Event::Key(_) => {
-                        ctx.send_to("event_loop",Action::UserInput(ev));
+                        ctx.send_to("event_loop", UserInput::new(ev));
                     }
                     Event::Mouse(me) => {
                         if MouseEventKind::Moved != me.kind {
-                            ctx.send_to("event_loop", Action::UserInput(ev));
+                            ctx.send_to("event_loop", UserInput::new(ev));
                         }
                     }
                     Event::Resize(_, _) => {
-                        ctx.send_to("event_loop", Action::Redraw);
+                        ctx.send_to("event_loop", ResizeScreen::new());
                     }
                 };
             }

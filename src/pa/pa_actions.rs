@@ -1,33 +1,33 @@
 use super::{callbacks, common::*};
 
 pub fn handle_command(
-    cmd: Action,
+    cmd: PulseAudioAction,
     context: &Rc<RefCell<Context>>,
     info_sx: &mpsc::UnboundedSender<EntryIdentifier>,
 ) -> Option<()> {
     match cmd {
-        Action::RequestPulseAudioState => {
+        PulseAudioAction::RequestPulseAudioState => {
             callbacks::request_current_state(Rc::clone(&context), info_sx.clone()).unwrap();
         }
-        Action::MuteEntry(ident, mute) => {
+        PulseAudioAction::MuteEntry(ident, mute) => {
             set_mute(ident, mute, &context);
         }
-        Action::MoveEntryToParent(ident, parent) => {
+        PulseAudioAction::MoveEntryToParent(ident, parent) => {
             move_entry_to_parent(ident, parent, &context, info_sx.clone());
         }
-        Action::ChangeCardProfile(ident, profile) => {
+        PulseAudioAction::ChangeCardProfile(ident, profile) => {
             change_card_profile(ident, profile, &context);
         }
-        Action::SetVolume(ident, vol) => {
+        PulseAudioAction::SetVolume(ident, vol) => {
             set_volume(ident, vol, &context);
         }
-        Action::SetSuspend(ident, suspend) => {
+        PulseAudioAction::SetSuspend(ident, suspend) => {
             set_suspend(ident, suspend, &context);
         }
-        Action::KillEntry(ident) => {
+        PulseAudioAction::KillEntry(ident) => {
             kill_entry(ident, &context);
         }
-        Action::ExitSignal => {
+        PulseAudioAction::Shutdown => {
             //@TODO disconnect monitors
             return None;
         }

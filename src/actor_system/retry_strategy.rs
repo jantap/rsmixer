@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use std::pin::Pin;
+use std::{marker::PhantomData, pin::Pin};
 
 use futures::Future;
 

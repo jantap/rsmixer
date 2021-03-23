@@ -18,14 +18,6 @@ pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
     }
 }
 
-pub fn parent_child_types(page: PageType) -> (EntryType, EntryType) {
-    match page {
-        PageType::Output => (EntryType::Sink, EntryType::SinkInput),
-        PageType::Input => (EntryType::Source, EntryType::SourceOutput),
-        PageType::Cards => (EntryType::Card, EntryType::Card),
-    }
-}
-
 pub fn prepare_terminal() -> Result<io::Stdout, RsError> {
     let mut stdout = io::stdout();
     crossterm::execute!(

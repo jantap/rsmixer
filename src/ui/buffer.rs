@@ -58,69 +58,53 @@ impl Buffer {
     }
 
     pub fn draw_changes<W: Write>(&mut self, stdout: &mut W) -> Result<(), crossterm::ErrorKind> {
-        let mut changes = self.changes.clone();
-        changes.retain(|k, v| {
+        let mut last_style = None;
+        let mut last_coord = None;
+        let mut text = "".to_string();
+
+        for (k, v) in self.changes.iter() {
             if let Some(pixel) = self.pixels.get(*k) {
-                *pixel != *v
+                if *pixel != *v {
+                    self.pixels[*k] = *v;
+                } else {
+                    continue;
+                }
             } else {
-                false
-            }
-        });
-
-        self.changes = changes;
-
-        let changes = self.changes.keys().collect_vec();
-
-        let mut last = None;
-        let mut i = 0;
-        while i < changes.len() {
-            if self.pixels.get(*changes[i]).is_none() {
-                i += 1;
                 continue;
             }
 
-            let start_i = i;
+            if last_style != Some(v.style) || *k == 0 || last_coord != Some(*k - 1) {
+                if !text.is_empty() {
+                    let style = match self.styles.get(&last_style.unwrap()) {
+                        Some(s) => *s,
+                        None => ContentStyle::default(),
+                    };
 
-            // decide whether moving the cursor is needed
-            if last.is_none() || last.unwrap() + 1 != *changes[i] {
-                let (x, y) = self.coord_to_xy(*changes[i]);
-                queue!(stdout, cursor::MoveTo(x, y))?;
-            }
-
-            // take as many changes with the same style as possible
-
-            let style = self.changes.get(changes[i]).unwrap().style;
-            while i + 1 < changes.len() {
-                if changes[i] + 1 != *changes[i + 1]
-                    || self.pixels.get(*changes[i + 1]).is_none()
-                    || self.changes.get(changes[i + 1]).unwrap().style != style
-                {
-                    break;
+                    queue!(stdout, style::PrintStyledContent(style.apply(text)))?;
                 }
 
-                i += 1;
+                let (x, y) = self.coord_to_xy(*k);
+                queue!(stdout, cursor::MoveTo(x, y))?;
+
+                text = v.text.unwrap_or(' ').to_string();
+                last_style = Some(v.style);
+            } else {
+                text = format!("{}{}", text, v.text.unwrap_or(' '));
             }
 
-            for k in &changes[start_i..i + 1] {
-                self.pixels[**k] = *self.changes.get(*k).unwrap();
-            }
+            last_coord = Some(*k);
+        }
 
-            let range = *changes[start_i]..(*changes[i] + 1);
-            let text = self.pixels[range]
-                .iter()
-                .map(|pixel| pixel.text.unwrap_or(' '))
-                .collect::<String>();
-
-            let style = match self.styles.get(&style) {
+        if !text.is_empty() {
+            let style = match self.styles.get(&last_style.unwrap()) {
                 Some(s) => *s,
                 None => ContentStyle::default(),
             };
 
             queue!(stdout, style::PrintStyledContent(style.apply(text)))?;
-
-            last = Some(*changes[i]);
-            i += 1;
         }
+
+        self.changes.clear();
 
         stdout.flush()?;
 

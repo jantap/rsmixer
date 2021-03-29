@@ -7,174 +7,174 @@ use state::Storage;
 use super::{callbacks, common::*, pa_actions};
 
 lazy_static! {
-    pub static ref ACTIONS_SX: Storage<mpsc::UnboundedSender<EntryUpdate>> = Storage::new();
+	pub static ref ACTIONS_SX: Storage<mpsc::UnboundedSender<EntryUpdate>> = Storage::new();
 }
 
 pub fn start(
-    internal_rx: cb_channel::Receiver<PAInternal>,
-    info_sx: mpsc::UnboundedSender<EntryIdentifier>,
-    actions_sx: mpsc::UnboundedSender<EntryUpdate>,
+	internal_rx: cb_channel::Receiver<PAInternal>,
+	info_sx: mpsc::UnboundedSender<EntryIdentifier>,
+	actions_sx: mpsc::UnboundedSender<EntryUpdate>,
 ) -> Result<(), RsError> {
-    (*ACTIONS_SX).set(actions_sx);
+	(*ACTIONS_SX).set(actions_sx);
 
-    // Create new mainloop and context
-    let mut proplist = Proplist::new().unwrap();
-    proplist
-        .set_str(pulse::proplist::properties::APPLICATION_NAME, "RsMixer")
-        .unwrap();
+	// Create new mainloop and context
+	let mut proplist = Proplist::new().unwrap();
+	proplist
+		.set_str(pulse::proplist::properties::APPLICATION_NAME, "RsMixer")
+		.unwrap();
 
-    debug!("[PAInterface] Creating new mainloop");
-    let mainloop = Rc::new(RefCell::new(match Mainloop::new() {
-        Some(ml) => ml,
-        None => {
-            error!("[PAInterface] Error while creating new mainloop");
-            return Err(RsError::MainloopCreateError);
-        }
-    }));
+	debug!("[PAInterface] Creating new mainloop");
+	let mainloop = Rc::new(RefCell::new(match Mainloop::new() {
+		Some(ml) => ml,
+		None => {
+			error!("[PAInterface] Error while creating new mainloop");
+			return Err(RsError::MainloopCreateError);
+		}
+	}));
 
-    debug!("[PAInterface] Creating new context");
-    let context = Rc::new(RefCell::new(
-        match Context::new_with_proplist(
-            mainloop.borrow_mut().deref().deref(),
-            "RsMixerContext",
-            &proplist,
-        ) {
-            Some(ctx) => ctx,
-            None => {
-                error!("[PAInterface] Error while creating new context");
-                return Err(RsError::MainloopCreateError);
-            }
-        },
-    ));
+	debug!("[PAInterface] Creating new context");
+	let context = Rc::new(RefCell::new(
+		match Context::new_with_proplist(
+			mainloop.borrow_mut().deref().deref(),
+			"RsMixerContext",
+			&proplist,
+		) {
+			Some(ctx) => ctx,
+			None => {
+				error!("[PAInterface] Error while creating new context");
+				return Err(RsError::MainloopCreateError);
+			}
+		},
+	));
 
-    // Context state change callback
-    {
-        debug!("[PAInterface] Registering state change callback");
-        let ml_ref = Rc::clone(&mainloop);
-        let context_ref = Rc::clone(&context);
-        context
-            .borrow_mut()
-            .set_state_callback(Some(Box::new(move || {
-                let state = unsafe { (*context_ref.as_ptr()).get_state() };
-                match state {
-                    pulse::context::State::Ready
-                    | pulse::context::State::Failed
-                    | pulse::context::State::Terminated => {
-                        unsafe { (*ml_ref.as_ptr()).signal(false) };
-                    }
-                    _ => {}
-                }
-            })));
-    }
+	// Context state change callback
+	{
+		debug!("[PAInterface] Registering state change callback");
+		let ml_ref = Rc::clone(&mainloop);
+		let context_ref = Rc::clone(&context);
+		context
+			.borrow_mut()
+			.set_state_callback(Some(Box::new(move || {
+				let state = unsafe { (*context_ref.as_ptr()).get_state() };
+				match state {
+					pulse::context::State::Ready
+					| pulse::context::State::Failed
+					| pulse::context::State::Terminated => {
+						unsafe { (*ml_ref.as_ptr()).signal(false) };
+					}
+					_ => {}
+				}
+			})));
+	}
 
-    // Try to connect to pulseaudio
-    debug!("[PAInterface] Connecting context");
+	// Try to connect to pulseaudio
+	debug!("[PAInterface] Connecting context");
 
-    match context
-        .borrow_mut()
-        .connect(None, pulse::context::FlagSet::NOFLAGS, None)
-    {
-        Ok(_) => {}
-        Err(_) => {
-            error!("[PAInterface] Error while connecting context");
-            return Err(RsError::MainloopConnectError);
-        }
-    };
+	match context
+		.borrow_mut()
+		.connect(None, pulse::context::FlagSet::NOFLAGS, None)
+	{
+		Ok(_) => {}
+		Err(_) => {
+			error!("[PAInterface] Error while connecting context");
+			return Err(RsError::MainloopConnectError);
+		}
+	};
 
-    info!("[PAInterface] Starting mainloop");
+	info!("[PAInterface] Starting mainloop");
 
-    // start mainloop
-    mainloop.borrow_mut().lock();
-    match mainloop.borrow_mut().start() {
-        Ok(_) => {}
-        Err(_) => {
-            return Err(RsError::MainloopConnectError);
-        }
-    }
+	// start mainloop
+	mainloop.borrow_mut().lock();
+	match mainloop.borrow_mut().start() {
+		Ok(_) => {}
+		Err(_) => {
+			return Err(RsError::MainloopConnectError);
+		}
+	}
 
-    debug!("[PAInterface] Waiting for context to be ready...");
-    // wait for context to be ready
-    loop {
-        match context.borrow_mut().get_state() {
-            pulse::context::State::Ready => {
-                break;
-            }
-            pulse::context::State::Failed | pulse::context::State::Terminated => {
-                mainloop.borrow_mut().unlock();
-                mainloop.borrow_mut().stop();
-                error!("[PAInterface] Connection failed or context terminated");
-                return Err(RsError::MainloopConnectError);
-            }
-            _ => {
-                mainloop.borrow_mut().wait();
-            }
-        }
-    }
-    debug!("[PAInterface] Context ready");
+	debug!("[PAInterface] Waiting for context to be ready...");
+	// wait for context to be ready
+	loop {
+		match context.borrow_mut().get_state() {
+			pulse::context::State::Ready => {
+				break;
+			}
+			pulse::context::State::Failed | pulse::context::State::Terminated => {
+				mainloop.borrow_mut().unlock();
+				mainloop.borrow_mut().stop();
+				error!("[PAInterface] Connection failed or context terminated");
+				return Err(RsError::MainloopConnectError);
+			}
+			_ => {
+				mainloop.borrow_mut().wait();
+			}
+		}
+	}
+	debug!("[PAInterface] Context ready");
 
-    context.borrow_mut().set_state_callback(None);
-    // {
-    //     debug!("[PAInterface] Registering state change callback");
-    //     let ml_ref = Rc::clone(&mainloop);
-    //     let context_ref = Rc::clone(&context);
-    //     context
-    //         .borrow_mut()
-    //         .set_state_callback(Some(Box::new(move || {
-    //             let state = unsafe { (*context_ref.as_ptr()).get_state() };
-    //             match state {
-    //                 pulse::context::State::Failed
-    //                 | pulse::context::State::Terminated => {
-    //                 }
-    //                 _ => {}
-    //             }
-    //         })));
-    // }
+	context.borrow_mut().set_state_callback(None);
+	// {
+	//     debug!("[PAInterface] Registering state change callback");
+	//     let ml_ref = Rc::clone(&mainloop);
+	//     let context_ref = Rc::clone(&context);
+	//     context
+	//         .borrow_mut()
+	//         .set_state_callback(Some(Box::new(move || {
+	//             let state = unsafe { (*context_ref.as_ptr()).get_state() };
+	//             match state {
+	//                 pulse::context::State::Failed
+	//                 | pulse::context::State::Terminated => {
+	//                 }
+	//                 _ => {}
+	//             }
+	//         })));
+	// }
 
-    callbacks::subscribe(&context, info_sx.clone())?;
-    callbacks::request_current_state(context.clone(), info_sx.clone())?;
+	callbacks::subscribe(&context, info_sx.clone())?;
+	callbacks::request_current_state(context.clone(), info_sx.clone())?;
 
-    mainloop.borrow_mut().unlock();
+	mainloop.borrow_mut().unlock();
 
-    debug!("[PAInterface] Actually starting our mainloop");
+	debug!("[PAInterface] Actually starting our mainloop");
 
-    let mut monitors = Monitors::default();
-    let mut last_targets = HashMap::new();
+	let mut monitors = Monitors::default();
+	let mut last_targets = HashMap::new();
 
-    while let Ok(msg) = internal_rx.recv() {
-        mainloop.borrow_mut().lock();
+	while let Ok(msg) = internal_rx.recv() {
+		mainloop.borrow_mut().lock();
 
-        match context.borrow_mut().get_state() {
-            pulse::context::State::Ready => {}
-            _ => {
-                mainloop.borrow_mut().unlock();
-                return Err(RsError::PulseAudioDisconnected);
-            }
-        }
+		match context.borrow_mut().get_state() {
+			pulse::context::State::Ready => {}
+			_ => {
+				mainloop.borrow_mut().unlock();
+				return Err(RsError::PulseAudioDisconnected);
+			}
+		}
 
-        match msg {
-            PAInternal::AskInfo(ident) => {
-                callbacks::request_info(ident, &context, info_sx.clone());
-            }
-            PAInternal::Tick => {
-                // remove failed monitors
-                monitors.filter(&mainloop, &context, &last_targets);
-            }
-            PAInternal::Command(cmd) => {
-                let cmd = cmd.deref();
-                if pa_actions::handle_command(cmd.clone(), &context, &info_sx).is_none() {
-                    monitors.filter(&mainloop, &context, &HashMap::new());
-                    mainloop.borrow_mut().unlock();
-                    break;
-                }
+		match msg {
+			PAInternal::AskInfo(ident) => {
+				callbacks::request_info(ident, &context, info_sx.clone());
+			}
+			PAInternal::Tick => {
+				// remove failed monitors
+				monitors.filter(&mainloop, &context, &last_targets);
+			}
+			PAInternal::Command(cmd) => {
+				let cmd = cmd.deref();
+				if pa_actions::handle_command(cmd.clone(), &context, &info_sx).is_none() {
+					monitors.filter(&mainloop, &context, &HashMap::new());
+					mainloop.borrow_mut().unlock();
+					break;
+				}
 
-                if let PulseAudioAction::CreateMonitors(mons) = cmd.clone() {
-                    last_targets = mons;
-                    monitors.filter(&mainloop, &context, &last_targets);
-                }
-            }
-        };
-        mainloop.borrow_mut().unlock();
-    }
+				if let PulseAudioAction::CreateMonitors(mons) = cmd.clone() {
+					last_targets = mons;
+					monitors.filter(&mainloop, &context, &last_targets);
+				}
+			}
+		};
+		mainloop.borrow_mut().unlock();
+	}
 
-    Ok(())
+	Ok(())
 }

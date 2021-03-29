@@ -1,16 +1,16 @@
 #[macro_export]
 macro_rules! unwrap_or_return {
-    ($x:expr, $y:expr) => {
-        match $x {
-            Some(x) => x,
-            None => {
-                return $y;
-            }
-        }
-    };
-    ($x:expr) => {
-        unwrap_or_return!($x, ())
-    };
+	($x:expr, $y:expr) => {
+		match $x {
+			Some(x) => x,
+			None => {
+				return $y;
+			}
+		}
+	};
+	($x:expr) => {
+		unwrap_or_return!($x, ())
+	};
 }
 
 #[macro_export]

@@ -36,9 +36,9 @@ use state::Storage;
 use tokio::runtime;
 
 lazy_static! {
-    pub static ref STYLES: Storage<Styles> = Storage::new();
-    pub static ref VARIABLES: Storage<Variables> = Storage::new();
-    pub static ref BINDINGS: Storage<MultiMap<InputEvent, UserAction>> = Storage::new();
+	pub static ref STYLES: Storage<Styles> = Storage::new();
+	pub static ref VARIABLES: Storage<Variables> = Storage::new();
+	pub static ref BINDINGS: Storage<MultiMap<InputEvent, UserAction>> = Storage::new();
 }
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -46,49 +46,49 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub type Styles = HashMap<Style, ContentStyle>;
 
 fn load_config_and_options() -> Result<()> {
-    info!("Checking command line options and config");
+	info!("Checking command line options and config");
 
-    CliOptions::check()?;
-    debug!("CLI options checked");
+	CliOptions::check()?;
+	debug!("CLI options checked");
 
-    let mut config = RsMixerConfig::load()?;
-    let (styles, bindings, variables) = config.interpret()?;
+	let mut config = RsMixerConfig::load()?;
+	let (styles, bindings, variables) = config.interpret()?;
 
-    STYLES.set(styles);
-    BINDINGS.set(bindings);
-    VARIABLES.set(variables);
-    debug!("Config loaded");
+	STYLES.set(styles);
+	BINDINGS.set(bindings);
+	VARIABLES.set(variables);
+	debug!("Config loaded");
 
-    Ok(())
+	Ok(())
 }
 
 async fn run() -> Result<()> {
-    load_config_and_options()?;
+	load_config_and_options()?;
 
-    debug!("Starting actor system");
-    let (mut context, worker) = actor_system::new();
+	debug!("Starting actor system");
+	let (mut context, worker) = actor_system::new();
 
-    let actor_system_handle = worker.start();
+	let actor_system_handle = worker.start();
 
-    EventLoopActor::blueprint().start(&mut context);
-    PulseActor::blueprint().start(&mut context);
-    InputActor::blueprint().start(&mut context);
+	EventLoopActor::blueprint().start(&mut context);
+	PulseActor::blueprint().start(&mut context);
+	InputActor::blueprint().start(&mut context);
 
-    debug!("Actor system started");
-    actor_system_handle.await?
+	debug!("Actor system started");
+	actor_system_handle.await?
 }
 
 fn main() -> Result<()> {
-    info!("Starting RsMixer");
+	info!("Starting RsMixer");
 
-    let threaded_rt = runtime::Builder::new_multi_thread().enable_time().build()?;
-    threaded_rt.block_on(async {
-        debug!("Tokio runtime started");
+	let threaded_rt = runtime::Builder::new_multi_thread().enable_time().build()?;
+	threaded_rt.block_on(async {
+		debug!("Tokio runtime started");
 
-        if let Err(e) = run().await {
-            println!("{:#?}", e);
-        }
-    });
+		if let Err(e) = run().await {
+			println!("{:#?}", e);
+		}
+	});
 
-    Ok(())
+	Ok(())
 }

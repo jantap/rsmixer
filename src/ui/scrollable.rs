@@ -1,12 +1,12 @@
 pub trait Scrollable {
-    fn selected(&self) -> usize;
-    fn len(&self) -> usize;
-    fn set_selected(&mut self, selected: usize) -> bool;
-    fn element_height(&self, index: usize) -> u16;
-    fn visible_range(&self, height: u16) -> Box<dyn Iterator<Item = usize>>;
-    fn visible_start_end(&self, height: u16) -> (usize, usize);
-    fn up(&mut self, how_much: usize);
-    fn down(&mut self, how_much: usize);
+	fn selected(&self) -> usize;
+	fn len(&self) -> usize;
+	fn set_selected(&mut self, selected: usize) -> bool;
+	fn element_height(&self, index: usize) -> u16;
+	fn visible_range(&self, height: u16) -> Box<dyn Iterator<Item = usize>>;
+	fn visible_start_end(&self, height: u16) -> (usize, usize);
+	fn up(&mut self, how_much: usize);
+	fn down(&mut self, how_much: usize);
 }
 
 #[macro_export]

@@ -1,11 +1,10 @@
-use super::{BlockWidget, Widget};
+use std::cmp::{max, min};
 
+use super::{BlockWidget, Widget};
 use crate::{
     ui::{Buffer, Rect},
     RsError,
 };
-
-use std::cmp::{max, min};
 
 #[derive(Clone)]
 

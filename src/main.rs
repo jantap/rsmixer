@@ -4,9 +4,9 @@
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
-static LOGGING_MODULE: &'static str = "Main";
+static LOGGING_MODULE: &str = "Main";
 
-mod action_handlers2;
+mod action_handlers;
 mod actor_system;
 mod actors;
 mod cli_options;
@@ -20,25 +20,20 @@ mod prelude;
 mod ui;
 mod util;
 
-pub use errors::RsError;
-pub use models::entry;
+use std::collections::HashMap;
 
 use actors::*;
 use cli_options::CliOptions;
 use config::{RsMixerConfig, Variables};
-use models::{InputEvent, Style, UserAction};
-use prelude::*;
-
-use tokio::runtime;
-
 use crossterm::style::ContentStyle;
-
+pub use errors::RsError;
 use lazy_static::lazy_static;
-
-use state::Storage;
-
+pub use models::entry;
+use models::{InputEvent, Style, UserAction};
 use multimap::MultiMap;
-use std::collections::HashMap;
+use prelude::*;
+use state::Storage;
+use tokio::runtime;
 
 lazy_static! {
     pub static ref STYLES: Storage<Styles> = Storage::new();
@@ -86,15 +81,12 @@ async fn run() -> Result<()> {
 fn main() -> Result<()> {
     info!("Starting RsMixer");
 
-    let threaded_rt = runtime::Builder::new_multi_thread()
-        .enable_time()
-        .build()?;
+    let threaded_rt = runtime::Builder::new_multi_thread().enable_time().build()?;
     threaded_rt.block_on(async {
         debug!("Tokio runtime started");
 
-        match run().await {
-            Err(e) => println!("{:#?}", e),
-            _ => {}
+        if let Err(e) = run().await {
+            println!("{:#?}", e);
         }
     });
 

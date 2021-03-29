@@ -1,17 +1,15 @@
+use std::cmp::min;
+
+use pulse::volume;
+
 use crate::{
     entry::{CardEntry, Entry, EntryKind, EntrySpaceLvl, HiddenStatus, PlayEntry},
     ui::{
         widgets::{VolumeWidgetBorder, Widget},
-        Buffer, Style,
+        Buffer, Rect, Style,
     },
     RsError,
 };
-
-use crate::ui::Rect;
-
-use std::cmp::min;
-
-use pulse::volume;
 
 impl Widget for Entry {
     fn resize(&mut self, area: Rect) -> Result<(), RsError> {

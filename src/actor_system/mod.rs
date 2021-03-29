@@ -9,14 +9,13 @@ mod worker;
 pub use actor::{Actor, ActorStatus, ActorType, ContinousActor, EventfulActor};
 pub use context::Ctx;
 pub use messages::BoxedMessage;
-pub use worker::Worker;
 pub use retry_strategy::StrategyClosure;
-
 use tokio::sync::mpsc::{
     unbounded_channel as channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
 };
+pub use worker::Worker;
 
-static LOGGING_MODULE: &'static str = "ActorSystem";
+static LOGGING_MODULE: &str = "ActorSystem";
 
 pub fn new() -> (Ctx, Worker) {
     let (sx, rx) = channel();

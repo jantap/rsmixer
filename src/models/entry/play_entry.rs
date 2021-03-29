@@ -1,8 +1,7 @@
-use super::{EntrySpaceLvl, HiddenStatus};
-
-use crate::ui::{widgets::VolumeWidget, Rect};
-
 use pulse::volume::ChannelVolumes;
+
+use super::{EntrySpaceLvl, HiddenStatus};
+use crate::ui::{widgets::VolumeWidget, Rect};
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct PlayEntry {

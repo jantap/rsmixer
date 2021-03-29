@@ -1,8 +1,7 @@
-use super::UIMode;
-
-use crate:: entry::{Entries, Entry, EntryIdentifier, EntryKind, EntryType, HiddenStatus};
-
 use std::{fmt::Display, iter};
+
+use super::UIMode;
+use crate::entry::{Entries, Entry, EntryIdentifier, EntryKind, EntryType, HiddenStatus};
 
 #[derive(PartialEq, Clone, Hash, Copy, Debug)]
 pub enum PageType {

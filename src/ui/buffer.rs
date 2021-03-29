@@ -1,15 +1,15 @@
-use crate::models::Style;
-
-use super::Rect;
-
-use std::{collections::{HashMap, BTreeMap}, io::Write};
+use std::{
+    collections::{BTreeMap, HashMap},
+    io::Write,
+};
 
 use crossterm::{
     cursor, queue,
     style::{self, ContentStyle},
 };
 
-use itertools::Itertools;
+use super::Rect;
+use crate::models::Style;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Pixel {

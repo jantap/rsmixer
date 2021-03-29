@@ -1,8 +1,8 @@
-use super::{common::*, sync_loop::ACTIONS_SX};
-
 use std::convert::TryInto;
 
 use pulse::stream::PeekResult;
+
+use super::{common::*, sync_loop::ACTIONS_SX};
 
 pub struct Monitor {
     stream: Rc<RefCell<Stream>>,
@@ -234,7 +234,9 @@ fn create(
                                 let data_slice = slice_to_4_bytes(&data[(size-4) .. size]);
                                 let peak = f32::from_ne_bytes(data_slice).abs();
 
-                                (*ACTIONS_SX).get().send(EntryUpdate::PeakVolumeUpdate(ident, peak)).unwrap();
+                                if (*ACTIONS_SX).get().send(EntryUpdate::PeakVolumeUpdate(ident, peak)).is_err() {
+                                    disconnect_stream();
+                                }
 
                                 unsafe { (*(*stream_ref.as_ptr()).as_ptr()).discard().unwrap(); };
                             },

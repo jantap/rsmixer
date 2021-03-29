@@ -1,8 +1,8 @@
-use crate::{actor_system::Ctx, models::{RSState, EntryUpdate}};
-
 use std::ops::Deref;
 
-pub fn handle(msg: &EntryUpdate, state: &mut RSState, ctx: &Ctx) {
+use crate::models::{EntryUpdate, RSState};
+
+pub fn handle(msg: &EntryUpdate, state: &mut RSState) {
     match msg {
         EntryUpdate::EntryUpdate(ident, entry) => {
             state.update_entry(ident, entry.deref().to_owned());

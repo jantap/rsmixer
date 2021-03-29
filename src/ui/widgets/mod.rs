@@ -13,7 +13,6 @@ pub use volume::{VolumeWidget, VolumeWidgetBorder};
 pub use warning_text::WarningTextWidget;
 
 use super::{Buffer, Rect};
-
 use crate::RsError;
 
 pub trait Widget {

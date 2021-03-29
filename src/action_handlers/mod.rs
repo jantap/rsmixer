@@ -1,9 +1,4 @@
-mod common;
-pub mod context_menu;
-pub mod entries_updates;
-pub mod general;
-pub mod help;
-pub mod move_entry;
-pub mod normal;
-pub mod play_entries;
+pub mod pulseaudio_info;
+pub mod pulseaudio_status;
+pub mod user_action;
 pub mod user_input;

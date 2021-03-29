@@ -1,6 +1,10 @@
-use linked_hash_map::LinkedHashMap;
-use serde::{private::de::{Content, ContentRefDeserializer}, Deserialize, Deserializer, Serialize, Serializer};
 use std::hash::Hash;
+
+use linked_hash_map::LinkedHashMap;
+use serde::{
+    private::de::{Content, ContentRefDeserializer},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
 
 #[derive(Clone)]
 enum Element<T> {
@@ -26,10 +30,10 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Element<T> {
     {
         let content = Content::deserialize(deserializer)?;
         if let Ok(x) = T::deserialize(ContentRefDeserializer::<D::Error>::new(&content)) {
-            return Ok(Element::Single(vec![x]));
+            Ok(Element::Single(vec![x]))
         } else {
             let xs = Vec::<T>::deserialize(ContentRefDeserializer::<D::Error>::new(&content))?;
-            return Ok(Element::Many(xs));
+            Ok(Element::Many(xs))
         }
     }
 }
@@ -65,7 +69,7 @@ impl<K: Eq + Hash, V> MultiMap<K, V> {
         self.0.insert(k, to_push);
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a K, &'a V)> + 'a {
+    pub fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
         self.0.iter().flat_map(|(k, v)| {
             let vs = match v {
                 Element::Single(x) => x,

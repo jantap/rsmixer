@@ -1,12 +1,11 @@
-use super::Widget;
+use std::cmp::max;
 
+use super::Widget;
 use crate::{
     models::ContextMenu,
     ui::{Buffer, Rect, Scrollable, Style},
     RsError,
 };
-
-use std::cmp::max;
 
 impl Widget for ContextMenu {
     fn resize(&mut self, area: Rect) -> Result<(), RsError> {

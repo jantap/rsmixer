@@ -4,6 +4,8 @@ mod scrollable;
 pub mod util;
 pub mod widgets;
 
+use std::io::Write;
+
 use buffer::{Buffer, Pixel};
 pub use rect::Rect;
 pub use scrollable::Scrollable;
@@ -14,8 +16,6 @@ use crate::{
     models::{PageType, RSState, Style, UIMode},
     RsError,
 };
-
-use std::io::Write;
 
 pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(), RsError> {
     make_changes(state).await?;

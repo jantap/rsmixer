@@ -1,6 +1,9 @@
-use crate::{models::PageType, models::UserAction, RsError};
-
 use std::convert::TryFrom;
+
+use crate::{
+    models::{PageType, UserAction},
+    RsError,
+};
 
 impl ToString for UserAction {
     fn to_string(&self) -> String {
@@ -23,9 +26,13 @@ impl ToString for UserAction {
             UserAction::MoveDown(num) => format!("down({})", num),
             UserAction::MoveLeft => "left".to_string(),
             UserAction::MoveRight => "right".to_string(),
-            UserAction::CyclePages(x) => if *x > 0 {
-                "cycle_pages_forward".to_string()
-            }else{ "cycle_pages_backward".to_string()}
+            UserAction::CyclePages(x) => {
+                if *x > 0 {
+                    "cycle_pages_forward".to_string()
+                } else {
+                    "cycle_pages_backward".to_string()
+                }
+            }
             UserAction::CloseContextMenu => "close_context_menu".to_string(),
             UserAction::Confirm => "confirm".to_string(),
             UserAction::Hide(_) => "hide".to_string(),

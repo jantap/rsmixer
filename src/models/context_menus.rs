@@ -1,13 +1,9 @@
 use crate::{
     actor_system::Ctx,
     entry::{Entry, EntryIdentifier, EntryKind, EntryType},
-    ui::widgets::ToolWindowWidget,
-    models::PulseAudioAction
-};
-
-use crate::{
+    models::PulseAudioAction,
     scrollable,
-    ui::{Rect, Scrollable},
+    ui::{widgets::ToolWindowWidget, Rect, Scrollable},
 };
 
 #[derive(PartialEq, Clone)]
@@ -117,10 +113,16 @@ impl ContextMenu {
                 return ContextMenuEffect::MoveEntry;
             }
             ContextMenuOption::MoveToEntry(entry, _) => {
-                ctx.send_to("pulseaudio", PulseAudioAction::MoveEntryToParent(ident, *entry));
+                ctx.send_to(
+                    "pulseaudio",
+                    PulseAudioAction::MoveEntryToParent(ident, *entry),
+                );
             }
             ContextMenuOption::ChangeCardProfile(name, _) => {
-                ctx.send_to("pulseaudio", PulseAudioAction::ChangeCardProfile(ident, name.clone()));
+                ctx.send_to(
+                    "pulseaudio",
+                    PulseAudioAction::ChangeCardProfile(ident, name.clone()),
+                );
             }
             ContextMenuOption::Suspend => {
                 ctx.send_to("pulseaudio", PulseAudioAction::SetSuspend(ident, true));

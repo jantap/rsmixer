@@ -1,13 +1,15 @@
-use crate::{
-    action_handlers2::*,
-    actor_system::prelude::*,
-    models::{PageType, RSState, UIMode, PulseAudioAction, EntryUpdate, PAStatus, UserInput, UserAction, ResizeScreen},
-    ui, STYLES,
-};
-
 use std::io::Stdout;
 
 use anyhow::Result;
+
+use crate::{
+    action_handlers::*,
+    actor_system::prelude::*,
+    models::{
+        EntryUpdate, PAStatus, PulseAudioAction, RSState, ResizeScreen, UserAction, UserInput,
+    },
+    ui, STYLES,
+};
 
 #[derive(Default)]
 pub struct EventLoopActor {
@@ -48,11 +50,11 @@ impl EventfulActor for EventLoopActor {
         if msg.is::<EntryUpdate>() {
             let msg = msg.downcast_ref::<EntryUpdate>().unwrap();
 
-            pulseaudio_info::handle(&msg, &mut self.state, &ctx);
+            pulseaudio_info::handle(&msg, &mut self.state);
         } else if msg.is::<PAStatus>() {
             let msg = msg.downcast_ref::<PAStatus>().unwrap();
 
-            pulseaudio_status::handle(&msg, &mut self.state, &ctx);
+            pulseaudio_status::handle(&msg, &mut self.state);
         } else if msg.is::<UserInput>() {
             let msg = msg.downcast_ref::<UserInput>().unwrap();
 

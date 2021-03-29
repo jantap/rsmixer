@@ -1,6 +1,6 @@
-use super::EntryType;
-
 use std::cmp::Ordering;
+
+use super::EntryType;
 
 #[derive(Clone, Copy, PartialEq, Hash, Debug)]
 pub struct EntryIdentifier {

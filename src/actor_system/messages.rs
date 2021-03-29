@@ -1,8 +1,9 @@
-use super::{actor::ActorFactory, actor_entry::ActorEntry, retry_strategy::RetryStrategy};
-
-use crate::prelude::*;
-
 use std::{any::Any, fmt::Debug};
+
+use tokio::task::JoinHandle;
+
+use super::{actor::ActorFactory, actor_entry::ActorEntry, retry_strategy::RetryStrategy};
+use crate::prelude::*;
 
 pub type BoxedMessage = Box<dyn Any + Send + Sync + 'static>;
 
@@ -16,6 +17,7 @@ pub enum SystemMessage {
     RestartActor(&'static str),
     ActorPanicked(&'static str),
     ActorReturnedErr(&'static str, Result<()>),
+    UserTask(JoinHandle<()>),
     Shutdown,
     // Broadcast(BoxedMessage),
 }

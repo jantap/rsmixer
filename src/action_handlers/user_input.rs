@@ -1,19 +1,17 @@
-use super::common::*;
-
-use crate::{
-    entry::{EntryIdentifier, EntryKind},
-    models::InputEvent,
-    RsError, BINDINGS,
-};
-
-use crate::ui::{Rect, Scrollable};
-
 use std::convert::TryFrom;
 
 use crossterm::event::{Event, MouseButton, MouseEvent, MouseEventKind};
 
-pub async fn action_handler(event: Event, state: &mut RSState, ctx: &Ctx) -> Result<(), RsError> {
-    let input_event = InputEvent::try_from(event)?;
+use crate::{
+    actor_system::Ctx,
+    entry::{EntryIdentifier, EntryKind},
+    models::{InputEvent, PageType, RSState, UIMode, UserAction, UserInput},
+    ui::{Rect, Scrollable},
+    RsError, BINDINGS,
+};
+
+pub fn handle(input: &UserInput, state: &RSState, ctx: &Ctx) -> Result<(), RsError> {
+    let input_event = InputEvent::try_from(input.event)?;
     let mut actions;
 
     if let Some(bindings) = (*BINDINGS).get().get_vec(&input_event) {
@@ -21,13 +19,13 @@ pub async fn action_handler(event: Event, state: &mut RSState, ctx: &Ctx) -> Res
 
         handle_conflicting_bindings(&mut actions, state);
 
-        if let Event::Mouse(mouse_event) = event {
+        if let Event::Mouse(mouse_event) = input.event {
             handle_mouse_bindings(&mut actions, mouse_event, state);
         }
     } else {
         actions = Vec::new();
 
-        if let Event::Mouse(mouse_event) = event {
+        if let Event::Mouse(mouse_event) = input.event {
             handle_unbindable_mouse_actions(&mut actions, mouse_event, state);
         }
     }
@@ -40,22 +38,22 @@ pub async fn action_handler(event: Event, state: &mut RSState, ctx: &Ctx) -> Res
 }
 
 fn handle_unbindable_mouse_actions(
-    actions: &mut Vec<Action>,
+    actions: &mut Vec<UserAction>,
     mouse_event: MouseEvent,
-    state: &mut RSState,
+    state: &RSState,
 ) {
     let mouse_pos = Rect::new(mouse_event.column, mouse_event.row, 1, 1);
     match (&state.ui_mode, mouse_event.kind) {
         (UIMode::Help, MouseEventKind::Up(_)) => {
             if !mouse_pos.intersects(&state.help.window.area) {
-                actions.push(Action::CloseContextMenu);
+                actions.push(UserAction::CloseContextMenu);
             }
         }
         (UIMode::Normal, MouseEventKind::Up(MouseButton::Left)) => {
             let (ident, page_type) = find_collisions(mouse_event, state);
 
             if let Some(pt) = page_type {
-                actions.push(Action::ChangePage(pt));
+                actions.push(UserAction::ChangePage(pt));
             }
             if let Some(ident) = ident {
                 let new_selected = state
@@ -65,25 +63,20 @@ fn handle_unbindable_mouse_actions(
                     .unwrap_or_else(|| state.page_entries.selected());
 
                 if state.page_entries.selected() == new_selected {
-                    actions.push(Action::OpenContextMenu(None));
+                    actions.push(UserAction::OpenContextMenu(None));
                 } else {
-                    state
-                        .redraw
-                        .affected_entries
-                        .insert(state.page_entries.selected());
-                    state.redraw.affected_entries.insert(new_selected);
-                    state.page_entries.set_selected(new_selected);
+                    actions.push(UserAction::SetSelected(new_selected));
                 }
             }
         }
         (UIMode::Normal, MouseEventKind::ScrollUp) => {
             if mouse_pos.y == 0 {
-                actions.push(Action::CyclePages(-1));
+                actions.push(UserAction::CyclePages(-1));
             }
         }
         (UIMode::Normal, MouseEventKind::ScrollDown) => {
             if mouse_pos.y == 0 {
-                actions.push(Action::CyclePages(1));
+                actions.push(UserAction::CyclePages(1));
             }
         }
         (UIMode::ContextMenu, MouseEventKind::Up(MouseButton::Left)) => {
@@ -98,23 +91,23 @@ fn handle_unbindable_mouse_actions(
                     .map(|(_, i)| i)
                 {
                     if i == state.context_menu.selected() {
-                        actions.push(Action::Confirm);
+                        actions.push(UserAction::Confirm);
                     } else {
-                        state.context_menu.set_selected(i);
+                        actions.push(UserAction::SetSelected(i));
                     }
                 }
             } else if !state.context_menu.tool_window.area.intersects(&mouse_pos) {
-                actions.push(Action::CloseContextMenu);
+                actions.push(UserAction::CloseContextMenu);
             }
         }
         (UIMode::ContextMenu, MouseEventKind::ScrollUp) => {
             if state.context_menu.area.intersects(&mouse_pos) {
-                state.context_menu.up(1);
+                actions.push(UserAction::MoveUp(1));
             }
         }
         (UIMode::ContextMenu, MouseEventKind::ScrollDown) => {
             if state.context_menu.area.intersects(&mouse_pos) {
-                state.context_menu.down(1);
+                actions.push(UserAction::MoveDown(1));
             }
         }
         _ => {}
@@ -123,7 +116,7 @@ fn handle_unbindable_mouse_actions(
 
 fn find_collisions(
     mouse_event: MouseEvent,
-    state: &mut RSState,
+    state: &RSState,
 ) -> (Option<EntryIdentifier>, Option<PageType>) {
     let mouse_event_rect = Rect::new(mouse_event.column, mouse_event.row, 1, 1);
 
@@ -160,7 +153,7 @@ fn find_collisions(
     (ident, page_type)
 }
 
-fn handle_mouse_bindings(actions: &mut Vec<Action>, mouse_event: MouseEvent, state: &mut RSState) {
+fn handle_mouse_bindings(actions: &mut Vec<UserAction>, mouse_event: MouseEvent, state: &RSState) {
     let (ident, _) = find_collisions(mouse_event, state);
 
     if ident.is_none() {
@@ -169,65 +162,68 @@ fn handle_mouse_bindings(actions: &mut Vec<Action>, mouse_event: MouseEvent, sta
 
     for a in actions {
         match a {
-            Action::RequstChangeVolume(value, _) => {
-                *a = Action::RequstChangeVolume(*value, ident);
+            UserAction::RequstChangeVolume(value, _) => {
+                *a = UserAction::RequstChangeVolume(*value, ident);
             }
-            Action::RequestMute(_) => {
-                *a = Action::RequestMute(ident);
+            UserAction::RequestMute(_) => {
+                *a = UserAction::RequestMute(ident);
             }
-            Action::OpenContextMenu(_) => {
-                *a = Action::OpenContextMenu(ident);
+            UserAction::OpenContextMenu(_) => {
+                *a = UserAction::OpenContextMenu(ident);
             }
-            Action::Hide(_) => {
-                *a = Action::Hide(ident);
+            UserAction::Hide(_) => {
+                *a = UserAction::Hide(ident);
             }
             _ => {}
         }
     }
 }
 
-fn handle_conflicting_bindings(actions: &mut Vec<Action>, state: &mut RSState) {
+fn handle_conflicting_bindings(actions: &mut Vec<UserAction>, state: &RSState) {
     if actions.len() == 1 {
         return;
     }
 
-    if actions.contains(&Action::ExitSignal) && actions.contains(&Action::CloseContextMenu) {
+    if actions.contains(&UserAction::RequestQuit) && actions.contains(&UserAction::CloseContextMenu)
+    {
         match state.ui_mode {
             UIMode::ContextMenu | UIMode::Help => {
-                actions.retain(|action| *action != Action::ExitSignal);
+                actions.retain(|action| *action != UserAction::RequestQuit);
             }
             _ => {
-                actions.retain(|action| *action != Action::CloseContextMenu);
+                actions.retain(|action| *action != UserAction::CloseContextMenu);
             }
         }
     }
 
-    if actions.contains(&Action::Confirm) && actions.contains(&Action::OpenContextMenu(None)) {
-        if state.ui_mode == UIMode::ContextMenu {
-            actions.retain(|action| *action != Action::OpenContextMenu(None));
+    if actions.contains(&UserAction::Confirm)
+        && actions.contains(&UserAction::OpenContextMenu(None))
+    {
+        if let UIMode::MoveEntry(_, _) | UIMode::ContextMenu = state.ui_mode {
+            actions.retain(|action| *action != UserAction::OpenContextMenu(None));
         } else {
-            actions.retain(|action| *action != Action::Confirm);
+            actions.retain(|action| *action != UserAction::Confirm);
         }
     }
 
-    if actions.contains(&Action::MoveLeft) {
+    if actions.contains(&UserAction::MoveLeft) {
         match state.ui_mode {
             UIMode::ContextMenu | UIMode::Help => {
-                actions.retain(|action| *action == Action::MoveLeft);
+                actions.retain(|action| *action == UserAction::MoveLeft);
             }
             _ => {
-                actions.retain(|action| *action != Action::MoveLeft);
+                actions.retain(|action| *action != UserAction::MoveLeft);
             }
         }
     }
 
-    if actions.contains(&Action::MoveRight) {
+    if actions.contains(&UserAction::MoveRight) {
         match state.ui_mode {
             UIMode::ContextMenu | UIMode::Help => {
-                actions.retain(|action| *action == Action::MoveRight);
+                actions.retain(|action| *action == UserAction::MoveRight);
             }
             _ => {
-                actions.retain(|action| *action != Action::MoveRight);
+                actions.retain(|action| *action != UserAction::MoveRight);
             }
         }
     }

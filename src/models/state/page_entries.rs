@@ -1,12 +1,11 @@
-use super::RSState;
+use std::collections::{HashMap, HashSet};
 
+use super::RSState;
 use crate::{
-    entry::{EntryType, EntryKind, EntryIdentifier, HiddenStatus},
-    models::{PulseAudioAction, UIMode, PageType},
+    entry::{EntryIdentifier, EntryKind, EntryType, HiddenStatus},
+    models::{PageType, PulseAudioAction, UIMode},
     ui::Scrollable,
 };
-
-use std::collections::{HashSet, HashMap};
 
 pub fn update(state: &mut RSState) {
     let last_sel = state.page_entries.get_selected();
@@ -59,10 +58,9 @@ pub fn update(state: &mut RSState) {
 
     if entries_changed {
         let monitors = monitor_list(state);
-        state.ctx().send_to(
-            "pulseaudio",
-            PulseAudioAction::CreateMonitors(monitors)
-        );
+        state
+            .ctx()
+            .send_to("pulseaudio", PulseAudioAction::CreateMonitors(monitors));
 
         state.redraw.resize = true;
     }

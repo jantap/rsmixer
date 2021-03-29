@@ -4,11 +4,9 @@ mod monitor;
 mod pa_actions;
 mod sync_loop;
 
-pub use sync_loop::start;
-
 use common::*;
-
 use lazy_static::lazy_static;
+pub use sync_loop::start;
 
 #[derive(Debug)]
 pub enum PAInternal {

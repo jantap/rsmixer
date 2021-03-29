@@ -1,16 +1,15 @@
+use std::collections::HashMap;
+
+use crossterm::event::Event;
+use pulse::volume::ChannelVolumes;
+
 use crate::{
     entry::{Entry, EntryIdentifier},
     models::PageType,
 };
 
-use std::collections::HashMap;
-
-use pulse::volume::ChannelVolumes;
-
-use crossterm::event::Event;
-
 #[derive(Clone, PartialEq, Debug)]
-pub enum PAStatus{
+pub enum PAStatus {
     // PulseAudio connection status
     RetryIn(u64),
     ConnectToPulseAudio,
@@ -40,9 +39,7 @@ pub struct UserInput {
 }
 impl UserInput {
     pub fn new(event: Event) -> Self {
-        Self {
-            event
-        }
+        Self { event }
     }
 }
 

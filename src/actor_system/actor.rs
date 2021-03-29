@@ -1,3 +1,9 @@
+use std::{pin::Pin, sync::Arc};
+
+use async_trait::async_trait;
+use futures::Future;
+use tokio::{sync::RwLock, task};
+
 use super::{
     actor_entry::ActorEntry,
     channel,
@@ -7,21 +13,7 @@ use super::{
     retry_strategy::{RetryStrategy, Strategy},
     Receiver, Sender, LOGGING_MODULE,
 };
-
 use crate::prelude::*;
-
-use std::sync::Arc;
-
-use tokio::{
-    sync::RwLock,
-    task,
-};
-
-use futures::Future;
-
-use std::pin::Pin;
-
-use async_trait::async_trait;
 
 pub type BoxedEventfulActor = Box<dyn EventfulActor + Send + Sync>;
 pub type BoxedContinousActor = Box<dyn ContinousActor + Send + Sync>;
@@ -87,7 +79,7 @@ impl Actor {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum ActorType {
     Eventful,
     Continous,
@@ -203,44 +195,40 @@ pub fn spawn_actor(sx: Sender<Arc<SystemMessage>>, id: &'static str, mut actor: 
                     actor_entry.status.clone(),
                 );
             }
-        } else {
-            if let Some(actor) = &actor_entry.actor {
-                let task = {
-                    let mut actor = actor.write().await;
-                    if let Actor::Continous(actor) = &mut *actor {
-                        actor.run(sx.clone().into(), rrx)
-                    } else {
-                        Box::pin(async { Ok(()) })
+        } else if let Some(actor) = &actor_entry.actor {
+            let task = {
+                let mut actor = actor.write().await;
+                if let Actor::Continous(actor) = &mut *actor {
+                    actor.run(sx.clone().into(), rrx)
+                } else {
+                    Box::pin(async { Ok(()) })
+                }
+            };
+
+            let status = actor_entry.status.clone();
+            let ctx: Ctx = sx.clone().into();
+
+            let handle = task::spawn(async move {
+                let result = task::spawn(task).await;
+
+                match result {
+                    Ok(Err(err)) => {
+                        warn!("Actor '{}' returned Err while handling message", id);
+                        status.set(ActorStatus::Failed).await;
+
+                        ctx.actor_returned_err(id, Err(err));
                     }
-                };
+                    Err(_) => {
+                        warn!("Actor '{}' panicked while handling message", id);
+                        status.set(ActorStatus::Failed).await;
 
-                let status = actor_entry.status.clone();
-                let ctx: Ctx = sx.clone().into();
-
-                task::spawn(async move {
-                    let result = task::spawn(task).await;
-
-            match result {
-                Ok(Err(err)) => {
-                    warn!("Actor '{}' returned Err while handling message", id);
-                    status.set(ActorStatus::Failed).await;
-
-                    ctx.actor_returned_err(id, Err(err));
-
-                    return;
+                        ctx.actor_panicked(id);
+                    }
+                    _ => {}
                 }
-                Err(_) => {
-                    warn!("Actor '{}' panicked while handling message", id);
-                    status.set(ActorStatus::Failed).await;
+            });
 
-                    ctx.actor_panicked(id);
-
-                    return;
-                }
-                _ => {}
-            }
-                });
-            }
+            let _ = sx.send(Arc::new(SystemMessage::UserTask(handle)));
         }
 
         let r = sx.send(Arc::new(SystemMessage::ActorUpdate(id, actor_entry)));

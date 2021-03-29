@@ -1,13 +1,13 @@
+use std::sync::Arc;
+
+use tokio::sync::RwLock;
+
 use super::{
     actor::{Actor, ActorStatus, ActorStatusLocked, ActorType},
     messages::BoxedMessage,
     prelude::MessageSender,
     Sender,
 };
-
-use std::sync::Arc;
-
-use tokio::sync::RwLock;
 
 pub struct ActorEntry {
     pub actor: Option<Arc<RwLock<Actor>>>,
@@ -24,10 +24,7 @@ impl ActorEntry {
             None => None,
         };
         Self {
-            actor: match actor {
-                None => None,
-                Some(x) => Some(Arc::new(RwLock::new(x))),
-            },
+            actor: actor.map(|a| Arc::new(RwLock::new(a))),
             status: ActorStatusLocked::new(status),
             cached_messages: Arc::new(RwLock::new(Vec::new())),
             actor_type,

@@ -1,6 +1,6 @@
-use crate::{actor_system::Ctx, models::{RSState, PAStatus, UIMode}};
+use crate::models::{PAStatus, RSState, UIMode};
 
-pub fn handle(msg: &PAStatus, state: &mut RSState, ctx: &Ctx) {
+pub fn handle(msg: &PAStatus, state: &mut RSState) {
     match msg {
         PAStatus::PulseAudioDisconnected => {
             state.reset();

@@ -9,12 +9,12 @@ pub use entries::Entries;
 pub use entry_type::EntryType;
 pub use identifier::EntryIdentifier;
 pub use play_entry::PlayEntry;
-
-use crate::{ui::widgets::VolumeWidget, unwrap_or_return};
-
-use crate::ui::Rect;
-
 use pulse::volume::ChannelVolumes;
+
+use crate::{
+    ui::{widgets::VolumeWidget, Rect},
+    unwrap_or_return,
+};
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum EntrySpaceLvl {

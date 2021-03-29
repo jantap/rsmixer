@@ -1,9 +1,3 @@
-use super::{common::*, sync_loop::ACTIONS_SX};
-
-use crate::{models::EntryUpdate, entry::{CardProfile, Entry}};
-
-use crate::ui::Rect;
-
 use pulse::{
     callbacks::ListResult,
     context::{
@@ -11,6 +5,13 @@ use pulse::{
         subscribe::{InterestMaskSet, Operation},
     },
     def::{SinkState, SourceState},
+};
+
+use super::{common::*, sync_loop::ACTIONS_SX};
+use crate::{
+    entry::{CardProfile, Entry},
+    models::EntryUpdate,
+    ui::Rect,
 };
 
 pub fn subscribe(
@@ -164,21 +165,17 @@ pub fn on_card_info(res: ListResult<&CardInfo>) {
             .profiles
             .iter()
             .filter_map(|p| {
-                if let Some(n) = &p.name {
-                    Some(CardProfile {
-                        area: Rect::default(),
-                        is_selected: false,
-                        name: n.to_string(),
-                        description: match &p.description {
-                            Some(s) => s.to_string(),
-                            None => n.to_string(),
-                        },
-                        #[cfg(any(feature = "pa_v13"))]
-                        available: p.available,
-                    })
-                } else {
-                    None
-                }
+                p.name.clone().map(|n| CardProfile {
+                    area: Rect::default(),
+                    is_selected: false,
+                    name: n.to_string(),
+                    description: match &p.description {
+                        Some(s) => s.to_string(),
+                        None => n.to_string(),
+                    },
+                    #[cfg(any(feature = "pa_v13"))]
+                    available: p.available,
+                })
             })
             .collect();
 

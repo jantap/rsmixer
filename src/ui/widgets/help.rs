@@ -1,14 +1,12 @@
-use super::{ToolWindowWidget, Widget};
+use itertools::Itertools;
 
+use super::{ToolWindowWidget, Widget};
 use crate::{
     help::{self, HelpLine},
-    ui::{Buffer, Rect, Style},
+    scrollable,
+    ui::{Buffer, Rect, Scrollable, Style},
     RsError,
 };
-
-use crate::{scrollable, ui::Scrollable};
-
-use itertools::Itertools;
 
 #[derive(Clone)]
 pub struct HelpWidget {

@@ -1,4 +1,7 @@
-use crate::{actor_system::Ctx, models::{RSState, UserAction, UIMode, PageType}};
+use crate::{
+    actor_system::Ctx,
+    models::{PageType, PulseAudioAction, RSState, UIMode, UserAction},
+};
 
 pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
     match msg {
@@ -50,14 +53,19 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
                 state.change_ui_mode(UIMode::Normal);
             }
         }
-        UserAction::Confirm => {
-            match state.ui_mode {
-                UIMode::ContextMenu => {
-                    state.confirm_context_menu();
-                }
-                _ => {}
+        UserAction::Confirm => match state.ui_mode {
+            UIMode::ContextMenu => {
+                state.confirm_context_menu();
             }
-        }
+            UIMode::MoveEntry(ident, parent) => {
+                state.change_ui_mode(UIMode::Normal);
+                ctx.send_to(
+                    "pulseaudio",
+                    PulseAudioAction::MoveEntryToParent(ident, parent),
+                );
+            }
+            _ => {}
+        },
         UserAction::Hide(ident) => {
             if UIMode::Normal == state.ui_mode {
                 state.hide_entry(ident);

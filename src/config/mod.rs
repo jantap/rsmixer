@@ -3,19 +3,19 @@ mod colors;
 pub mod keys_mouse;
 mod variables;
 
-pub use variables::Variables;
-
-use crate::{models::{UserAction, InputEvent}, multimap::MultiMap, RsError, Styles, VERSION};
-
 use std::{collections::HashMap, convert::TryFrom};
 
 use crossterm::style::{Attribute, ContentStyle};
-
 use linked_hash_map::LinkedHashMap;
-
-use serde::{Deserialize, Serialize};
-
 use semver::Version;
+use serde::{Deserialize, Serialize};
+pub use variables::Variables;
+
+use crate::{
+    models::{InputEvent, UserAction},
+    multimap::MultiMap,
+    RsError, Styles, VERSION,
+};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RsMixerConfig {
@@ -150,7 +150,8 @@ impl RsMixerConfig {
                 .iter()
                 .find(|(_, v)| (**v).0 == UserAction::OpenContextMenu(None))
             {
-                self.bindings.insert(k.clone(), UserAction::Confirm.to_string());
+                self.bindings
+                    .insert(k.clone(), UserAction::Confirm.to_string());
             }
         }
 

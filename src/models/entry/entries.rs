@@ -1,6 +1,6 @@
-use super::{CardEntry, Entry, EntryIdentifier, EntryKind, EntryType, PlayEntry};
-
 use std::collections::BTreeMap;
+
+use super::{CardEntry, Entry, EntryIdentifier, EntryKind, EntryType, PlayEntry};
 
 pub struct Entries(BTreeMap<EntryIdentifier, Entry>);
 

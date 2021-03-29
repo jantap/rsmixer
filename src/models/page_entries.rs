@@ -1,9 +1,8 @@
 use crate::{
     entry::{EntryIdentifier, EntrySpaceLvl, EntryType},
-    ui::util::entry_height,
+    scrollable,
+    ui::{util::entry_height, Scrollable},
 };
-
-use crate::{scrollable, ui::Scrollable};
 
 pub struct PageEntries {
     pub entries: Vec<EntryIdentifier>,

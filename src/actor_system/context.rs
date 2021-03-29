@@ -1,3 +1,5 @@
+use std::{any::Any, sync::Arc};
+
 use super::{
     actor::{ActorFactory, ActorStatus},
     actor_entry::ActorEntry,
@@ -5,10 +7,7 @@ use super::{
     retry_strategy::RetryStrategy,
     Sender,
 };
-
 use crate::prelude::*;
-
-use std::{any::Any, sync::Arc};
 
 #[derive(Clone)]
 pub struct Ctx {
@@ -35,10 +34,6 @@ impl Ctx {
             .internal_sx
             .send(Arc::new(SystemMessage::RestartActor(id)));
     }
-    pub fn actor(&mut self, id: &'static str, actor_factory: ActorFactory) {
-        self.actor_with_retry_strategy(id, actor_factory, RetryStrategy::default());
-    }
-
     pub fn actor_with_retry_strategy(
         &mut self,
         id: &'static str,

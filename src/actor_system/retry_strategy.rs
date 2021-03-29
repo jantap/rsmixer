@@ -1,8 +1,8 @@
-use crate::prelude::*;
-
-use std::{marker::PhantomData, pin::Pin};
+use std::pin::Pin;
 
 use futures::Future;
+
+use crate::prelude::*;
 
 pub trait StrategyClosure: Future<Output = bool> + Send + Sync {}
 impl<X> StrategyClosure for X where X: Future<Output = bool> + Send + Sync {}
@@ -11,7 +11,6 @@ pub type PinnedClosure = Pin<Box<dyn StrategyClosure>>;
 
 pub trait Strategy<T>: Fn(T) -> PinnedClosure + Send + Sync {}
 impl<X, T> Strategy<T> for X where X: Fn(T) -> PinnedClosure + Send + Sync {}
-
 
 pub struct RetryStrategy {
     pub on_panic: Box<dyn Strategy<usize>>,

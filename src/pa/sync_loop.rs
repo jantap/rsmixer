@@ -1,12 +1,10 @@
-use super::{callbacks, common::*, pa_actions};
-
 use std::ops::Deref;
 
-use pulse::proplist::Proplist;
-
 use lazy_static::lazy_static;
-
+use pulse::proplist::Proplist;
 use state::Storage;
+
+use super::{callbacks, common::*, pa_actions};
 
 lazy_static! {
     pub static ref ACTIONS_SX: Storage<mpsc::UnboundedSender<EntryUpdate>> = Storage::new();
@@ -164,6 +162,7 @@ pub fn start(
             PAInternal::Command(cmd) => {
                 let cmd = cmd.deref();
                 if pa_actions::handle_command(cmd.clone(), &context, &info_sx).is_none() {
+                    monitors.filter(&mainloop, &context, &HashMap::new());
                     mainloop.borrow_mut().unlock();
                     break;
                 }

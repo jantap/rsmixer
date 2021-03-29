@@ -1,11 +1,11 @@
-use crate::RsError;
-
 use std::{
     convert::TryFrom,
     fmt::{self, Display},
 };
 
 use crossterm::event::{Event, KeyCode, KeyModifiers, MouseButton, MouseEventKind};
+
+use crate::RsError;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq)]
 pub enum InputEventKind {

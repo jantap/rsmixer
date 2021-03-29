@@ -1,10 +1,11 @@
-use crate::{actor_system::prelude::*, models::{UserInput, ResizeScreen}};
-
+use anyhow::Result;
+use crossterm::event::{Event, EventStream, MouseEventKind};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use crossterm::event::{Event, EventStream, MouseEventKind};
-
-use anyhow::Result;
+use crate::{
+    actor_system::prelude::*,
+    models::{ResizeScreen, UserInput},
+};
 
 pub struct InputActor {}
 

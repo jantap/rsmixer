@@ -1,25 +1,19 @@
-pub use super::{monitor::Monitors, PAInternal, SPEC};
+pub use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
+pub use log::{debug, error, info, warn};
+pub use pulse::{
+    context::{subscribe::Facility, Context},
+    mainloop::{api::Mainloop as MainloopTrait, threaded::Mainloop},
+    stream::Stream,
+};
+pub use tokio::sync::mpsc;
+
+pub use super::{monitor::Monitors, PAInternal, SPEC};
 pub use crate::{
     entry::{EntryIdentifier, EntryType},
     models::{EntryUpdate, PulseAudioAction},
     RsError,
 };
-
-pub use std::{cell::RefCell, collections::HashMap, rc::Rc};
-
-pub use tokio::sync::mpsc;
-
-pub use pulse::stream::Stream;
-pub use pulse::{
-    context::{subscribe::Facility, Context},
-    mainloop::{
-        api::Mainloop as MainloopTrait, //Needs to be in scope
-        threaded::Mainloop,
-    },
-};
-
-pub use log::{debug, error, info, warn};
 
 impl From<Facility> for EntryType {
     fn from(fac: Facility) -> Self {

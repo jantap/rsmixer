@@ -1,12 +1,8 @@
-use crate::{
-    entry::{EntrySpaceLvl, EntryType},
-    models::PageType,
-    RsError,
-};
-
 use std::io;
 
 use crossterm::{cursor::Hide, execute};
+
+use crate::{entry::EntrySpaceLvl, RsError};
 
 pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
     if lvl == EntrySpaceLvl::Card {

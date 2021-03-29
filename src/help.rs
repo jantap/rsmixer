@@ -1,6 +1,9 @@
-use crate::{models::{UserAction, PageType}, repeat, BINDINGS};
-
 use std::{collections::HashSet, mem::discriminant};
+
+use crate::{
+    models::{PageType, UserAction},
+    repeat, BINDINGS,
+};
 
 #[derive(Debug, Clone)]
 pub struct HelpLine {

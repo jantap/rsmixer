@@ -24,7 +24,11 @@ impl Redraw {
     pub fn reset(&mut self) {
         *self = Redraw::default();
     }
-    pub fn anything(&self) -> bool{
-        self.entries || self.peak_volume.is_some() || self.resize || self.context_menu || !self.affected_entries.is_empty()
+    pub fn anything(&self) -> bool {
+        self.entries
+            || self.peak_volume.is_some()
+            || self.resize
+            || self.context_menu
+            || !self.affected_entries.is_empty()
     }
 }

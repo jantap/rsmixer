@@ -2,10 +2,7 @@ use super::{
     super::{Buffer, Rect, Style},
     Widget,
 };
-
-use crate::RsError;
-
-use crate::ui::Pixel;
+use crate::{ui::Pixel, RsError};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum VolumeWidgetBorder {

@@ -1,8 +1,10 @@
 use super::Widget;
-
-use crate::{models::Style, repeat, ui::Buffer, RsError};
-
-use crate::ui::Rect;
+use crate::{
+    models::Style,
+    repeat,
+    ui::{Buffer, Rect},
+    RsError,
+};
 
 #[derive(Clone)]
 pub struct BlockWidget {

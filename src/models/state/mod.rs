@@ -1,20 +1,20 @@
 mod page_entries;
 
-use super::{ContextMenu, PageEntries, PageType, Redraw, UIMode, PulseAudioAction, ContextMenuEffect};
-
-use crate::{
-    actor_system::Ctx,
-    entry::{Entry, Entries, EntryIdentifier, EntryKind},
-    ui::{
-        widgets::{HelpWidget, WarningTextWidget},
-        Scrollable,
-        UI,
-    },
-};
-
 use std::collections::HashMap;
 
 use pulse::volume;
+
+use super::{
+    ContextMenu, ContextMenuEffect, PageEntries, PageType, PulseAudioAction, Redraw, UIMode,
+};
+use crate::{
+    actor_system::Ctx,
+    entry::{Entries, Entry, EntryIdentifier, EntryKind},
+    ui::{
+        widgets::{HelpWidget, WarningTextWidget},
+        Scrollable, UI,
+    },
+};
 
 pub struct RSState {
     pub current_page: PageType,
@@ -66,11 +66,15 @@ impl RSState {
         }
     }
     pub fn reset(&mut self) {
-        self.ctx().send_to("pulseaudio", PulseAudioAction::CreateMonitors(HashMap::new()));
+        self.ctx().send_to(
+            "pulseaudio",
+            PulseAudioAction::CreateMonitors(HashMap::new()),
+        );
         *self = Self::new(self.ctx.take().unwrap());
         self.redraw.resize = true;
     }
     pub fn change_ui_mode(&mut self, mode: UIMode) {
+        log::debug!("changing ui mode to {:?}", mode);
         self.ui_mode = mode;
         self.redraw.resize = true;
     }
@@ -80,7 +84,7 @@ impl RSState {
         if self.page_entries.ident_position(*ident).is_some() {
             page_entries::update(self);
         }
-        
+
         if self.ui_mode == UIMode::ContextMenu {
             self.change_ui_mode(UIMode::Normal);
         }
@@ -156,7 +160,7 @@ impl RSState {
 
                 page_entries::update(self);
             }
-            _ => {},
+            _ => {}
         }
     }
 
@@ -204,7 +208,7 @@ impl RSState {
 
                 page_entries::update(self);
             }
-            _ => {},
+            _ => {}
         }
     }
 
@@ -247,8 +251,10 @@ impl RSState {
             Some(i) => i,
             None => match self.page_entries.get_selected() {
                 Some(sel) => sel,
-                None => { return; }
-            }
+                None => {
+                    return;
+                }
+            },
         };
 
         let mute = match self.entries.get_play_entry(&ident) {
@@ -257,7 +263,8 @@ impl RSState {
                 return;
             }
         };
-        self.ctx().send_to("pulseaudio", PulseAudioAction::MuteEntry(ident, !mute));
+        self.ctx()
+            .send_to("pulseaudio", PulseAudioAction::MuteEntry(ident, !mute));
     }
 
     pub fn request_change_volume(&mut self, how_much: i16, ident: &Option<EntryIdentifier>) {
@@ -265,8 +272,10 @@ impl RSState {
             Some(i) => i,
             None => match self.page_entries.get_selected() {
                 Some(sel) => sel,
-                None => { return; }
-            }
+                None => {
+                    return;
+                }
+            },
         };
 
         if let Some(play) = self.entries.get_play_entry_mut(&ident) {
@@ -295,7 +304,8 @@ impl RSState {
             for v in vols.get_mut() {
                 v.0 = target;
             }
-            self.ctx().send_to("pulseaudio", PulseAudioAction::SetVolume(ident, vols));
+            self.ctx()
+                .send_to("pulseaudio", PulseAudioAction::SetVolume(ident, vols));
         }
     }
 
@@ -309,18 +319,15 @@ impl RSState {
         }
 
         if self.page_entries.selected() < self.page_entries.len() {
-            if let Some(entry) = self.entries.get(
-                &self
-                    .page_entries
-                    .get(self.page_entries.selected())
-                    .unwrap(),
-            ) {
+            if let Some(entry) = self
+                .entries
+                .get(&self.page_entries.get(self.page_entries.selected()).unwrap())
+            {
                 self.ui_mode = UIMode::ContextMenu;
                 self.context_menu = ContextMenu::new(entry);
 
                 if let EntryKind::CardEntry(card) = &entry.entry_kind {
-                    self
-                        .context_menu
+                    self.context_menu
                         .set_selected(card.selected_profile.unwrap_or(0));
                 }
 
@@ -347,9 +354,7 @@ impl RSState {
                 let (parent_type, _) = self.current_page.parent_child_types();
                 let entry_ident = selected;
 
-                if let Some(parent_id) =
-                    self.entries.get_play_entry(&entry_ident).unwrap().parent
-                {
+                if let Some(parent_id) = self.entries.get_play_entry(&entry_ident).unwrap().parent {
                     let entry_parent = EntryIdentifier::new(parent_type, parent_id);
                     let parent_ident = match self.entries.find(|(&i, _)| i == entry_parent) {
                         Some((i, _)) => *i,
@@ -371,8 +376,10 @@ impl RSState {
             Some(i) => i,
             None => match self.page_entries.get_selected() {
                 Some(i) => i,
-                None => { return; }
-            }
+                None => {
+                    return;
+                }
+            },
         };
 
         self.entries.hide(ident);
@@ -390,8 +397,7 @@ impl RSState {
         self.ctx.as_ref().unwrap()
     }
     fn selected_entry_needs_redraw(&mut self) {
-        self
-            .redraw
+        self.redraw
             .affected_entries
             .insert(self.page_entries.selected());
     }

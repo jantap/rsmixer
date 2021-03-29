@@ -1,3 +1,5 @@
+pub use async_trait::async_trait;
+
 pub use super::{
     actor::{Actor, ActorBlueprint, ActorStatus, BoxedResultFuture, ContinousActor, EventfulActor},
     context::Ctx,
@@ -5,9 +7,6 @@ pub use super::{
     retry_strategy::{PinnedClosure, RetryStrategy},
     worker::Worker,
 };
-
-pub use async_trait::async_trait;
-
 use super::{Receiver, Sender};
 
 pub type MessageReceiver = Receiver<BoxedMessage>;

@@ -1,20 +1,18 @@
+use std::time::Duration;
+
+use anyhow::Result;
+use tokio::{sync::mpsc, task};
+use tokio_stream::{
+    wrappers::{IntervalStream, UnboundedReceiverStream},
+    StreamExt,
+};
+
 use crate::{
     actor_system::prelude::*,
-    models::{PAStatus, PulseAudioAction, EntryUpdate},
+    models::{EntryUpdate, PAStatus, PulseAudioAction},
     pa::{self, common::*},
     VARIABLES,
 };
-
-use std::time::Duration;
-
-use tokio_stream::StreamExt;
-use tokio_stream::wrappers::{IntervalStream, UnboundedReceiverStream};
-use tokio::{
-    sync::mpsc,
-    task,
-};
-
-use anyhow::Result;
 
 pub struct PulseActor {}
 
@@ -85,9 +83,11 @@ async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
                             }
                             continue;
                         }
-                        if let Some(_) = cmd.downcast_ref::<Shutdown>() {
+                        if cmd.downcast_ref::<Shutdown>().is_some() {
                             internal_sx.send(PAInternal::Command(Box::new(PulseAudioAction::Shutdown)))?;
+                            log::error!("starting await");
                             sync_pa.await.unwrap();
+                            log::error!("ending await");
                             return Ok(());
                         }
                     }

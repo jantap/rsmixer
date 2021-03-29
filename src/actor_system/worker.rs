@@ -1,3 +1,11 @@
+use std::{collections::HashMap, sync::Arc};
+
+use futures::future::{AbortHandle, Abortable};
+use tokio::{
+    sync::RwLock,
+    task::{self, JoinHandle},
+};
+
 use super::{
     actor::{ActorFactory, ActorStatus, ActorType},
     actor_entry::ActorEntry,
@@ -6,14 +14,7 @@ use super::{
     retry_strategy::RetryStrategy,
     Receiver, Sender, LOGGING_MODULE,
 };
-
 use crate::prelude::*;
-
-use std::{collections::HashMap, sync::Arc};
-
-use tokio::{sync::RwLock, task};
-
-use futures::future::{AbortHandle, Abortable};
 
 pub struct Worker {
     entries: HashMap<&'static str, ActorEntry>,
@@ -22,6 +23,7 @@ pub struct Worker {
     internal_rx: Arc<RwLock<Receiver<Arc<SystemMessage>>>>,
     internal_sx: Sender<Arc<SystemMessage>>,
     tasks: Vec<AbortHandle>,
+    user_tasks: Vec<JoinHandle<()>>,
 }
 
 impl Worker {
@@ -33,6 +35,7 @@ impl Worker {
             internal_sx: sx,
             internal_rx: Arc::new(RwLock::new(rx)),
             tasks: Vec::new(),
+            user_tasks: Vec::new(),
         }
     }
 
@@ -69,6 +72,9 @@ impl Worker {
                     }
                     SystemMessage::ActorReturnedErr(id, result) => {
                         self.handle_actor_returned_err(id, result);
+                    }
+                    SystemMessage::UserTask(handle) => {
+                        self.user_tasks.push(handle);
                     }
                     SystemMessage::RestartActor(id) => {
                         self.restart_actor(id).await;
@@ -134,7 +140,7 @@ impl Worker {
         for h in &mut self.tasks {
             h.abort();
         }
-        for (_, entry) in &mut self.entries {
+        for entry in self.entries.values_mut() {
             {
                 let mut cached = entry.cached_messages.write().await;
                 cached.clear();
@@ -144,6 +150,11 @@ impl Worker {
         for (id, entry) in &mut self.entries {
             super::actor::stop_actor(id, entry).await;
         }
+
+        for task in &mut self.user_tasks {
+            let _ = task.await;
+        }
+
         info!("Finished");
     }
 
@@ -154,13 +165,10 @@ impl Worker {
             super::actor::stop_actor(id, entry).await;
         }
 
-        match self.factories.get(id) {
-            Some(factory) => {
-                let actor = (factory)();
-                super::actor::spawn_actor(self.internal_sx.clone(), id, actor);
-            }
-            None => {}
-        };
+        if let Some(factory) = self.factories.get(id) {
+            let actor = (factory)();
+            super::actor::spawn_actor(self.internal_sx.clone(), id, actor);
+        }
     }
 
     fn handle_actor_panic(&mut self, id: &'static str) {

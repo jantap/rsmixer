@@ -1,6 +1,6 @@
-use crate::{models::InputEvent, RsError};
-
 use crossterm::event::{KeyCode, KeyModifiers, MouseButton, MouseEventKind};
+
+use crate::{models::InputEvent, RsError};
 
 pub fn try_string_to_event(key: &str) -> Result<InputEvent, RsError> {
     let s = String::from(key).to_lowercase();

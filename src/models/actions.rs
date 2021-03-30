@@ -62,6 +62,8 @@ pub enum UserAction {
 	// number of percentage points it should be changed by
 	RequstChangeVolume(i16, Option<EntryIdentifier>),
 
+    InputVolumeValue,
+
 	// context menus
 	OpenContextMenu(Option<EntryIdentifier>),
 	CloseContextMenu,

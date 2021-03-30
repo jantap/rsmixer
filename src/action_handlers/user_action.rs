@@ -79,5 +79,6 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
 		UserAction::RequestQuit => {
 			ctx.shutdown();
 		}
+        UserAction::InputVolumeValue => {}
 	}
 }

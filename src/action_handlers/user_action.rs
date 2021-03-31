@@ -65,7 +65,8 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
 				);
 			}
 			UIMode::InputVolumeValue => {
-				// @TODO
+				state.confirm_input_volume();
+				state.change_ui_mode(UIMode::Normal);
 			}
 			_ => {}
 		},
@@ -83,7 +84,7 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
 			ctx.shutdown();
 		}
 		UserAction::InputVolumeValue => {
-			if UIMode::Normal == state.ui_mode {
+			if UIMode::Normal == state.ui_mode && state.current_page != PageType::Cards {
 				state.setup_volume_input();
 				state.change_ui_mode(UIMode::InputVolumeValue);
 			}

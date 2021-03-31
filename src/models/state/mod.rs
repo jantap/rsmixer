@@ -319,7 +319,8 @@ impl RSState {
 	}
 
 	pub fn set_volume_input_value(&mut self, percent: String, cursor: u8) {
-		log::error!("volume input {} {}", percent, cursor);
+		self.redraw.context_menu = true;
+
 		self.input_exact_volume.value = percent;
 		self.input_exact_volume.cursor = cursor;
 	}
@@ -348,6 +349,35 @@ impl RSState {
 
 				self.redraw.resize = true;
 			}
+		}
+	}
+
+	pub fn confirm_input_volume(&mut self) {
+		let selected = match self.page_entries.get_selected() {
+			Some(ident) => ident,
+			None => {
+				return;
+			}
+		};
+
+		let percent = match self.input_exact_volume.value.parse::<u16>() {
+			Ok(percent) => percent,
+			Err(_) => {
+				return;
+			}
+		};
+
+		let vol = percent_to_volume(percent as i16);
+
+		if let Some(play) = self.entries.get_play_entry_mut(&selected) {
+			let mut vols = play.volume;
+
+			for v in vols.get_mut() {
+				v.0 = vol;
+			}
+
+			self.ctx()
+				.send_to("pulseaudio", PulseAudioAction::SetVolume(selected, vols));
 		}
 	}
 

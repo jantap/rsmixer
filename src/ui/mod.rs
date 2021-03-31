@@ -117,6 +117,7 @@ pub async fn make_changes(state: &mut RSState) -> Result<(), RsError> {
 	match state.ui_mode {
 		UIMode::Help => state.help.render(&mut state.ui.buffer)?,
 		UIMode::ContextMenu => state.context_menu.render(&mut state.ui.buffer)?,
+		UIMode::InputVolumeValue => state.input_exact_volume.render(&mut state.ui.buffer)?,
 		_ => {}
 	};
 
@@ -181,6 +182,14 @@ fn resize(state: &mut RSState) -> Result<(), RsError> {
 	}
 
 	state.context_menu.resize(state.ui.entries_area)?;
+
+	if state.ui_mode == UIMode::InputVolumeValue {
+		if let Some(ident) = &state.page_entries.get_selected() {
+			if let Some(play) = state.entries.get_play_entry(ident) {
+				state.input_exact_volume.resize(play.area)?;
+			}
+		}
+	}
 
 	state.help.resize(state.ui.entries_area)?;
 

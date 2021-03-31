@@ -44,27 +44,27 @@ macro_rules! unwrap_or_return {
 #[macro_export]
 macro_rules! error {
     ($($x:expr),*) => {
-        log::error!("{} {}", LOGGING_MODULE, format!($($x),*));
+        log::error!("[{}] {}", LOGGING_MODULE, format!($($x),*));
     }
 }
 
 #[macro_export]
 macro_rules! debug {
     ($($x:expr),*) => {
-        log::debug!("{} {}", LOGGING_MODULE, format!($($x),*));
+        log::debug!("[{}] {}", LOGGING_MODULE, format!($($x),*));
     }
 }
 
 #[macro_export]
 macro_rules! info {
     ($($x:expr),*) => {
-        log::info!("{} {}", LOGGING_MODULE, format!($($x),*));
+        log::info!("[{}] {}", LOGGING_MODULE, format!($($x),*));
     }
 }
 
 #[macro_export]
 macro_rules! warn {
     ($($x:expr),*) => {
-        log::warn!("{} {}", LOGGING_MODULE, format!($($x),*));
+        log::warn!("[{}] {}", LOGGING_MODULE, format!($($x),*));
     }
 }

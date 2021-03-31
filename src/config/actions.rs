@@ -36,8 +36,10 @@ impl ToString for UserAction {
 			UserAction::CloseContextMenu => "close_context_menu".to_string(),
 			UserAction::Confirm => "confirm".to_string(),
 			UserAction::Hide(_) => "hide".to_string(),
-			UserAction::SetSelected(_) => "unsupported".to_string(),
-            UserAction::InputVolumeValue => "input_volume_value".to_string(),
+			UserAction::InputVolumeValue => "input_volume_value".to_string(),
+			UserAction::ChangeVolumeInputValue(_, _) | UserAction::SetSelected(_) => {
+				"unsupported".to_string()
+			}
 		}
 	}
 }
@@ -112,7 +114,7 @@ impl TryFrom<String> for UserAction {
 			"right" => UserAction::MoveRight,
 			"cycle_pages_forward" => UserAction::CyclePages(1),
 			"cycle_pages_backward" => UserAction::CyclePages(-1),
-            "input_volume_value" => UserAction::InputVolumeValue,
+			"input_volume_value" => UserAction::InputVolumeValue,
 			"close_context_menu" => UserAction::CloseContextMenu,
 			"confirm" => UserAction::Confirm,
 			"hide" => UserAction::Hide(None),

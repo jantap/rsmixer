@@ -49,7 +49,7 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
 			}
 		}
 		UserAction::CloseContextMenu => {
-			if let UIMode::ContextMenu | UIMode::Help = state.ui_mode {
+			if let UIMode::ContextMenu | UIMode::Help | UIMode::InputVolumeValue = state.ui_mode {
 				state.change_ui_mode(UIMode::Normal);
 			}
 		}
@@ -63,6 +63,9 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
 					"pulseaudio",
 					PulseAudioAction::MoveEntryToParent(ident, parent),
 				);
+			}
+			UIMode::InputVolumeValue => {
+				// @TODO
 			}
 			_ => {}
 		},
@@ -79,6 +82,14 @@ pub fn handle(msg: &UserAction, state: &mut RSState, ctx: &Ctx) {
 		UserAction::RequestQuit => {
 			ctx.shutdown();
 		}
-        UserAction::InputVolumeValue => {}
+		UserAction::InputVolumeValue => {
+			if UIMode::Normal == state.ui_mode {
+				state.setup_volume_input();
+				state.change_ui_mode(UIMode::InputVolumeValue);
+			}
+		}
+		UserAction::ChangeVolumeInputValue(value, cursor) => {
+			state.set_volume_input_value(value.clone(), *cursor);
+		}
 	}
 }

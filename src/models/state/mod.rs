@@ -11,9 +11,10 @@ use crate::{
 	actor_system::Ctx,
 	entry::{Entries, Entry, EntryIdentifier, EntryKind},
 	ui::{
-		widgets::{HelpWidget, WarningTextWidget},
+		widgets::{HelpWidget, VolumeInputWidget, WarningTextWidget},
 		Scrollable, UI,
 	},
+	util::{percent_to_volume, volume_to_percent},
 };
 
 pub struct RSState {
@@ -25,6 +26,7 @@ pub struct RSState {
 	pub redraw: Redraw,
 	pub help: HelpWidget,
 	pub warning_text: WarningTextWidget,
+	pub input_exact_volume: VolumeInputWidget,
 	pub ui: UI,
 	pub ctx: Option<Ctx>,
 }
@@ -42,6 +44,7 @@ impl Default for RSState {
 			warning_text: WarningTextWidget {
 				text: "".to_string(),
 			},
+			input_exact_volume: VolumeInputWidget::default(),
 			ui: UI::default(),
 			ctx: None,
 		}
@@ -58,6 +61,7 @@ impl RSState {
 			ui_mode: UIMode::Normal,
 			redraw: Redraw::default(),
 			help: HelpWidget::default(),
+			input_exact_volume: VolumeInputWidget::default(),
 			warning_text: WarningTextWidget {
 				text: "".to_string(),
 			},
@@ -280,33 +284,44 @@ impl RSState {
 
 		if let Some(play) = self.entries.get_play_entry_mut(&ident) {
 			let mut vols = play.volume;
-			let avg = vols.avg().0;
 
-			let base_delta =
-				(volume::Volume::NORMAL.0 as f32 - volume::Volume::MUTED.0 as f32) / 100.0;
+			let target_percent = volume_to_percent(vols) as i16 + how_much;
 
-			let current_percent =
-				((avg - volume::Volume::MUTED.0) as f32 / base_delta).round() as u32;
-			let target_percent = current_percent as i16 + how_much;
-
-			let target = if target_percent < 0 {
-				volume::Volume::MUTED.0
-			} else if target_percent == 100 {
-				volume::Volume::NORMAL.0
-			} else if target_percent >= 150 {
-				(volume::Volume::NORMAL.0 as f32 * 1.5) as u32
-			} else if target_percent < 100 {
-				volume::Volume::MUTED.0 + target_percent as u32 * base_delta as u32
-			} else {
-				volume::Volume::NORMAL.0 + (target_percent - 100) as u32 * base_delta as u32
-			};
+			let target = percent_to_volume(target_percent);
 
 			for v in vols.get_mut() {
 				v.0 = target;
 			}
+
 			self.ctx()
 				.send_to("pulseaudio", PulseAudioAction::SetVolume(ident, vols));
 		}
+	}
+
+	pub fn setup_volume_input(&mut self) {
+		let ident = match self.page_entries.get_selected() {
+			Some(i) => i,
+			None => {
+				return;
+			}
+		};
+
+		let percent = if let Some(play) = self.entries.get_play_entry(&ident) {
+			volume_to_percent(play.volume)
+		} else {
+			0
+		};
+		let percent = percent.to_string();
+
+		let cursor = percent.len();
+
+		self.set_volume_input_value(percent, cursor as u8);
+	}
+
+	pub fn set_volume_input_value(&mut self, percent: String, cursor: u8) {
+		log::error!("volume input {} {}", percent, cursor);
+		self.input_exact_volume.value = percent;
+		self.input_exact_volume.cursor = cursor;
 	}
 
 	pub fn open_context_menu(&mut self, ident: &Option<EntryIdentifier>) {

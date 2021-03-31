@@ -1,16 +1,18 @@
 use std::convert::TryFrom;
 
+use anyhow::Result;
 use crossterm::event::{Event, MouseButton, MouseEvent, MouseEventKind};
 
+use super::volume_input_edit;
 use crate::{
 	actor_system::Ctx,
 	entry::{EntryIdentifier, EntryKind},
 	models::{InputEvent, PageType, RSState, UIMode, UserAction, UserInput},
 	ui::{Rect, Scrollable},
-	RsError, BINDINGS,
+	BINDINGS,
 };
 
-pub fn handle(input: &UserInput, state: &RSState, ctx: &Ctx) -> Result<(), RsError> {
+pub fn handle(input: &UserInput, state: &RSState, ctx: &Ctx) -> Result<()> {
 	let input_event = InputEvent::try_from(input.event)?;
 	let mut actions;
 
@@ -27,6 +29,12 @@ pub fn handle(input: &UserInput, state: &RSState, ctx: &Ctx) -> Result<(), RsErr
 
 		if let Event::Mouse(mouse_event) = input.event {
 			handle_unbindable_mouse_actions(&mut actions, mouse_event, state);
+		}
+	}
+
+	if state.ui_mode == UIMode::InputVolumeValue {
+		if let Event::Key(key_event) = input.event {
+			volume_input_edit::handle(&mut actions, &key_event, state)?;
 		}
 	}
 
@@ -186,20 +194,23 @@ fn handle_conflicting_bindings(actions: &mut Vec<UserAction>, state: &RSState) {
 
 	if actions.contains(&UserAction::RequestQuit) && actions.contains(&UserAction::CloseContextMenu)
 	{
-		match state.ui_mode {
-			UIMode::ContextMenu | UIMode::Help => {
-				actions.retain(|action| *action != UserAction::RequestQuit);
-			}
-			_ => {
-				actions.retain(|action| *action != UserAction::CloseContextMenu);
-			}
+		if let UIMode::ContextMenu
+		| UIMode::Help
+		| UIMode::InputVolumeValue
+		| UIMode::MoveEntry(_, _) = state.ui_mode
+		{
+			actions.retain(|action| *action != UserAction::RequestQuit);
+		} else {
+			actions.retain(|action| *action != UserAction::CloseContextMenu);
 		}
 	}
 
 	if actions.contains(&UserAction::Confirm)
 		&& actions.contains(&UserAction::OpenContextMenu(None))
 	{
-		if let UIMode::MoveEntry(_, _) | UIMode::ContextMenu = state.ui_mode {
+		if let UIMode::MoveEntry(_, _) | UIMode::ContextMenu | UIMode::InputVolumeValue =
+			state.ui_mode
+		{
 			actions.retain(|action| *action != UserAction::OpenContextMenu(None));
 		} else {
 			actions.retain(|action| *action != UserAction::Confirm);
@@ -207,24 +218,18 @@ fn handle_conflicting_bindings(actions: &mut Vec<UserAction>, state: &RSState) {
 	}
 
 	if actions.contains(&UserAction::MoveLeft) {
-		match state.ui_mode {
-			UIMode::ContextMenu | UIMode::Help => {
-				actions.retain(|action| *action == UserAction::MoveLeft);
-			}
-			_ => {
-				actions.retain(|action| *action != UserAction::MoveLeft);
-			}
+		if let UIMode::ContextMenu | UIMode::Help = state.ui_mode {
+			actions.retain(|action| *action == UserAction::MoveLeft);
+		} else {
+			actions.retain(|action| *action != UserAction::MoveLeft);
 		}
 	}
 
 	if actions.contains(&UserAction::MoveRight) {
-		match state.ui_mode {
-			UIMode::ContextMenu | UIMode::Help => {
-				actions.retain(|action| *action == UserAction::MoveRight);
-			}
-			_ => {
-				actions.retain(|action| *action != UserAction::MoveRight);
-			}
+		if let UIMode::ContextMenu | UIMode::Help = state.ui_mode {
+			actions.retain(|action| *action == UserAction::MoveRight);
+		} else {
+			actions.retain(|action| *action != UserAction::MoveRight);
 		}
 	}
 }

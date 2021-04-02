@@ -2,8 +2,6 @@ mod page_entries;
 
 use std::collections::HashMap;
 
-use pulse::volume;
-
 use super::{
 	ContextMenu, ContextMenuEffect, PageEntries, PageType, PulseAudioAction, Redraw, UIMode,
 };

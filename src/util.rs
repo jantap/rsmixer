@@ -5,9 +5,7 @@ pub fn volume_to_percent(volume: volume::ChannelVolumes) -> u16 {
 
 	let base_delta = (volume::Volume::NORMAL.0 as f32 - volume::Volume::MUTED.0 as f32) / 100.0;
 
-	let current_percent = ((avg - volume::Volume::MUTED.0) as f32 / base_delta).round() as u16;
-
-	current_percent
+	((avg - volume::Volume::MUTED.0) as f32 / base_delta).round() as u16
 }
 
 pub fn percent_to_volume(target_percent: i16) -> u32 {

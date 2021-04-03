@@ -4,6 +4,7 @@ mod context;
 mod messages;
 pub mod prelude;
 mod retry_strategy;
+mod retry_worker;
 mod worker;
 
 pub use actor::{Actor, ActorStatus, ActorType, ContinousActor, EventfulActor};

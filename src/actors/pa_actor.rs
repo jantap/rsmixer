@@ -20,8 +20,8 @@ impl PulseActor {
 	pub fn new() -> Actor {
 		Actor::Continous(Box::new(Self {}))
 	}
-	pub fn blueprint() -> ActorBlueprint {
-		ActorBlueprint::new("pulseaudio", &Self::new)
+	pub fn item() -> ActorItem {
+		ActorItem::new("pulseaudio", &Self::new)
 			.on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
 			.on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
 	}
@@ -29,16 +29,14 @@ impl PulseActor {
 
 #[async_trait]
 impl ContinousActor for PulseActor {
-	async fn start(&mut self, _ctx: Ctx) -> Result<()> {
-		Ok(())
-	}
+	async fn start(&mut self, _ctx: Ctx) {}
 	async fn stop(&mut self) {}
-	fn run(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> BoxedResultFuture {
+	fn run(&mut self, ctx: Ctx, events_rx: LockedReceiver) -> BoxedResultFuture {
 		Box::pin(start_async(events_rx, ctx))
 	}
 }
 
-async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
+async fn start_async(external_rx: LockedReceiver, ctx: Ctx) -> Result<()> {
 	let mut interval = IntervalStream::new(tokio::time::interval(Duration::from_millis(50)));
 
 	let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RsError> {
@@ -48,7 +46,7 @@ async fn start_async(external_rx: MessageReceiver, ctx: Ctx) -> Result<()> {
 		}
 	};
 	let retry_time = (*VARIABLES).get().pa_retry_time;
-	let mut external_rx = UnboundedReceiverStream::new(external_rx);
+	let mut external_rx = external_rx.write().await;
 
 	loop {
 		let (info_sx, info_rx) = mpsc::unbounded_channel();

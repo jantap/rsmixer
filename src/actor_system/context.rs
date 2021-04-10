@@ -1,12 +1,6 @@
 use std::{any::Any, sync::Arc};
 
-use super::{
-	actor::{ActorFactory, ActorStatus},
-	actor_entry::ActorEntry,
-	messages::SystemMessage,
-	retry_strategy::RetryStrategy,
-	Sender,
-};
+use super::{actor::ActorItem, messages::SystemMessage, Sender};
 use crate::prelude::*;
 
 #[derive(Clone)]
@@ -29,44 +23,36 @@ impl Ctx {
 	pub fn shutdown(&self) {
 		let _ = self.internal_sx.send(Arc::new(SystemMessage::Shutdown));
 	}
+    #[allow(dead_code)]
+	pub fn stop_actor(&self, id: &'static str) {
+		let _ = self
+			.internal_sx
+			.send(Arc::new(SystemMessage::StopActor(id)));
+	}
+    #[allow(dead_code)]
 	pub fn restart_actor(&self, id: &'static str) {
 		let _ = self
 			.internal_sx
 			.send(Arc::new(SystemMessage::RestartActor(id)));
 	}
-	pub fn actor_with_retry_strategy(
-		&mut self,
-		id: &'static str,
-		actor_factory: ActorFactory,
-		retry_strategy: RetryStrategy,
-	) {
-		let actor = actor_factory();
-
+	pub fn register_actor(&mut self, actor_item: ActorItem) {
 		let _ = self
 			.internal_sx
-			.send(Arc::new(SystemMessage::ActorRegistered(
-				id,
-				actor_factory,
-				retry_strategy,
-			)));
-
-		let _ = self.internal_sx.send(Arc::new(SystemMessage::ActorUpdate(
-			id,
-			ActorEntry::new(None, ActorStatus::Starting, None),
-		)));
-
-		let sx = self.internal_sx.clone();
-
-		super::actor::spawn_actor(sx, id, actor);
+			.send(Arc::new(SystemMessage::RegisterActor(actor_item)));
+	}
+	pub fn start_actor(&self, id: &'static str) {
+		let _ = self
+			.internal_sx
+			.send(Arc::new(SystemMessage::StartActor(id)));
 	}
 	pub fn actor_panicked(&self, id: &'static str) {
 		let _ = self
 			.internal_sx
-			.send(Arc::new(SystemMessage::ActorPanicked(id)));
+			.send(Arc::new(SystemMessage::ActorTaskFinished(id, None)));
 	}
-	pub fn actor_returned_err(&self, id: &'static str, result: Result<()>) {
+	pub fn actor_returned(&self, id: &'static str, result: Result<()>) {
 		let _ = self
 			.internal_sx
-			.send(Arc::new(SystemMessage::ActorReturnedErr(id, result)));
+			.send(Arc::new(SystemMessage::ActorTaskFinished(id, Some(result))));
 	}
 }

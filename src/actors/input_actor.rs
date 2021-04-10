@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::event::{Event, EventStream, MouseEventKind};
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use tokio_stream::StreamExt;
 
 use crate::{
 	actor_system::prelude::*,
@@ -14,8 +14,8 @@ impl InputActor {
 		Actor::Continous(Box::new(Self {}))
 	}
 
-	pub fn blueprint() -> ActorBlueprint {
-		ActorBlueprint::new("input", &Self::new)
+	pub fn item() -> ActorItem {
+		ActorItem::new("input", &Self::new)
 			.on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
 			.on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
 	}
@@ -23,19 +23,17 @@ impl InputActor {
 
 #[async_trait]
 impl ContinousActor for InputActor {
-	async fn start(&mut self, _ctx: Ctx) -> Result<()> {
-		Ok(())
-	}
+	async fn start(&mut self, _ctx: Ctx) {}
 	async fn stop(&mut self) {}
 
-	fn run(&mut self, ctx: Ctx, events_rx: MessageReceiver) -> BoxedResultFuture {
+	fn run(&mut self, ctx: Ctx, events_rx: LockedReceiver) -> BoxedResultFuture {
 		Box::pin(start(events_rx, ctx))
 	}
 }
 
-pub async fn start(rx: MessageReceiver, ctx: Ctx) -> Result<()> {
+pub async fn start(rx: LockedReceiver, ctx: Ctx) -> Result<()> {
 	let mut reader = EventStream::new();
-	let mut rx = UnboundedReceiverStream::new(rx);
+	let mut rx = rx.write().await;
 
 	loop {
 		let input_event = reader.next();

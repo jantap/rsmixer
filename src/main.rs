@@ -1,6 +1,3 @@
-#![feature(async_closure)]
-#![feature(btree_retain)]
-
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 
@@ -70,9 +67,9 @@ async fn run() -> Result<()> {
 
 	let actor_system_handle = worker.start();
 
-	EventLoopActor::blueprint().start(&mut context);
-	PulseActor::blueprint().start(&mut context);
-	InputActor::blueprint().start(&mut context);
+	EventLoopActor::item().register_and_start(&mut context);
+	PulseActor::item().register_and_start(&mut context);
+	InputActor::item().register_and_start(&mut context);
 
 	debug!("Actor system started");
 	actor_system_handle.await?

@@ -1,13 +1,15 @@
+use std::sync::Arc;
+
 pub use async_trait::async_trait;
+use tokio::sync::RwLock;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub use super::{
-	actor::{Actor, ActorBlueprint, ActorStatus, BoxedResultFuture, ContinousActor, EventfulActor},
+	actor::{Actor, ActorItem, ActorStatus, BoxedResultFuture, ContinousActor, EventfulActor},
 	context::Ctx,
 	messages::{BoxedMessage, Shutdown},
 	retry_strategy::{PinnedClosure, RetryStrategy},
 	worker::Worker,
 };
-use super::{Receiver, Sender};
 
-pub type MessageReceiver = Receiver<BoxedMessage>;
-pub type MessageSender = Sender<BoxedMessage>;
+pub type LockedReceiver = Arc<RwLock<UnboundedReceiverStream<BoxedMessage>>>;

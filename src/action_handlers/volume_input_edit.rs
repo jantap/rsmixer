@@ -19,9 +19,16 @@ pub fn handle(actions: &mut Vec<UserAction>, input: &KeyEvent, state: &RSState) 
 	}
 
 	let new_input_value = match input.code {
-		KeyCode::Char(x @ ('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9')) => {
-			Some(add_char(x, state)?)
-		}
+		KeyCode::Char(x @ '0')
+		| KeyCode::Char(x @ '1')
+		| KeyCode::Char(x @ '2')
+		| KeyCode::Char(x @ '3')
+		| KeyCode::Char(x @ '4')
+		| KeyCode::Char(x @ '5')
+		| KeyCode::Char(x @ '6')
+		| KeyCode::Char(x @ '7')
+		| KeyCode::Char(x @ '8')
+		| KeyCode::Char(x @ '9') => Some(add_char(x, state)?),
 		KeyCode::Backspace => Some(remove_char(state)?),
 		KeyCode::Left => Some(move_cursor(state, -1)?),
 		KeyCode::Right => Some(move_cursor(state, 1)?),

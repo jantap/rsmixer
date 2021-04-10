@@ -1,7 +1,5 @@
 use std::{error::Error, fmt};
 
-use thiserror::Error;
-
 use crate::pa::PAInternal;
 
 #[derive(Debug)]

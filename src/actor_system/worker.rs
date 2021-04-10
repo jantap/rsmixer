@@ -1,36 +1,90 @@
 use std::{collections::HashMap, sync::Arc};
 
-use tokio::{
-	sync::RwLock,
-	task::{self, JoinHandle},
-};
+use tokio::task;
 
 use super::{
-	actor::{ActorFactory, ActorStatus, ActorType},
-	actor_entry::ActorEntry,
+	actor::ActorItem,
+	context::Ctx,
 	messages::{BoxedMessage, SystemMessage},
-	retry_worker::RetryWorker,
 	Receiver, Sender, LOGGING_MODULE,
 };
 use crate::prelude::*;
 
+pub struct RegisteredActors {
+	items: HashMap<&'static str, ActorItem>,
+	ctx: Ctx,
+}
+
+impl RegisteredActors {
+	pub fn new(ctx: Ctx) -> Self {
+		Self {
+			items: HashMap::new(),
+			ctx,
+		}
+	}
+
+	pub fn register(&mut self, item: ActorItem) {
+		self.items.insert(item.id, item);
+	}
+
+	pub async fn stop(&mut self, id: &'static str) {
+		if let Some(item) = self.items.get_mut(id) {
+			item.stop().await;
+		}
+	}
+
+	pub async fn restart(&mut self, id: &'static str) {
+		if let Some(item) = self.items.get_mut(id) {
+			item.restart().await;
+		}
+	}
+
+	pub async fn stop_and_cache_messages(&mut self, id: &'static str) {
+		if let Some(item) = self.items.get_mut(id) {
+			item.stop_and_cache_messages().await;
+		}
+	}
+
+	pub async fn start(&mut self, id: &'static str) -> Result<()> {
+		if let Some(item) = self.items.get_mut(id) {
+			item.start(&self.ctx).await
+		} else {
+			Err(anyhow::anyhow!("actor is not registered"))
+		}
+	}
+
+	pub fn send(&mut self, id: &'static str, msg: BoxedMessage) {
+		if let Some(item) = self.items.get_mut(id) {
+			item.send(msg);
+		}
+	}
+
+	pub async fn actor_task_finished(&mut self, id: &'static str, result: Option<Result<()>>) {
+		if let Some(item) = self.items.get_mut(id) {
+			item.actor_task_finished(&self.ctx, result).await;
+		}
+	}
+
+	pub async fn shutdown(&mut self) {
+		for (_, item) in &mut self.items {
+			item.shutdown();
+		}
+
+		for (_, item) in &mut self.items {
+			item.join().await;
+		}
+	}
+}
+
 pub struct Worker {
-	entries: HashMap<&'static str, ActorEntry>,
-	factories: HashMap<&'static str, ActorFactory>,
+	actors: RegisteredActors,
 	internal_rx: Option<Receiver<Arc<SystemMessage>>>,
-	internal_sx: Sender<Arc<SystemMessage>>,
-	user_tasks: Vec<JoinHandle<()>>,
-	retry_worker: RetryWorker,
 }
 impl Worker {
 	pub fn new(sx: Sender<Arc<SystemMessage>>, rx: Receiver<Arc<SystemMessage>>) -> Self {
 		Self {
-			entries: HashMap::new(),
-			factories: HashMap::new(),
-			internal_sx: sx,
+			actors: RegisteredActors::new(sx.clone().into()),
 			internal_rx: Some(rx),
-			user_tasks: Vec::new(),
-			retry_worker: RetryWorker::default(),
 		}
 	}
 
@@ -48,135 +102,35 @@ impl Worker {
 					}
 				};
 				match msg {
-					SystemMessage::ActorRegistered(id, factory, retry_strategy) => {
-						self.factories.insert(id, factory);
-						self.retry_worker.add_strategy(id, retry_strategy);
+					SystemMessage::RegisterActor(item) => {
+						self.actors.register(item);
 					}
-					SystemMessage::ActorUpdate(id, mut actor) => {
-						if let Some(a) = self.entries.get(id) {
-							actor.cached_messages = a.cached_messages.to_owned();
-						}
-						self.entries.insert(id, actor);
+					SystemMessage::StartActor(id) => {
+						if let Err(e) = self.actors.start(id).await {
+                            error!("Failed to start actor {}.\n{:#?}", id, e);
+                        }
 					}
+					SystemMessage::StopActor(id) => {
+                        self.actors.stop(id).await;
+                    }
 					SystemMessage::SendMsg(id, m) => {
-						self.send_to(id, m).await;
+						self.actors.send(id, m);
 					}
-					SystemMessage::ActorPanicked(id) => {
-						self.retry_worker
-							.actor_panic(id, self.internal_sx.clone().into());
-					}
-					SystemMessage::ActorReturnedErr(id, result) => {
-						self.retry_worker.actor_returned_err(
-							id,
-							result,
-							self.internal_sx.clone().into(),
-						);
-					}
-					SystemMessage::UserTask(handle) => {
-						self.user_tasks.push(handle);
+					SystemMessage::ActorTaskFinished(id, result) => {
+						self.actors.stop_and_cache_messages(id).await;
+
+						self.actors.actor_task_finished(id, result).await;
 					}
 					SystemMessage::RestartActor(id) => {
-						self.restart_actor(id).await;
+						self.actors.restart(id).await;
 					}
 					SystemMessage::Shutdown => {
-						self.shutdown().await;
+						self.actors.shutdown().await;
 						break;
 					}
 				};
 			}
 			Ok(())
 		})
-	}
-
-	async fn send_to(&mut self, id: &'static str, msg: BoxedMessage) {
-		if let Some(entry) = self.entries.get(id) {
-			if let Some(ActorType::Continous) = entry.actor_type {
-				if let Some(sx) = &entry.event_sx {
-					let _ = sx.send(msg);
-					return;
-				}
-			}
-		}
-
-		self.send_to_eventful(id, msg).await;
-	}
-
-	async fn send_to_eventful(&mut self, id: &'static str, msg: BoxedMessage) {
-		let mut sx = None;
-		if let Some(act_entry) = self.entries.get_mut(id) {
-			if act_entry.actor.is_some()
-				&& act_entry.actor_type == Some(ActorType::Eventful)
-				&& act_entry.status.get().await == ActorStatus::Ready
-			{
-				if let Some(s) = &act_entry.event_sx {
-					sx = Some(s.clone());
-				}
-			}
-		}
-		if let Some(sx) = sx {
-			let cached = self.cached_messages_for(id);
-			let mut cached = cached.write().await;
-			let mut to_send = vec![msg];
-
-			while let Some(c) = cached.pop() {
-				to_send.push(c);
-			}
-
-			while let Some(c) = to_send.pop() {
-				let _ = sx.send(c);
-			}
-			return;
-		}
-
-		let cached = self.cached_messages_for(id);
-		let mut cached = cached.write().await;
-
-		cached.push(msg);
-	}
-
-	async fn shutdown(&mut self) {
-		info!("Shutting down");
-		self.retry_worker.abort_arbitrers();
-
-		for entry in self.entries.values_mut() {
-			{
-				let mut cached = entry.cached_messages.write().await;
-				cached.clear();
-			}
-		}
-
-		for (id, entry) in &mut self.entries {
-			super::actor::stop_actor(id, entry).await;
-		}
-
-		for task in &mut self.user_tasks {
-			let _ = task.await;
-		}
-
-		info!("Finished");
-	}
-
-	async fn restart_actor(&mut self, id: &'static str) {
-		info!("Restarting actor {}", id);
-
-		if let Some(entry) = self.entries.get_mut(id) {
-			super::actor::stop_actor(id, entry).await;
-		}
-
-		if let Some(factory) = self.factories.get(id) {
-			let actor = (factory)();
-			super::actor::spawn_actor(self.internal_sx.clone(), id, actor);
-		}
-	}
-
-	fn cached_messages_for(&mut self, id: &'static str) -> Arc<RwLock<Vec<BoxedMessage>>> {
-		let j = self.entries.get(id).is_some();
-
-		if !j {
-			self.entries
-				.insert(id, ActorEntry::new(None, ActorStatus::NotRegistered, None));
-		}
-
-		Arc::clone(&self.entries.get(id).unwrap().cached_messages)
 	}
 }

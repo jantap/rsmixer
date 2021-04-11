@@ -3,11 +3,11 @@ pub mod common;
 mod errors;
 mod monitor;
 mod pa_actions;
-mod sync_loop;
+mod pa_interface;
 
 use common::*;
 use lazy_static::lazy_static;
-pub use sync_loop::start;
+pub use pa_interface::start;
 
 #[derive(Debug)]
 pub enum PAInternal {

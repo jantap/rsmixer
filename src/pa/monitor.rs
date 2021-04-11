@@ -2,7 +2,7 @@ use std::convert::TryInto;
 
 use pulse::stream::PeekResult;
 
-use super::{common::*, sync_loop::ACTIONS_SX};
+use super::{common::*, pa_interface::ACTIONS_SX};
 
 pub struct Monitor {
 	stream: Rc<RefCell<Stream>>,

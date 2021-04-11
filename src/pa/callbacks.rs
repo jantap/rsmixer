@@ -7,7 +7,7 @@ use pulse::{
 	def::{SinkState, SourceState},
 };
 
-use super::{common::*, sync_loop::ACTIONS_SX};
+use super::{common::*, pa_interface::ACTIONS_SX};
 use crate::{
 	entry::{CardProfile, Entry},
 	models::EntryUpdate,

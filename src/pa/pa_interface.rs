@@ -56,13 +56,13 @@ pub fn start(
 			.borrow_mut()
 			.set_state_callback(Some(Box::new(move || {
 				let state = unsafe { (*context_ref.as_ptr()).get_state() };
-				match state {
+				if matches!(
+					state,
 					pulse::context::State::Ready
-					| pulse::context::State::Failed
-					| pulse::context::State::Terminated => {
-						unsafe { (*ml_ref.as_ptr()).signal(false) };
-					}
-					_ => {}
+						| pulse::context::State::Failed
+						| pulse::context::State::Terminated
+				) {
+					unsafe { (*ml_ref.as_ptr()).signal(false) };
 				}
 			})));
 	}
@@ -70,26 +70,21 @@ pub fn start(
 	// Try to connect to pulseaudio
 	debug!("[PAInterface] Connecting context");
 
-	match context
+	if context
 		.borrow_mut()
 		.connect(None, pulse::context::FlagSet::NOFLAGS, None)
+		.is_err()
 	{
-		Ok(_) => {}
-		Err(_) => {
-			error!("[PAInterface] Error while connecting context");
-			return Err(PAError::MainloopConnectError.into());
-		}
-	};
+		error!("[PAInterface] Error while connecting context");
+		return Err(PAError::MainloopConnectError.into());
+	}
 
 	info!("[PAInterface] Starting mainloop");
 
 	// start mainloop
 	mainloop.borrow_mut().lock();
-	match mainloop.borrow_mut().start() {
-		Ok(_) => {}
-		Err(_) => {
-			return Err(PAError::MainloopConnectError.into());
-		}
+	if mainloop.borrow_mut().start().is_err() {
+		return Err(PAError::MainloopConnectError.into());
 	}
 
 	debug!("[PAInterface] Waiting for context to be ready...");
@@ -113,22 +108,6 @@ pub fn start(
 	debug!("[PAInterface] PAContext ready");
 
 	context.borrow_mut().set_state_callback(None);
-	// {
-	//     debug!("[PAInterface] Registering state change callback");
-	//     let ml_ref = Rc::clone(&mainloop);
-	//     let context_ref = Rc::clone(&context);
-	//     context
-	//         .borrow_mut()
-	//         .set_state_callback(Some(Box::new(move || {
-	//             let state = unsafe { (*context_ref.as_ptr()).get_state() };
-	//             match state {
-	//                 pulse::context::State::Failed
-	//                 | pulse::context::State::Terminated => {
-	//                 }
-	//                 _ => {}
-	//             }
-	//         })));
-	// }
 
 	callbacks::subscribe(&context, info_sx.clone())?;
 	callbacks::request_current_state(context.clone(), info_sx.clone())?;

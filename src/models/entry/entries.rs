@@ -38,13 +38,19 @@ impl Entries {
 		self.0.get_mut(ident)
 	}
 	pub fn get_card_entry(&self, entry_ident: &EntryIdentifier) -> Option<&CardEntry> {
-        self.0.get(entry_ident).map_or(None, |e| e.entry_kind.card_entry())
+		self.0
+			.get(entry_ident)
+			.map_or(None, |e| e.entry_kind.card_entry())
 	}
 	pub fn get_play_entry(&self, entry_ident: &EntryIdentifier) -> Option<&PlayEntry> {
-        self.0.get(entry_ident).map_or(None, |e| e.entry_kind.play_entry())
+		self.0
+			.get(entry_ident)
+			.map_or(None, |e| e.entry_kind.play_entry())
 	}
 	pub fn get_play_entry_mut(&mut self, entry_ident: &EntryIdentifier) -> Option<&mut PlayEntry> {
-        self.0.get_mut(entry_ident).map_or(None, |e| e.entry_kind.play_entry_mut())
+		self.0
+			.get_mut(entry_ident)
+			.map_or(None, |e| e.entry_kind.play_entry_mut())
 	}
 	pub fn position<P>(&mut self, predicate: P) -> Option<usize>
 	where

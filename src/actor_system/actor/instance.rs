@@ -41,9 +41,9 @@ impl ActorInstance {
 		actor.stop().await;
 	}
 
-	pub async fn get_receiver<'a>(
-		&'a mut self,
-	) -> RwLockWriteGuard<'a, UnboundedReceiverStream<BoxedMessage>> {
+	pub async fn get_receiver(
+		&mut self,
+	) -> RwLockWriteGuard<'_, UnboundedReceiverStream<BoxedMessage>> {
 		self.events_rx.write().await
 	}
 

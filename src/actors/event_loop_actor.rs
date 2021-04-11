@@ -19,12 +19,12 @@ pub struct EventLoopActor {
 }
 
 impl EventLoopActor {
-	pub fn new() -> Actor {
+	pub fn factory() -> Actor {
 		Actor::Eventful(Box::new(Self::default()))
 	}
 
 	pub fn item() -> ActorItem {
-		ActorItem::new("event_loop", &Self::new)
+		ActorItem::new("event_loop", &Self::factory)
 			.on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
 			.on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
 	}

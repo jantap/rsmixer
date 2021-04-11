@@ -13,11 +13,7 @@ pub enum ActorStatus {
 
 impl ActorStatus {
 	pub fn is_off(&self) -> bool {
-		if let Self::ArbiterRunning | Self::Off = self {
-			true
-		} else {
-			false
-		}
+		matches!(self, Self::ArbiterRunning | Self::Off)
 	}
 }
 

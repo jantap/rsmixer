@@ -17,11 +17,11 @@ use crate::{
 pub struct PulseActor {}
 
 impl PulseActor {
-	pub fn new() -> Actor {
+	pub fn factory() -> Actor {
 		Actor::Continous(Box::new(Self {}))
 	}
 	pub fn item() -> ActorItem {
-		ActorItem::new("pulseaudio", &Self::new)
+		ActorItem::new("pulseaudio", &Self::factory)
 			.on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
 			.on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
 	}

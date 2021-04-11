@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms)]
+
 extern crate crossbeam_channel as cb_channel;
 extern crate libpulse_binding as pulse;
 

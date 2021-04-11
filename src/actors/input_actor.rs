@@ -10,12 +10,12 @@ use crate::{
 pub struct InputActor {}
 
 impl InputActor {
-	pub fn new() -> Actor {
+	pub fn factory() -> Actor {
 		Actor::Continous(Box::new(Self {}))
 	}
 
 	pub fn item() -> ActorItem {
-		ActorItem::new("input", &Self::new)
+		ActorItem::new("input", &Self::factory)
 			.on_panic(|_| -> PinnedClosure { Box::pin(async { true }) })
 			.on_error(|_| -> PinnedClosure { Box::pin(async { true }) })
 	}

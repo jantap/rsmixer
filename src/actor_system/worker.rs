@@ -66,11 +66,11 @@ impl RegisteredActors {
 	}
 
 	pub async fn shutdown(&mut self) {
-		for (_, item) in &mut self.items {
+		for item in self.items.values_mut() {
 			item.shutdown();
 		}
 
-		for (_, item) in &mut self.items {
+		for item in self.items.values_mut() {
 			item.join().await;
 		}
 	}
@@ -83,7 +83,7 @@ pub struct Worker {
 impl Worker {
 	pub fn new(sx: Sender<Arc<SystemMessage>>, rx: Receiver<Arc<SystemMessage>>) -> Self {
 		Self {
-			actors: RegisteredActors::new(sx.clone().into()),
+			actors: RegisteredActors::new(sx.into()),
 			internal_rx: Some(rx),
 		}
 	}

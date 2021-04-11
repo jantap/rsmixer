@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 
 use crate::{
+	config::ConfigError,
 	models::{PageType, UserAction},
-    config::ConfigError,
 };
 
 impl ToString for UserAction {

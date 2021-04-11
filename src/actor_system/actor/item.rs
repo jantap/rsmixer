@@ -173,7 +173,7 @@ impl ActorItem {
 
 		actor.start(ctx.clone()).await;
 
-        self.status.set(ActorStatus::Ready).await;
+		self.status.set(ActorStatus::Ready).await;
 
 		let actor_type = actor.actor_type();
 

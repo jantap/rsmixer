@@ -2,8 +2,8 @@ use std::cmp::{max, min};
 
 use super::{BlockWidget, Widget};
 use crate::{
+	prelude::*,
 	ui::{Buffer, Rect},
-    prelude::*,
 };
 
 #[derive(Clone)]

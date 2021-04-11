@@ -125,7 +125,8 @@ fn create(
 		match Stream::new(&mut p_context.borrow_mut(), "RsMixer monitor", p_spec, None) {
 			Some(stream) => stream,
 			None => {
-				return Err(PAError::StreamCreateError).context("while creating stream for monitoring volume");
+				return Err(PAError::StreamCreateError)
+					.context("while creating stream for monitoring volume");
 			}
 		},
 	));
@@ -176,7 +177,8 @@ fn create(
 	) {
 		Ok(_) => {}
 		Err(_) => {
-			return Err(PAError::StreamCreateError).context("while connecting stream for monitoring volume");
+			return Err(PAError::StreamCreateError)
+				.context("while connecting stream for monitoring volume");
 		}
 	};
 

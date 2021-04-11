@@ -1,9 +1,9 @@
 use super::Widget;
 use crate::{
 	models::Style,
+	prelude::*,
 	repeat,
 	ui::{Buffer, Rect, UIError},
-    prelude::*,
 };
 
 #[derive(Clone)]

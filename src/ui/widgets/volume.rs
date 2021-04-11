@@ -1,5 +1,8 @@
 use super::Widget;
-use crate::{ui::{Buffer, Rect, Style, UIError, Pixel}, prelude::*};
+use crate::{
+	prelude::*,
+	ui::{Buffer, Pixel, Rect, Style, UIError},
+};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum VolumeWidgetBorder {

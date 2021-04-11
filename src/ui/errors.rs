@@ -2,10 +2,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum UIError {
-    #[error("terminal window is too small")]
+	#[error("terminal window is too small")]
 	TerminalTooSmall,
-    #[error("crossterm terminal error")]
+	#[error("crossterm terminal error")]
 	TerminalError(#[from] crossterm::ErrorKind),
-    #[error("terminal io error")]
+	#[error("terminal io error")]
 	IoError(#[from] std::io::Error),
 }

@@ -7,11 +7,11 @@ pub use pulse::{
 };
 pub use tokio::sync::mpsc;
 
-pub use super::{monitor::Monitors, PAInternal, SPEC, errors::PAError};
+pub use super::{errors::PAError, monitor::Monitors, PAInternal, SPEC};
 pub use crate::{
 	entry::{EntryIdentifier, EntryType},
 	models::{EntryUpdate, PulseAudioAction},
-    prelude::*,
+	prelude::*,
 };
 
 pub static LOGGING_MODULE: &str = "PAInterface";

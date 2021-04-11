@@ -1,14 +1,14 @@
 mod actions;
 mod colors;
+mod errors;
 pub mod keys_mouse;
 mod variables;
-mod errors;
 
 use std::{collections::HashMap, convert::TryFrom};
 
 use crossterm::style::{Attribute, ContentStyle};
-use linked_hash_map::LinkedHashMap;
 pub use errors::ConfigError;
+use linked_hash_map::LinkedHashMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 pub use variables::Variables;
@@ -16,8 +16,8 @@ pub use variables::Variables;
 use crate::{
 	models::{InputEvent, UserAction},
 	multimap::MultiMap,
+	prelude::*,
 	Styles, VERSION,
-    prelude::*,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -41,9 +41,7 @@ impl RsMixerConfig {
 		Ok(config)
 	}
 
-	pub fn interpret(
-		&mut self,
-	) -> Result<(Styles, MultiMap<InputEvent, UserAction>, Variables)> {
+	pub fn interpret(&mut self) -> Result<(Styles, MultiMap<InputEvent, UserAction>, Variables)> {
 		self.compatibility_layer()?;
 
 		let bindings = self.bindings()?;
@@ -57,14 +55,16 @@ impl RsMixerConfig {
 				if let Some(color) = colors::str_to_color(q) {
 					c = c.foreground(color);
 				} else {
-					return Err(ConfigError::InvalidColor(q.clone())).context("while parsing config file");
+					return Err(ConfigError::InvalidColor(q.clone()))
+						.context("while parsing config file");
 				}
 			}
 			if let Some(q) = &v.bg {
 				if let Some(color) = colors::str_to_color(q) {
 					c = c.background(color);
 				} else {
-					return Err(ConfigError::InvalidColor(q.clone())).context("while parsing config file");
+					return Err(ConfigError::InvalidColor(q.clone()))
+						.context("while parsing config file");
 				}
 			}
 			if let Some(attrs) = &v.attributes {

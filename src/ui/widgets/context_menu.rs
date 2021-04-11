@@ -3,8 +3,8 @@ use std::cmp::max;
 use super::Widget;
 use crate::{
 	models::ContextMenu,
+	prelude::*,
 	ui::{Buffer, Rect, Scrollable, Style, UIError},
-    prelude::*,
 };
 
 impl Widget for ContextMenu {

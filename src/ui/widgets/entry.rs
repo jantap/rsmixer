@@ -4,12 +4,11 @@ use pulse::volume;
 
 use crate::{
 	entry::{CardEntry, Entry, EntryKind, EntrySpaceLvl, HiddenStatus, PlayEntry},
+	prelude::*,
 	ui::{
 		widgets::{VolumeWidgetBorder, Widget},
-		Buffer, Rect, Style,
-        UIError,
+		Buffer, Rect, Style, UIError,
 	},
-    prelude::*,
 };
 
 impl Widget for Entry {

@@ -1,8 +1,8 @@
 use super::{BlockWidget, Widget};
 use crate::{
 	models::Style,
+	prelude::*,
 	ui::{Buffer, Rect},
-    prelude::*,
 };
 
 #[derive(Clone)]

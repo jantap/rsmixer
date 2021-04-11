@@ -4,6 +4,7 @@ use std::{
 };
 
 use crossterm::event::{Event, KeyCode, KeyModifiers, MouseButton, MouseEventKind};
+
 use crate::config::ConfigError;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq)]

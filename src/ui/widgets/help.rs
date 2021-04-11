@@ -3,9 +3,9 @@ use itertools::Itertools;
 use super::{ToolWindowWidget, Widget};
 use crate::{
 	help::{self, HelpLine},
+	prelude::*,
 	scrollable,
 	ui::{Buffer, Rect, Scrollable, Style, UIError},
-    prelude::*,
 };
 
 #[derive(Clone)]

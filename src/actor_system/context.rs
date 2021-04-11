@@ -23,13 +23,13 @@ impl Ctx {
 	pub fn shutdown(&self) {
 		let _ = self.internal_sx.send(Arc::new(SystemMessage::Shutdown));
 	}
-    #[allow(dead_code)]
+	#[allow(dead_code)]
 	pub fn stop_actor(&self, id: &'static str) {
 		let _ = self
 			.internal_sx
 			.send(Arc::new(SystemMessage::StopActor(id)));
 	}
-    #[allow(dead_code)]
+	#[allow(dead_code)]
 	pub fn restart_actor(&self, id: &'static str) {
 		let _ = self
 			.internal_sx

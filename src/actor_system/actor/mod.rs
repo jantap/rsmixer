@@ -74,7 +74,7 @@ impl Actor {
 			Self::Eventful(_) => None,
 		}
 	}
-    #[allow(dead_code)]
+	#[allow(dead_code)]
 	pub fn as_eventful(&mut self) -> Option<&mut BoxedEventfulActor> {
 		match self {
 			Self::Eventful(a) => Some(a),
@@ -92,7 +92,7 @@ impl LockedActor {
 			0: Arc::new(RwLock::new(actor)),
 		}
 	}
-    #[allow(dead_code)]
+	#[allow(dead_code)]
 	pub async fn read(&self) -> RwLockReadGuard<'_, Actor> {
 		self.0.read().await
 	}

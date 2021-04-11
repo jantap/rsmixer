@@ -1,22 +1,22 @@
 mod buffer;
+mod errors;
 mod rect;
 mod scrollable;
 pub mod util;
 pub mod widgets;
-mod errors;
 
 use std::io::Write;
 
 use buffer::{Buffer, Pixel};
+pub use errors::UIError;
 pub use rect::Rect;
 pub use scrollable::Scrollable;
 pub use util::{clean_terminal, entry_height, prepare_terminal};
 use widgets::{BlockWidget, Widget};
-pub use errors::UIError;
 
 use crate::{
 	models::{PageType, RSState, Style, UIMode},
-    prelude::*,
+	prelude::*,
 };
 
 pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<()> {
@@ -31,12 +31,16 @@ pub async fn make_changes(state: &mut RSState) -> Result<()> {
 		state.ui.terminal_too_small = match resize(state) {
 			Ok(()) => false,
 			Err(err) => match err.source() {
-                Some(source) => match source.downcast_ref::<UIError>() {
-                    Some(UIError::TerminalTooSmall) => true,
-                    _ => { return Err(err); },
-                },
-                None => { return Err(err); },
-            }
+				Some(source) => match source.downcast_ref::<UIError>() {
+					Some(UIError::TerminalTooSmall) => true,
+					_ => {
+						return Err(err);
+					}
+				},
+				None => {
+					return Err(err);
+				}
+			},
 		};
 	}
 

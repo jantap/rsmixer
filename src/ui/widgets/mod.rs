@@ -15,7 +15,6 @@ pub use volume_input::VolumeInputWidget;
 pub use warning_text::WarningTextWidget;
 
 use super::{Buffer, Rect};
-
 use crate::prelude::*;
 
 pub trait Widget {

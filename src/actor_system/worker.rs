@@ -107,12 +107,12 @@ impl Worker {
 					}
 					SystemMessage::StartActor(id) => {
 						if let Err(e) = self.actors.start(id).await {
-                            error!("Failed to start actor {}.\n{:#?}", id, e);
-                        }
+							error!("Failed to start actor {}.\n{:#?}", id, e);
+						}
 					}
 					SystemMessage::StopActor(id) => {
-                        self.actors.stop(id).await;
-                    }
+						self.actors.stop(id).await;
+					}
 					SystemMessage::SendMsg(id, m) => {
 						self.actors.send(id, m);
 					}

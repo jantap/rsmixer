@@ -69,7 +69,7 @@ impl ActorInstance {
 
 	pub async fn join(&mut self) {
 		if let Some(handle) = &mut self.task {
-			let _  = handle.await;
+			let _ = handle.await;
 		}
 
 		let mut actor = self.actor.write().await;

@@ -32,6 +32,33 @@ pub enum EntryKind {
 	PlayEntry(PlayEntry),
 }
 
+impl EntryKind {
+    pub fn play_entry(&self) -> Option<&PlayEntry> {
+        match self {
+            Self::PlayEntry(play) => Some(play),
+            Self::CardEntry(_) => None,
+        }
+    }
+    pub fn card_entry(&self) -> Option<&CardEntry> {
+        match self {
+            Self::CardEntry(card) => Some(card),
+            Self::PlayEntry(_) => None,
+        }
+    }
+    pub fn play_entry_mut(&mut self) -> Option<&mut PlayEntry> {
+        match self {
+            Self::PlayEntry(play) => Some(play),
+            Self::CardEntry(_) => None,
+        }
+    }
+    pub fn card_entry_mut(&mut self) -> Option<&mut CardEntry> {
+        match self {
+            Self::CardEntry(card) => Some(card),
+            Self::PlayEntry(_) => None,
+        }
+    }
+}
+
 #[derive(PartialEq, Clone, Debug, Copy)]
 pub enum HiddenStatus {
 	Show,

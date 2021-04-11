@@ -25,7 +25,7 @@ use cli_options::CliOptions;
 use config::{RsMixerConfig, Variables};
 use crossterm::style::ContentStyle;
 use lazy_static::lazy_static;
-pub use models::entry;
+use models::entry;
 use models::{InputEvent, Style, UserAction};
 use multimap::MultiMap;
 use prelude::*;

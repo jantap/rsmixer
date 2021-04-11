@@ -37,35 +37,14 @@ impl Entries {
 	pub fn get_mut(&mut self, ident: &EntryIdentifier) -> Option<&mut Entry> {
 		self.0.get_mut(ident)
 	}
-	pub fn _get_mut(&mut self, ident: EntryIdentifier) -> Option<&mut Entry> {
-		self.0.get_mut(&ident)
-	}
 	pub fn get_card_entry(&self, entry_ident: &EntryIdentifier) -> Option<&CardEntry> {
-		match self.0.get(entry_ident) {
-			Some(e) => match &e.entry_kind {
-				EntryKind::CardEntry(p) => Some(p),
-				_ => None,
-			},
-			None => None,
-		}
+        self.0.get(entry_ident).map_or(None, |e| e.entry_kind.card_entry())
 	}
 	pub fn get_play_entry(&self, entry_ident: &EntryIdentifier) -> Option<&PlayEntry> {
-		match self.0.get(entry_ident) {
-			Some(e) => match &e.entry_kind {
-				EntryKind::PlayEntry(p) => Some(p),
-				_ => None,
-			},
-			None => None,
-		}
+        self.0.get(entry_ident).map_or(None, |e| e.entry_kind.play_entry())
 	}
 	pub fn get_play_entry_mut(&mut self, entry_ident: &EntryIdentifier) -> Option<&mut PlayEntry> {
-		match self.0.get_mut(entry_ident) {
-			Some(e) => match &mut e.entry_kind {
-				EntryKind::PlayEntry(p) => Some(p),
-				_ => None,
-			},
-			None => None,
-		}
+        self.0.get_mut(entry_ident).map_or(None, |e| e.entry_kind.play_entry_mut())
 	}
 	pub fn position<P>(&mut self, predicate: P) -> Option<usize>
 	where

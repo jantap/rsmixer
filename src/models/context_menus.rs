@@ -1,7 +1,7 @@
 use crate::{
 	actor_system::Ctx,
 	entry::{Entry, EntryIdentifier, EntryKind, EntryType},
-	models::PulseAudioAction,
+	models::{PulseAudioAction, UserAction},
 	scrollable,
 	ui::{widgets::ToolWindowWidget, Rect, Scrollable},
 };
@@ -15,6 +15,7 @@ pub enum ContextMenuOption {
 	Suspend,
 	Resume,
 	SetAsDefault,
+	InputExactVolume,
 }
 
 impl From<ContextMenuOption> for String {
@@ -27,6 +28,7 @@ impl From<ContextMenuOption> for String {
 			ContextMenuOption::Suspend => "Suspend".into(),
 			ContextMenuOption::Resume => "Resume".into(),
 			ContextMenuOption::SetAsDefault => "Set as default".into(),
+			ContextMenuOption::InputExactVolume => "Input exact volume value".into(),
 		}
 	}
 }
@@ -84,9 +86,14 @@ impl ContextMenu {
 					ContextMenuOption::Suspend
 				},
 				ContextMenuOption::SetAsDefault,
+				ContextMenuOption::InputExactVolume,
 			],
-			EntryType::SinkInput => vec![ContextMenuOption::Move, ContextMenuOption::Kill],
-			EntryType::SourceOutput => vec![],
+			EntryType::SinkInput => vec![
+				ContextMenuOption::Move,
+				ContextMenuOption::Kill,
+				ContextMenuOption::InputExactVolume,
+			],
+			EntryType::SourceOutput => vec![ContextMenuOption::InputExactVolume],
 			EntryType::Card => card
 				.unwrap()
 				.profiles
@@ -111,6 +118,9 @@ impl ContextMenu {
 		match &self.options[self.selected] {
 			ContextMenuOption::Move => {
 				return ContextMenuEffect::MoveEntry;
+			}
+			ContextMenuOption::InputExactVolume => {
+				ctx.send_to("event_loop", UserAction::InputVolumeValue);
 			}
 			ContextMenuOption::MoveToEntry(entry, _) => {
 				ctx.send_to(

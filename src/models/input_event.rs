@@ -4,8 +4,7 @@ use std::{
 };
 
 use crossterm::event::{Event, KeyCode, KeyModifiers, MouseButton, MouseEventKind};
-
-use crate::RsError;
+use crate::config::ConfigError;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq)]
 pub enum InputEventKind {
@@ -37,12 +36,12 @@ impl InputEvent {
 }
 
 impl TryFrom<Event> for InputEvent {
-	type Error = RsError;
+	type Error = ConfigError;
 	fn try_from(value: Event) -> Result<Self, Self::Error> {
 		match value {
 			Event::Key(key) => Ok(InputEvent::key(key.code, key.modifiers)),
 			Event::Mouse(mouse) => Ok(InputEvent::mouse(mouse.kind, mouse.modifiers)),
-			_ => Err(RsError::KeyCodeError(
+			_ => Err(ConfigError::KeyCodeError(
 				"Event::Redraw cannot be converted to InputEvent".to_string(),
 			)),
 		}

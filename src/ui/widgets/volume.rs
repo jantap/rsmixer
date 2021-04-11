@@ -1,8 +1,5 @@
-use super::{
-	super::{Buffer, Rect, Style},
-	Widget,
-};
-use crate::{ui::Pixel, RsError};
+use super::Widget;
+use crate::{ui::{Buffer, Rect, Style, UIError, Pixel}, prelude::*};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum VolumeWidgetBorder {
@@ -60,16 +57,16 @@ impl VolumeWidget {
 }
 
 impl Widget for VolumeWidget {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		if area.width < 3 || area.height < 1 {
-			return Err(RsError::TerminalTooSmall);
+			return Err(UIError::TerminalTooSmall.into());
 		}
 
 		self.area = area;
 
 		Ok(())
 	}
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		self.border.render(buffer, &self.area);
 
 		let filled = (self.percent * (self.area.width - 2) as f32).floor() as u16;

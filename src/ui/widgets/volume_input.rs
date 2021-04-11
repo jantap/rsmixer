@@ -2,7 +2,7 @@ use super::{BlockWidget, Widget};
 use crate::{
 	models::Style,
 	ui::{Buffer, Rect},
-	RsError,
+    prelude::*,
 };
 
 #[derive(Clone)]
@@ -23,13 +23,13 @@ impl Default for VolumeInputWidget {
 }
 
 impl Widget for VolumeInputWidget {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		let area = Rect::new(area.x + area.width / 2 - 3, area.y, 7, 3);
 		self.window.resize(area)?;
 		Ok(())
 	}
 
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		self.window.render(buffer)?;
 
 		buffer.string(

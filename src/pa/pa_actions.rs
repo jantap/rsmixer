@@ -2,7 +2,7 @@ use super::{callbacks, common::*};
 
 pub fn handle_command(
 	cmd: PulseAudioAction,
-	context: &Rc<RefCell<Context>>,
+	context: &Rc<RefCell<PAContext>>,
 	info_sx: &mpsc::UnboundedSender<EntryIdentifier>,
 ) -> Option<()> {
 	match cmd {
@@ -39,7 +39,7 @@ pub fn handle_command(
 fn set_volume(
 	ident: EntryIdentifier,
 	vol: pulse::volume::ChannelVolumes,
-	context: &Rc<RefCell<Context>>,
+	context: &Rc<RefCell<PAContext>>,
 ) {
 	let mut introspector = context.borrow_mut().introspect();
 	match ident.entry_type {
@@ -59,7 +59,7 @@ fn set_volume(
 	};
 }
 
-fn change_card_profile(ident: EntryIdentifier, profile: String, context: &Rc<RefCell<Context>>) {
+fn change_card_profile(ident: EntryIdentifier, profile: String, context: &Rc<RefCell<PAContext>>) {
 	if ident.entry_type != EntryType::Card {
 		return;
 	}
@@ -72,7 +72,7 @@ fn change_card_profile(ident: EntryIdentifier, profile: String, context: &Rc<Ref
 fn move_entry_to_parent(
 	ident: EntryIdentifier,
 	parent: EntryIdentifier,
-	context: &Rc<RefCell<Context>>,
+	context: &Rc<RefCell<PAContext>>,
 	info_sx: mpsc::UnboundedSender<EntryIdentifier>,
 ) {
 	let mut introspector = context.borrow_mut().introspect();
@@ -102,7 +102,7 @@ fn move_entry_to_parent(
 	};
 }
 
-fn set_suspend(ident: EntryIdentifier, suspend: bool, context: &Rc<RefCell<Context>>) {
+fn set_suspend(ident: EntryIdentifier, suspend: bool, context: &Rc<RefCell<PAContext>>) {
 	let mut introspector = context.borrow_mut().introspect();
 	match ident.entry_type {
 		EntryType::Sink => {
@@ -115,7 +115,7 @@ fn set_suspend(ident: EntryIdentifier, suspend: bool, context: &Rc<RefCell<Conte
 	};
 }
 
-fn kill_entry(ident: EntryIdentifier, context: &Rc<RefCell<Context>>) {
+fn kill_entry(ident: EntryIdentifier, context: &Rc<RefCell<PAContext>>) {
 	let mut introspector = context.borrow_mut().introspect();
 	match ident.entry_type {
 		EntryType::SinkInput => {
@@ -128,7 +128,7 @@ fn kill_entry(ident: EntryIdentifier, context: &Rc<RefCell<Context>>) {
 	};
 }
 
-fn set_mute(ident: EntryIdentifier, mute: bool, context: &Rc<RefCell<Context>>) {
+fn set_mute(ident: EntryIdentifier, mute: bool, context: &Rc<RefCell<PAContext>>) {
 	let mut introspector = context.borrow_mut().introspect();
 	match ident.entry_type {
 		EntryType::Sink => {

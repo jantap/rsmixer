@@ -15,9 +15,10 @@ pub use volume_input::VolumeInputWidget;
 pub use warning_text::WarningTextWidget;
 
 use super::{Buffer, Rect};
-use crate::RsError;
+
+use crate::prelude::*;
 
 pub trait Widget {
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError>;
-	fn resize(&mut self, area: Rect) -> Result<(), RsError>;
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()>;
+	fn resize(&mut self, area: Rect) -> Result<()>;
 }

@@ -4,8 +4,8 @@ use super::{ToolWindowWidget, Widget};
 use crate::{
 	help::{self, HelpLine},
 	scrollable,
-	ui::{Buffer, Rect, Scrollable, Style},
-	RsError,
+	ui::{Buffer, Rect, Scrollable, Style, UIError},
+    prelude::*,
 };
 
 #[derive(Clone)]
@@ -61,9 +61,9 @@ impl Default for HelpWidget {
 }
 
 impl Widget for HelpWidget {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		if area.height < 3 || area.width < self.min_line + 2 {
-			return Err(RsError::TerminalTooSmall);
+			return Err(UIError::TerminalTooSmall.into());
 		}
 		self.window.padding.0 = if area.width < self.min_line + 6 { 1 } else { 3 };
 		self.window.padding.1 = if area.height < 8 { 1 } else { 2 };
@@ -85,7 +85,7 @@ impl Widget for HelpWidget {
 
 		Ok(())
 	}
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		self.window.render(buffer)?;
 
 		let inside_height = self.window.area.height - self.window.padding.1 * 2;

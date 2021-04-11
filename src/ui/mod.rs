@@ -3,6 +3,7 @@ mod rect;
 mod scrollable;
 pub mod util;
 pub mod widgets;
+mod errors;
 
 use std::io::Write;
 
@@ -11,27 +12,31 @@ pub use rect::Rect;
 pub use scrollable::Scrollable;
 pub use util::{clean_terminal, entry_height, prepare_terminal};
 use widgets::{BlockWidget, Widget};
+pub use errors::UIError;
 
 use crate::{
 	models::{PageType, RSState, Style, UIMode},
-	RsError,
+    prelude::*,
 };
 
-pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<(), RsError> {
+pub async fn redraw<W: Write>(stdout: &mut W, state: &mut RSState) -> Result<()> {
 	make_changes(state).await?;
 
 	state.ui.buffer.draw_changes(stdout)?;
 
 	Ok(())
 }
-pub async fn make_changes(state: &mut RSState) -> Result<(), RsError> {
+pub async fn make_changes(state: &mut RSState) -> Result<()> {
 	if state.redraw.resize {
 		state.ui.terminal_too_small = match resize(state) {
 			Ok(()) => false,
-			Err(RsError::TerminalTooSmall) => true,
-			Err(e) => {
-				return Err(e);
-			}
+			Err(err) => match err.source() {
+                Some(source) => match source.downcast_ref::<UIError>() {
+                    Some(UIError::TerminalTooSmall) => true,
+                    _ => { return Err(err); },
+                },
+                None => { return Err(err); },
+            }
 		};
 	}
 
@@ -148,7 +153,7 @@ impl Default for UI {
 	}
 }
 
-fn resize(state: &mut RSState) -> Result<(), RsError> {
+fn resize(state: &mut RSState) -> Result<()> {
 	let (x, y) = crossterm::terminal::size()?;
 	state.ui.buffer.resize(x, y);
 

@@ -2,8 +2,8 @@ use super::Widget;
 use crate::{
 	models::Style,
 	repeat,
-	ui::{Buffer, Rect},
-	RsError,
+	ui::{Buffer, Rect, UIError},
+    prelude::*,
 };
 
 #[derive(Clone)]
@@ -33,16 +33,16 @@ impl BlockWidget {
 }
 
 impl Widget for BlockWidget {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		if area.width < 2 || area.height < 2 {
-			return Err(RsError::TerminalTooSmall);
+			return Err(UIError::TerminalTooSmall.into());
 		}
 
 		self.area = area;
 
 		Ok(())
 	}
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		let top_border = format!(
 			"┌{}",
 			if self.title.len() < self.area.width as usize - 2 {

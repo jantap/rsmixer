@@ -39,10 +39,10 @@ impl ContinousActor for PulseActor {
 async fn start_async(external_rx: LockedReceiver, ctx: Ctx) -> Result<()> {
 	let mut interval = IntervalStream::new(tokio::time::interval(Duration::from_millis(50)));
 
-	let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<(), RsError> {
+	let send = |ch: &cb_channel::Sender<PAInternal>, msg: PAInternal| -> Result<()> {
 		match ch.send(msg) {
 			Ok(()) => Ok(()),
-			Err(err) => Err(RsError::ChannelError(err)),
+			Err(err) => Err(PAError::ChannelError(err).into()),
 		}
 	};
 	let retry_time = (*VARIABLES).get().pa_retry_time;

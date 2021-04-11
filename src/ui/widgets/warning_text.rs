@@ -2,7 +2,7 @@ use super::Widget;
 use crate::{
 	models::Style,
 	ui::{Buffer, Rect},
-	RsError,
+    prelude::*
 };
 
 #[derive(Clone)]
@@ -19,10 +19,10 @@ impl Default for WarningTextWidget {
 }
 
 impl Widget for WarningTextWidget {
-	fn resize(&mut self, _area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, _area: Rect) -> Result<()> {
 		Ok(())
 	}
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		buffer.rect(
 			Rect::new(0, 0, buffer.width, buffer.height),
 			' ',

@@ -1,8 +1,8 @@
 use crossterm::event::{KeyCode, KeyModifiers, MouseButton, MouseEventKind};
 
-use crate::{models::InputEvent, RsError};
+use crate::{models::InputEvent, config::ConfigError};
 
-pub fn try_string_to_event(key: &str) -> Result<InputEvent, RsError> {
+pub fn try_string_to_event(key: &str) -> Result<InputEvent, ConfigError> {
 	let s = String::from(key).to_lowercase();
 	let mut modifiers = KeyModifiers::empty();
 
@@ -13,7 +13,7 @@ pub fn try_string_to_event(key: &str) -> Result<InputEvent, RsError> {
 			"shift" => modifiers |= KeyModifiers::SHIFT,
 			"ctrl" => modifiers |= KeyModifiers::CONTROL,
 			"alt" => modifiers |= KeyModifiers::ALT,
-			_ => return Err(RsError::KeyCodeError(String::from(key))),
+			_ => return Err(ConfigError::KeyCodeError(String::from(key))),
 		};
 	}
 
@@ -26,13 +26,13 @@ pub fn try_string_to_event(key: &str) -> Result<InputEvent, RsError> {
 	}
 }
 
-pub fn try_string_to_mouseevent(code: &str) -> Result<MouseEventKind, RsError> {
+pub fn try_string_to_mouseevent(code: &str) -> Result<MouseEventKind, ConfigError> {
 	match code {
 		"scroll_down" => Ok(MouseEventKind::ScrollDown),
 		"scroll_up" => Ok(MouseEventKind::ScrollUp),
 		"mouse_right" => Ok(MouseEventKind::Up(MouseButton::Right)),
 		"mouse_middle" => Ok(MouseEventKind::Up(MouseButton::Middle)),
-		_ => Err(RsError::KeyCodeError(code.to_string())),
+		_ => Err(ConfigError::KeyCodeError(code.to_string())),
 	}
 }
 
@@ -40,7 +40,7 @@ pub fn try_string_to_keyevent(
 	key: &str,
 	code: &str,
 	mut modifiers: KeyModifiers,
-) -> Result<InputEvent, RsError> {
+) -> Result<InputEvent, ConfigError> {
 	let code = match code {
 		"backspace" => KeyCode::Backspace,
 		"enter" => KeyCode::Enter,
@@ -81,10 +81,10 @@ pub fn try_string_to_keyevent(
 				if let Ok(f) = code[1..code.len()].parse::<u8>() {
 					KeyCode::F(f)
 				} else {
-					return Err(RsError::KeyCodeError(String::from(key)));
+					return Err(ConfigError::KeyCodeError(String::from(key)));
 				}
 			}
-			_ => return Err(RsError::KeyCodeError(String::from(key))),
+			_ => return Err(ConfigError::KeyCodeError(String::from(key))),
 		},
 	};
 

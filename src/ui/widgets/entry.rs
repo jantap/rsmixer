@@ -7,14 +7,15 @@ use crate::{
 	ui::{
 		widgets::{VolumeWidgetBorder, Widget},
 		Buffer, Rect, Style,
+        UIError,
 	},
-	RsError,
+    prelude::*,
 };
 
 impl Widget for Entry {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		if area.width < 7 || area.height < 1 {
-			return Err(RsError::TerminalTooSmall);
+			return Err(UIError::TerminalTooSmall.into());
 		}
 
 		match &mut self.entry_kind {
@@ -25,7 +26,7 @@ impl Widget for Entry {
 			EntryKind::CardEntry(card) => card.resize(area),
 		}
 	}
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		match &mut self.entry_kind {
 			EntryKind::PlayEntry(play) => {
 				play.is_selected = self.is_selected;
@@ -91,12 +92,12 @@ impl PlayEntry {
 }
 
 impl Widget for CardEntry {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		self.area = area;
 		Ok(())
 	}
 
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		buffer.rect(self.area, ' ', Style::Normal);
 
 		let style = if self.is_selected {
@@ -137,7 +138,7 @@ impl Widget for CardEntry {
 	}
 }
 impl Widget for PlayEntry {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		self.area = area;
 		let (text_width, w) = self.text_volume_widths();
 
@@ -168,9 +169,9 @@ impl Widget for PlayEntry {
 		Ok(())
 	}
 
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		if self.area.width < 5 || self.area.height < 2 {
-			return Err(RsError::TerminalTooSmall);
+			return Err(UIError::TerminalTooSmall.into());
 		}
 
 		buffer.rect(self.area, ' ', Style::Normal);

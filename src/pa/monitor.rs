@@ -27,7 +27,7 @@ impl Monitors {
 	pub fn filter(
 		&mut self,
 		mainloop: &Rc<RefCell<Mainloop>>,
-		context: &Rc<RefCell<Context>>,
+		context: &Rc<RefCell<PAContext>>,
 		targets: &HashMap<EntryIdentifier, Option<u32>>,
 	) {
 		// remove failed streams
@@ -61,7 +61,7 @@ impl Monitors {
 	fn create_monitor(
 		&mut self,
 		mainloop: &Rc<RefCell<Mainloop>>,
-		context: &Rc<RefCell<Context>>,
+		context: &Rc<RefCell<PAContext>>,
 		ident: EntryIdentifier,
 		monitor_src: Option<u32>,
 	) {
@@ -107,12 +107,12 @@ fn slice_to_4_bytes(slice: &[u8]) -> [u8; 4] {
 
 fn create(
 	p_mainloop: &Rc<RefCell<Mainloop>>,
-	p_context: &Rc<RefCell<Context>>,
+	p_context: &Rc<RefCell<PAContext>>,
 	p_spec: &pulse::sample::Spec,
 	ident: EntryIdentifier,
 	source_index: Option<u32>,
 	close_rx: cb_channel::Receiver<u32>,
-) -> Result<Rc<RefCell<Stream>>, RsError> {
+) -> Result<Rc<RefCell<Stream>>> {
 	info!("[PADataInterface] Attempting to create new monitor stream");
 
 	let stream_index = if ident.entry_type == EntryType::SinkInput {
@@ -125,7 +125,7 @@ fn create(
 		match Stream::new(&mut p_context.borrow_mut(), "RsMixer monitor", p_spec, None) {
 			Some(stream) => stream,
 			None => {
-				return Err(RsError::StreamCreateError);
+				return Err(PAError::StreamCreateError).context("while creating stream for monitoring volume");
 			}
 		},
 	));
@@ -176,7 +176,7 @@ fn create(
 	) {
 		Ok(_) => {}
 		Err(_) => {
-			return Err(RsError::StreamCreateError);
+			return Err(PAError::StreamCreateError).context("while connecting stream for monitoring volume");
 		}
 	};
 
@@ -188,7 +188,7 @@ fn create(
 			}
 			pulse::stream::State::Failed | pulse::stream::State::Terminated => {
 				error!("[PADataInterface] Stream state failed/terminated");
-				return Err(RsError::StreamCreateError);
+				return Err(PAError::StreamCreateError).context("stream terminated");
 			}
 			_ => {
 				p_mainloop.borrow_mut().wait();

@@ -15,9 +15,9 @@ use crate::{
 };
 
 pub fn subscribe(
-	context: &Rc<RefCell<Context>>,
+	context: &Rc<RefCell<PAContext>>,
 	info_sx: mpsc::UnboundedSender<EntryIdentifier>,
-) -> Result<(), RsError> {
+) -> Result<()> {
 	info!("[PAInterface] Registering pulseaudio callbacks");
 
 	context.borrow_mut().subscribe(
@@ -78,9 +78,9 @@ pub fn subscribe(
 }
 
 pub fn request_current_state(
-	context: Rc<RefCell<Context>>,
+	context: Rc<RefCell<PAContext>>,
 	info_sxx: mpsc::UnboundedSender<EntryIdentifier>,
-) -> Result<(), RsError> {
+) -> Result<()> {
 	info!("[PAInterface] Requesting starting state");
 
 	let introspector = context.borrow_mut().introspect();
@@ -126,7 +126,7 @@ pub fn request_current_state(
 
 pub fn request_info(
 	ident: EntryIdentifier,
-	context: &Rc<RefCell<Context>>,
+	context: &Rc<RefCell<PAContext>>,
 	info_sx: mpsc::UnboundedSender<EntryIdentifier>,
 ) {
 	let introspector = context.borrow_mut().introspect();

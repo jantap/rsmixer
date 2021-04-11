@@ -3,19 +3,19 @@ use std::cmp::max;
 use super::Widget;
 use crate::{
 	models::ContextMenu,
-	ui::{Buffer, Rect, Scrollable, Style},
-	RsError,
+	ui::{Buffer, Rect, Scrollable, Style, UIError},
+    prelude::*,
 };
 
 impl Widget for ContextMenu {
-	fn resize(&mut self, area: Rect) -> Result<(), RsError> {
+	fn resize(&mut self, area: Rect) -> Result<()> {
 		let mut longest_word = 0;
 		self.options.iter().for_each(|o| {
 			longest_word = max(longest_word, String::from(o.clone()).len());
 		});
 
 		if area.height < 3 || area.width < 4 {
-			return Err(RsError::TerminalTooSmall);
+			return Err(UIError::TerminalTooSmall.into());
 		}
 		self.tool_window.padding.0 = if area.width < longest_word as u16 + 6 {
 			1
@@ -38,7 +38,7 @@ impl Widget for ContextMenu {
 
 		Ok(())
 	}
-	fn render(&mut self, buffer: &mut Buffer) -> Result<(), RsError> {
+	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
 		self.tool_window.render(buffer)?;
 
 		for (y, i) in self.visible_range(self.area.height).enumerate() {

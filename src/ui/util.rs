@@ -2,7 +2,7 @@ use std::io;
 
 use crossterm::{cursor::Hide, execute};
 
-use crate::{entry::EntrySpaceLvl, RsError};
+use crate::{entry::EntrySpaceLvl, ui::UIError};
 
 pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
 	if lvl == EntrySpaceLvl::Card {
@@ -14,7 +14,7 @@ pub fn entry_height(lvl: EntrySpaceLvl) -> u16 {
 	}
 }
 
-pub fn prepare_terminal() -> Result<io::Stdout, RsError> {
+pub fn prepare_terminal() -> Result<io::Stdout, UIError> {
 	let mut stdout = io::stdout();
 	crossterm::execute!(
 		stdout,
@@ -27,7 +27,7 @@ pub fn prepare_terminal() -> Result<io::Stdout, RsError> {
 	Ok(stdout)
 }
 
-pub fn clean_terminal() -> Result<(), RsError> {
+pub fn clean_terminal() -> Result<(), UIError> {
 	let mut stdout = std::io::stdout();
 	crossterm::execute!(
 		stdout,

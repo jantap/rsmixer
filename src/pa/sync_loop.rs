@@ -14,7 +14,7 @@ pub fn start(
 	internal_rx: cb_channel::Receiver<PAInternal>,
 	info_sx: mpsc::UnboundedSender<EntryIdentifier>,
 	actions_sx: mpsc::UnboundedSender<EntryUpdate>,
-) -> Result<(), RsError> {
+) -> Result<()> {
 	(*ACTIONS_SX).set(actions_sx);
 
 	// Create new mainloop and context
@@ -28,13 +28,13 @@ pub fn start(
 		Some(ml) => ml,
 		None => {
 			error!("[PAInterface] Error while creating new mainloop");
-			return Err(RsError::MainloopCreateError);
+			return Err(PAError::MainloopCreateError.into());
 		}
 	}));
 
 	debug!("[PAInterface] Creating new context");
 	let context = Rc::new(RefCell::new(
-		match Context::new_with_proplist(
+		match PAContext::new_with_proplist(
 			mainloop.borrow_mut().deref().deref(),
 			"RsMixerContext",
 			&proplist,
@@ -42,12 +42,12 @@ pub fn start(
 			Some(ctx) => ctx,
 			None => {
 				error!("[PAInterface] Error while creating new context");
-				return Err(RsError::MainloopCreateError);
+				return Err(PAError::MainloopCreateError.into());
 			}
 		},
 	));
 
-	// Context state change callback
+	// PAContext state change callback
 	{
 		debug!("[PAInterface] Registering state change callback");
 		let ml_ref = Rc::clone(&mainloop);
@@ -77,7 +77,7 @@ pub fn start(
 		Ok(_) => {}
 		Err(_) => {
 			error!("[PAInterface] Error while connecting context");
-			return Err(RsError::MainloopConnectError);
+			return Err(PAError::MainloopConnectError.into());
 		}
 	};
 
@@ -88,7 +88,7 @@ pub fn start(
 	match mainloop.borrow_mut().start() {
 		Ok(_) => {}
 		Err(_) => {
-			return Err(RsError::MainloopConnectError);
+			return Err(PAError::MainloopConnectError.into());
 		}
 	}
 
@@ -103,14 +103,14 @@ pub fn start(
 				mainloop.borrow_mut().unlock();
 				mainloop.borrow_mut().stop();
 				error!("[PAInterface] Connection failed or context terminated");
-				return Err(RsError::MainloopConnectError);
+				return Err(PAError::MainloopConnectError.into());
 			}
 			_ => {
 				mainloop.borrow_mut().wait();
 			}
 		}
 	}
-	debug!("[PAInterface] Context ready");
+	debug!("[PAInterface] PAContext ready");
 
 	context.borrow_mut().set_state_callback(None);
 	// {
@@ -147,7 +147,7 @@ pub fn start(
 			pulse::context::State::Ready => {}
 			_ => {
 				mainloop.borrow_mut().unlock();
-				return Err(RsError::PulseAudioDisconnected);
+				return Err(PAError::PulseAudioDisconnected).context("disconnected while working");
 			}
 		}
 

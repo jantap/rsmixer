@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use crate::{
 	models::{PageType, UserAction},
-	RsError,
+    config::ConfigError,
 };
 
 impl ToString for UserAction {
@@ -45,7 +45,7 @@ impl ToString for UserAction {
 }
 
 impl TryFrom<String> for UserAction {
-	type Error = RsError;
+	type Error = ConfigError;
 
 	fn try_from(st: String) -> Result<UserAction, Self::Error> {
 		let mut s = &st[..];
@@ -55,7 +55,7 @@ impl TryFrom<String> for UserAction {
 			let rparen = match st.chars().position(|c| c == ')') {
 				Some(r) => r,
 				None => {
-					return Err(RsError::ActionBindingError(st.clone()));
+					return Err(ConfigError::ActionBindingError(st.clone()));
 				}
 			};
 			a = st
@@ -78,7 +78,7 @@ impl TryFrom<String> for UserAction {
 				let a = match a.parse::<i16>() {
 					Ok(x) => x,
 					Err(_) => {
-						return Err(RsError::ActionBindingError(st.clone()));
+						return Err(ConfigError::ActionBindingError(st.clone()));
 					}
 				};
 				UserAction::RequstChangeVolume(-a, None)
@@ -87,7 +87,7 @@ impl TryFrom<String> for UserAction {
 				let a = match a.parse::<i16>() {
 					Ok(x) => x,
 					Err(_) => {
-						return Err(RsError::ActionBindingError(st.clone()));
+						return Err(ConfigError::ActionBindingError(st.clone()));
 					}
 				};
 				UserAction::RequstChangeVolume(a, None)
@@ -96,7 +96,7 @@ impl TryFrom<String> for UserAction {
 				let a = match a.parse::<u16>() {
 					Ok(x) => x,
 					Err(_) => {
-						return Err(RsError::ActionBindingError(st.clone()));
+						return Err(ConfigError::ActionBindingError(st.clone()));
 					}
 				};
 				UserAction::MoveUp(a)
@@ -105,7 +105,7 @@ impl TryFrom<String> for UserAction {
 				let a = match a.parse::<u16>() {
 					Ok(x) => x,
 					Err(_) => {
-						return Err(RsError::ActionBindingError(st.clone()));
+						return Err(ConfigError::ActionBindingError(st.clone()));
 					}
 				};
 				UserAction::MoveDown(a)
@@ -119,7 +119,7 @@ impl TryFrom<String> for UserAction {
 			"confirm" => UserAction::Confirm,
 			"hide" => UserAction::Hide(None),
 			_ => {
-				return Err(RsError::ActionBindingError(st.clone()));
+				return Err(ConfigError::ActionBindingError(st.clone()));
 			}
 		};
 		Ok(x)

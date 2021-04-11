@@ -3,6 +3,7 @@ pub mod common;
 mod monitor;
 mod pa_actions;
 mod sync_loop;
+mod errors;
 
 use common::*;
 use lazy_static::lazy_static;

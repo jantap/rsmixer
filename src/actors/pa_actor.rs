@@ -83,9 +83,7 @@ async fn start_async(external_rx: LockedReceiver, ctx: Ctx) -> Result<()> {
 						}
 						if cmd.downcast_ref::<Shutdown>().is_some() {
 							internal_sx.send(PAInternal::Command(Box::new(PulseAudioAction::Shutdown)))?;
-							log::error!("starting await");
 							sync_pa.await.unwrap();
-							log::error!("ending await");
 							return Ok(());
 						}
 					}

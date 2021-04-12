@@ -166,6 +166,7 @@ impl std::default::Default for RsMixerConfig {
 	fn default() -> Self {
 		let mut bindings = MultiMap::new();
 		bindings.insert("q".to_string(), "exit".to_string());
+		bindings.insert("ctrl+c".to_string(), "exit".to_string());
 		bindings.insert("?".to_string(), "help".to_string());
 
 		bindings.insert("j".to_string(), "down(1)".to_string());
@@ -181,12 +182,19 @@ impl std::default::Default for RsMixerConfig {
 		bindings.insert("l".to_string(), "raise_volume(5)".to_string());
 		bindings.insert("shift+h".to_string(), "lower_volume(15)".to_string());
 		bindings.insert("shift+l".to_string(), "raise_volume(15)".to_string());
+		bindings.insert("scroll_down".to_string(), "lower_volume(5)".to_string());
+		bindings.insert("scroll_up".to_string(), "raise_volume(5)".to_string());
 
 		bindings.insert("m".to_string(), "mute".to_string());
+		bindings.insert("mouse_middle".to_string(), "mute".to_string());
+		bindings.insert("mouse_right".to_string(), "mute".to_string());
 
 		bindings.insert("1".to_string(), "show_output".to_string());
 		bindings.insert("2".to_string(), "show_input".to_string());
 		bindings.insert("3".to_string(), "show_cards".to_string());
+		bindings.insert("F1".to_string(), "show_output".to_string());
+		bindings.insert("F2".to_string(), "show_input".to_string());
+		bindings.insert("F3".to_string(), "show_cards".to_string());
 		bindings.insert("tab".to_string(), "cycle_pages_forward".to_string());
 		bindings.insert("shift+tab".to_string(), "cycle_pages_backward".to_string());
 

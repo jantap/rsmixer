@@ -220,6 +220,7 @@ impl Entry {
 			EntryKind::PlayEntry(play) => {
 				let old_play = unwrap_or_return!(entries.get_play_entry(&self.entry_ident), true);
 				old_play.name != play.name
+                    || old_play.mute != play.mute
 					|| old_play.volume != play.volume
 					|| (play.peak - old_play.peak).abs() < f32::EPSILON
 			}

@@ -7,7 +7,7 @@ pub mod widgets;
 
 use std::io::Write;
 
-use buffer::{Buffer, Pixel};
+use buffer::{Buffer, Pixel, Pixels};
 pub use errors::UIError;
 pub use rect::Rect;
 pub use scrollable::Scrollable;
@@ -206,34 +206,18 @@ fn resize(state: &mut RSState) -> Result<()> {
 }
 
 fn draw_page_names(state: &mut RSState) {
-	if state.ui.buffer.width as usize
-		> 2 + state.ui.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6
-	{
-		let page: i8 = state.current_page.into();
-		let page = page as usize;
-		let mut length_so_far = 0;
+	let pixels = if state.ui.buffer.width as usize
+		> 2 + state.ui.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6  {
+            let style = |i: usize| {
+                if i as i8 == state.current_page.into() {
+                    Style::Bold
+                } else {
+                    Style::Normal
+                }
+            };
 
-		for (i, name) in state.ui.pages_names.iter().enumerate() {
-			state.ui.buffer.string(
-				1 + length_so_far,
-				0,
-				name.clone(),
-				if i == page { Style::Bold } else { Style::Muted },
-			);
-			if i != 2 {
-				state.ui.buffer.string(
-					1 + length_so_far + name.len() as u16,
-					0,
-					" / ".to_string(),
-					Style::Muted,
-				);
-				length_so_far += name.len() as u16 + 3;
-			}
-		}
-	} else {
-		state
-			.ui
-			.buffer
-			.string(1, 0, state.current_page.to_string(), Style::Bold);
-	}
+            (0..3).fold(Pixels::default(), |pixels, x| pixels.string(style(x), &state.ui.pages_names[x]))
+        } else {
+            Pixels::default().string(Style::Bold, &state.ui.pages_names[state.page_entries.selected()])
+        };
 }

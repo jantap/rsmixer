@@ -1,7 +1,7 @@
 use super::Widget;
 use crate::{
 	prelude::*,
-	ui::{Buffer, Pixel, Rect, Style, UIError},
+	ui::{Buffer, Pixel, Rect, Style, UIError, Pixels},
 };
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -95,7 +95,7 @@ impl Widget for VolumeWidget {
 			}
 		}
 
-		buffer.pixels(self.area.x + 1, self.area.y, pixels);
+		buffer.pixels(self.area.x + 1, self.area.y, &pixels.into());
 
 		Ok(())
 	}

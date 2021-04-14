@@ -1,6 +1,7 @@
 use std::{
 	collections::{BTreeMap, HashMap},
 	io::Write,
+    iter::Iterator,
 };
 
 use crossterm::{
@@ -11,20 +12,53 @@ use crossterm::{
 use super::Rect;
 use crate::models::Style;
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub struct Pixel {
 	pub text: Option<char>,
 	pub style: Style,
 }
 
-impl Default for Pixel {
-	fn default() -> Self {
-		Self {
-			text: None,
-			style: Style::default(),
-		}
-	}
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct Pixels(Vec<Pixel>);
+
+impl Pixels {
+    pub fn next(mut self, style: Style, s: char) -> Self {
+        self.0.push(Pixel {
+            style,
+            text: Some(s),
+        });
+        self
+    }
+    pub fn string(mut self, style: Style, s: &str) -> Self {
+        for c in s.chars() {
+            self.0.push(Pixel {
+                style,
+                text: Some(c),
+            });
+        }
+        self
+    }
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut Pixel> {
+        self.0.get_mut(index)
+    }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item=&mut Pixel> + '_ {
+        self.0.iter_mut()
+    }
 }
+
+impl From<Vec<Pixel>> for Pixels {
+    fn from(s: Vec<Pixel>) -> Self {
+        Self {
+            0: s,
+        }
+    }
+}
+impl From<Pixels> for Vec<Pixel> {
+    fn from(s: Pixels) -> Self {
+        s.0
+    }
+}
+
 
 pub struct Buffer {
 	pub width: u16,
@@ -146,10 +180,10 @@ impl Buffer {
 		}
 	}
 
-	pub fn pixels(&mut self, x: u16, y: u16, pixels: Vec<Pixel>) {
+	pub fn pixels(&mut self, x: u16, y: u16, pixels: &Pixels) {
 		let coord = self.xy_to_coord(x, y);
 
-		for (i, p) in pixels.iter().enumerate() {
+		for (i, p) in pixels.0.iter().enumerate() {
 			if i + coord >= self.pixels.len() {
 				break;
 			}

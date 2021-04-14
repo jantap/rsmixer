@@ -3,22 +3,22 @@ use crate::{
 	models::Style,
 	prelude::*,
 	repeat,
-	ui::{Buffer, Rect, UIError},
+	ui::{Buffer, Rect, UIError, Pixels},
 };
 
 #[derive(Clone)]
 pub struct BlockWidget {
 	pub area: Rect,
-	pub title: String,
-	pub title_len: u16,
+	pub title: Option<String>,
+	pub title_pixels: Option<Pixels>,
 	pub clean_inside: bool,
 }
 
 impl Default for BlockWidget {
 	fn default() -> Self {
 		Self {
-			title: String::from(""),
-			title_len: 0,
+			title: None,
+			title_pixels: None,
 			clean_inside: false,
 			area: Rect::default(),
 		}
@@ -43,53 +43,57 @@ impl Widget for BlockWidget {
 		Ok(())
 	}
 	fn render(&mut self, buffer: &mut Buffer) -> Result<()> {
-		let top_border = format!(
-			"┌{}",
-			if self.title.len() < self.area.width as usize - 2 {
-				&self.title[..]
-			} else {
-				&self.title[0..(self.area.width as usize - 2)]
-			}
-		);
+		let mut top_border = Pixels::default().string(Style::Normal, &format!("┌{}┐", repeat!("─", self.area.width - 2)));
+        
+        if let Some(title) = &self.title {
+            for (i, c) in title.chars().enumerate() {
+                if let Some(pixel) = top_border.get_mut(i + 1) {
+                    pixel.text = Some(c);
+                } else {
+                    break;
+                }
+            }
+        } else if let Some(title) = &mut self.title_pixels {
+            for (i, p) in title.iter_mut().enumerate() {
+                if let Some(pixel) = top_border.get_mut(i + 1) {
+                    *pixel = *p;
+                } else {
+                    break;
+                }
+            }
+        }
+        buffer.pixels(self.area.x, self.area.y, &top_border);
 
-		let top_border = format!(
-			"{}{}┐",
-			top_border,
-			repeat!("─", self.area.width + 1 - top_border.len() as u16)
-		);
+        if self.clean_inside {
+            let mut middle = Pixels::default().next(Style::Normal, '│');
+            for _ in 0..(self.area.width-2) {
+                middle = middle.next(Style::Normal, ' ');
+            }
+            middle = middle.next(Style::Normal, '│');
+
+            for i in 1..(self.area.height - 1) {
+                buffer.pixels(self.area.x, self.area.y + i, &middle);
+            }
+        } else {
+            for i in 1..(self.area.height - 1) {
+                buffer.string(self.area.x, self.area.y + i, "│".to_string(), Style::Normal);
+                buffer.string(
+                    self.area.x + self.area.width - 1,
+                    self.area.y + i,
+                    "│".to_string(),
+                    Style::Normal,
+                );
+            }
+        }
 
 		let bottom_border = format!("└{}┘", repeat!("─", self.area.width - 2));
 
-		buffer.string(self.area.x, self.area.y, top_border, Style::Normal);
 		buffer.string(
 			self.area.x,
 			self.area.y + self.area.height - 1,
 			bottom_border,
 			Style::Normal,
 		);
-
-		for i in 1..(self.area.height - 1) {
-			buffer.string(self.area.x, self.area.y + i, "│".to_string(), Style::Normal);
-			buffer.string(
-				self.area.x + self.area.width - 1,
-				self.area.y + i,
-				"│".to_string(),
-				Style::Normal,
-			);
-		}
-
-		if self.clean_inside {
-			buffer.rect(
-				Rect::new(
-					self.area.x + 1,
-					self.area.y + 1,
-					self.area.width - 2,
-					self.area.height - 2,
-				),
-				' ',
-				Style::Normal,
-			);
-		}
 
 		Ok(())
 	}

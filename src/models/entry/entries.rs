@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::{CardEntry, Entry, EntryIdentifier, EntryKind, EntryType, PlayEntry};
+use super::{CardEntry, Entry, EntryIdentifier, EntryType, PlayEntry};
 
 pub struct Entries(BTreeMap<EntryIdentifier, Entry>);
 
@@ -40,17 +40,17 @@ impl Entries {
 	pub fn get_card_entry(&self, entry_ident: &EntryIdentifier) -> Option<&CardEntry> {
 		self.0
 			.get(entry_ident)
-			.map_or(None, |e| e.entry_kind.card_entry())
+			.and_then(|e| e.entry_kind.card_entry())
 	}
 	pub fn get_play_entry(&self, entry_ident: &EntryIdentifier) -> Option<&PlayEntry> {
 		self.0
 			.get(entry_ident)
-			.map_or(None, |e| e.entry_kind.play_entry())
+			.and_then(|e| e.entry_kind.play_entry())
 	}
 	pub fn get_play_entry_mut(&mut self, entry_ident: &EntryIdentifier) -> Option<&mut PlayEntry> {
 		self.0
 			.get_mut(entry_ident)
-			.map_or(None, |e| e.entry_kind.play_entry_mut())
+			.and_then(|e| e.entry_kind.play_entry_mut())
 	}
 	pub fn position<P>(&mut self, predicate: P) -> Option<usize>
 	where

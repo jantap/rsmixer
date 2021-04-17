@@ -1,7 +1,7 @@
 use super::Widget;
 use crate::{
 	prelude::*,
-	ui::{Buffer, Pixel, Rect, Style, UIError, Pixels},
+	ui::{Buffer, Pixel, Rect, Style, UIError},
 };
 
 #[derive(Copy, Clone, PartialEq, Debug)]

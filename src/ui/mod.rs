@@ -59,8 +59,8 @@ pub async fn make_changes(state: &mut RSState) -> Result<()> {
 	}
 
 	if state.redraw.resize {
+		state.ui.border.title_pixels= Some(gen_page_names(state));
 		state.ui.border.render(&mut state.ui.buffer)?;
-		draw_page_names(state);
 	}
 
 	let only_affected =
@@ -205,8 +205,8 @@ fn resize(state: &mut RSState) -> Result<()> {
 	Ok(())
 }
 
-fn draw_page_names(state: &mut RSState) {
-	let pixels = if state.ui.buffer.width as usize
+fn gen_page_names(state: &mut RSState) -> Pixels{
+	if state.ui.buffer.width as usize
 		> 2 + state.ui.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6  {
             let style = |i: usize| {
                 if i as i8 == state.current_page.into() {
@@ -219,5 +219,5 @@ fn draw_page_names(state: &mut RSState) {
             (0..3).fold(Pixels::default(), |pixels, x| pixels.string(style(x), &state.ui.pages_names[x]))
         } else {
             Pixels::default().string(Style::Bold, &state.ui.pages_names[state.page_entries.selected()])
-        };
+        }
 }

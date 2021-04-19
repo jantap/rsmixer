@@ -15,6 +15,7 @@ pub enum VolumeWidgetBorder {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct VolumeWidget {
 	pub percent: f32,
+    pub last_percent: f32,
 	pub border: VolumeWidgetBorder,
 	pub area: Rect,
 	pub mute: bool,
@@ -24,6 +25,7 @@ impl VolumeWidget {
 	pub fn default() -> Self {
 		Self {
 			percent: 0.0,
+            last_percent: 0.0,
 			border: VolumeWidgetBorder::Single,
 			area: Rect::default(),
 			mute: false,
@@ -31,6 +33,7 @@ impl VolumeWidget {
 	}
 
 	pub fn volume(mut self, percent: f32) -> Self {
+        self.last_percent = self.percent;
 		self.percent = percent;
 		self
 	}
@@ -57,6 +60,35 @@ impl VolumeWidget {
 
 		(third, third * 2, third * 2 + last)
 	}
+
+	pub fn small_render(&mut self, buffer: &mut Buffer) -> Result<()> {
+		let filled = (self.percent * (self.area.width - 2) as f32).floor() as u16;
+		let last_filled = (self.last_percent * (self.area.width - 2) as f32).floor() as u16;
+        let smaller = filled.min(last_filled);
+        let greater = filled.max(last_filled);
+
+		let segments = self.get_segments();
+
+		let pixels: Vec<Pixel> = (smaller..greater)
+			.map(|i| Pixel {
+				text: if i < filled { Some('▮') } else { Some('-') },
+				style: 
+                    if self.mute {
+                        Style::Muted
+                    } else if i < segments.0 {
+                        Style::Green
+                    } else if i < segments.1 {
+                        Style::Orange
+                    } else {
+                        Style::Red
+                    }
+			})
+			.collect();
+
+		buffer.pixels(self.area.x + 1 + smaller, self.area.y, &pixels.into());
+
+		Ok(())
+	}
 }
 
 impl Widget for VolumeWidget {
@@ -73,27 +105,23 @@ impl Widget for VolumeWidget {
 		self.border.render(buffer, &self.area);
 
 		let filled = (self.percent * (self.area.width - 2) as f32).floor() as u16;
+		let segments = self.get_segments();
 
-		let mut pixels: Vec<Pixel> = (0..(self.area.width - 2))
+		let pixels: Vec<Pixel> = (0..(self.area.width - 2))
 			.map(|i| Pixel {
 				text: if i < filled { Some('▮') } else { Some('-') },
-				style: Style::Muted,
+				style: 
+                    if self.mute {
+                        Style::Muted
+                    } else if i < segments.0 {
+                        Style::Green
+                    } else if i < segments.1 {
+                        Style::Orange
+                    } else {
+                        Style::Red
+                    }
 			})
 			.collect();
-
-		if !self.mute {
-			let segments = self.get_segments();
-
-			for i in 0..segments.0 {
-				pixels[i as usize].style = Style::Green;
-			}
-			for i in segments.0..segments.1 {
-				pixels[i as usize].style = Style::Orange;
-			}
-			for i in segments.1..segments.2 {
-				pixels[i as usize].style = Style::Red;
-			}
-		}
 
 		buffer.pixels(self.area.x + 1, self.area.y, &pixels.into());
 

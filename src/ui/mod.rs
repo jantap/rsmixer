@@ -116,9 +116,9 @@ pub async fn make_changes(state: &mut RSState) -> Result<()> {
 				.entries
 				.get_play_entry_mut(&state.page_entries.get(index).unwrap())
 			{
-				play.peak_volume_bar
-					.volume(play.peak)
-					.render(&mut state.ui.buffer)?;
+				play.peak_volume_bar = play.peak_volume_bar
+					.volume(play.peak);
+				play.peak_volume_bar.small_render(&mut state.ui.buffer)?;
 			}
 		}
 	}
@@ -212,11 +212,16 @@ fn gen_page_names(state: &mut RSState) -> Pixels{
                 if i as i8 == state.current_page.into() {
                     Style::Bold
                 } else {
-                    Style::Normal
+                    Style::Muted
                 }
             };
 
-            (0..3).fold(Pixels::default(), |pixels, x| pixels.string(style(x), &state.ui.pages_names[x]))
+            Pixels::default()
+                .string(style(0), &state.ui.pages_names[0])
+                .string(Style::Muted, " / ")
+                .string(style(1), &state.ui.pages_names[1])
+                .string(Style::Muted, " / ")
+                .string(style(2), &state.ui.pages_names[2])
         } else {
             Pixels::default().string(Style::Bold, &state.ui.pages_names[state.page_entries.selected()])
         }

@@ -1,6 +1,6 @@
 use std::io;
 
-use crossterm::{cursor::Hide, execute};
+use crossterm::{cursor::{Show, Hide}, execute};
 
 use crate::{entry::EntrySpaceLvl, ui::UIError};
 
@@ -35,6 +35,7 @@ pub fn clean_terminal() -> Result<(), UIError> {
 		crossterm::terminal::LeaveAlternateScreen
 	)?;
 	crossterm::terminal::disable_raw_mode()?;
+	execute!(stdout, Hide)?;
 
 	Ok(())
 }

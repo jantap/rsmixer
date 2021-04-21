@@ -59,7 +59,7 @@ pub async fn make_changes(state: &mut RSState) -> Result<()> {
 	}
 
 	if state.redraw.resize {
-		state.ui.border.title_pixels= Some(gen_page_names(state));
+		state.ui.border.title_pixels = Some(gen_page_names(state));
 		state.ui.border.render(&mut state.ui.buffer)?;
 	}
 
@@ -116,8 +116,7 @@ pub async fn make_changes(state: &mut RSState) -> Result<()> {
 				.entries
 				.get_play_entry_mut(&state.page_entries.get(index).unwrap())
 			{
-				play.peak_volume_bar = play.peak_volume_bar
-					.volume(play.peak);
+				play.peak_volume_bar = play.peak_volume_bar.volume(play.peak);
 				play.peak_volume_bar.small_render(&mut state.ui.buffer)?;
 			}
 		}
@@ -205,24 +204,28 @@ fn resize(state: &mut RSState) -> Result<()> {
 	Ok(())
 }
 
-fn gen_page_names(state: &mut RSState) -> Pixels{
+fn gen_page_names(state: &mut RSState) -> Pixels {
 	if state.ui.buffer.width as usize
-		> 2 + state.ui.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6  {
-            let style = |i: usize| {
-                if i as i8 == state.current_page.into() {
-                    Style::Bold
-                } else {
-                    Style::Muted
-                }
-            };
+		> 2 + state.ui.pages_names.iter().map(|p| p.len()).sum::<usize>() + 6
+	{
+		let style = |i: usize| {
+			if i as i8 == state.current_page.into() {
+				Style::Bold
+			} else {
+				Style::Muted
+			}
+		};
 
-            Pixels::default()
-                .string(style(0), &state.ui.pages_names[0])
-                .string(Style::Muted, " / ")
-                .string(style(1), &state.ui.pages_names[1])
-                .string(Style::Muted, " / ")
-                .string(style(2), &state.ui.pages_names[2])
-        } else {
-            Pixels::default().string(Style::Bold, &state.ui.pages_names[state.page_entries.selected()])
-        }
+		Pixels::default()
+			.string(style(0), &state.ui.pages_names[0])
+			.string(Style::Muted, " / ")
+			.string(style(1), &state.ui.pages_names[1])
+			.string(Style::Muted, " / ")
+			.string(style(2), &state.ui.pages_names[2])
+	} else {
+		Pixels::default().string(
+			Style::Bold,
+			&state.ui.pages_names[state.page_entries.selected()],
+		)
+	}
 }

@@ -1,7 +1,7 @@
 use std::{
 	collections::{BTreeMap, HashMap},
 	io::Write,
-    iter::Iterator,
+	iter::Iterator,
 };
 
 use crossterm::{
@@ -22,43 +22,40 @@ pub struct Pixel {
 pub struct Pixels(Vec<Pixel>);
 
 impl Pixels {
-    pub fn next(mut self, style: Style, s: char) -> Self {
-        self.0.push(Pixel {
-            style,
-            text: Some(s),
-        });
-        self
-    }
-    pub fn string(mut self, style: Style, s: &str) -> Self {
-        for c in s.chars() {
-            self.0.push(Pixel {
-                style,
-                text: Some(c),
-            });
-        }
-        self
-    }
-    pub fn get_mut(&mut self, index: usize) -> Option<&mut Pixel> {
-        self.0.get_mut(index)
-    }
-    pub fn iter_mut(&mut self) -> impl Iterator<Item=&mut Pixel> + '_ {
-        self.0.iter_mut()
-    }
+	pub fn next(mut self, style: Style, s: char) -> Self {
+		self.0.push(Pixel {
+			style,
+			text: Some(s),
+		});
+		self
+	}
+	pub fn string(mut self, style: Style, s: &str) -> Self {
+		for c in s.chars() {
+			self.0.push(Pixel {
+				style,
+				text: Some(c),
+			});
+		}
+		self
+	}
+	pub fn get_mut(&mut self, index: usize) -> Option<&mut Pixel> {
+		self.0.get_mut(index)
+	}
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pixel> + '_ {
+		self.0.iter_mut()
+	}
 }
 
 impl From<Vec<Pixel>> for Pixels {
-    fn from(s: Vec<Pixel>) -> Self {
-        Self {
-            0: s,
-        }
-    }
+	fn from(s: Vec<Pixel>) -> Self {
+		Self { 0: s }
+	}
 }
 impl From<Pixels> for Vec<Pixel> {
-    fn from(s: Pixels) -> Self {
-        s.0
-    }
+	fn from(s: Pixels) -> Self {
+		s.0
+	}
 }
-
 
 pub struct Buffer {
 	pub width: u16,

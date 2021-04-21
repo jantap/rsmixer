@@ -3,6 +3,7 @@ use std::convert::TryInto;
 use pulse::stream::PeekResult;
 
 use super::{common::*, pa_interface::ACTIONS_SX};
+use crate::VARIABLES;
 
 pub struct Monitor {
 	stream: Rc<RefCell<Stream>>,
@@ -78,7 +79,18 @@ impl Monitors {
 			return;
 		}
 		let (sx, rx) = cb_channel::unbounded();
-		if let Ok(stream) = create(&mainloop, &context, &*SPEC, ident, monitor_src, rx) {
+		if let Ok(stream) = create(
+			&mainloop,
+			&context,
+			&pulse::sample::Spec {
+				format: pulse::sample::Format::FLOAT32NE,
+				channels: 1,
+				rate: (*VARIABLES).get().pa_rate,
+			},
+			ident,
+			monitor_src,
+			rx,
+		) {
 			self.monitors.insert(
 				ident,
 				Monitor {
@@ -171,7 +183,7 @@ fn create(
 			tlength: std::u32::MAX,
 			prebuf: std::u32::MAX,
 			minreq: 0,
-			fragsize: 4,
+			fragsize: (*VARIABLES).get().pa_frag_size,
 		}),
 		pulse::stream::FlagSet::PEAK_DETECT | pulse::stream::FlagSet::ADJUST_LATENCY,
 	) {
@@ -232,9 +244,13 @@ fn create(
                     match unsafe{ (*(*stream_ref.as_ptr()).as_ptr()).peek() } {
                         Ok(res) => match res {
                             PeekResult::Data(data) => {
-                                let size = data.len();
-                                let data_slice = slice_to_4_bytes(&data[(size-4) .. size]);
-                                let peak = f32::from_ne_bytes(data_slice).abs();
+                                let count = data.len() / 4;
+                                let mut peak = 0.0;
+                                for c in 0..count {
+                                    let data_slice = slice_to_4_bytes(&data[c * 4 .. (c + 1) * 4]);
+                                    peak += f32::from_ne_bytes(data_slice).abs();
+                                }
+                                peak = peak / count as f32;
 
                                 if (*ACTIONS_SX).get().send(EntryUpdate::PeakVolumeUpdate(ident, peak)).is_err() {
                                     disconnect_stream();

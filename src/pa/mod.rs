@@ -20,6 +20,6 @@ lazy_static! {
 	pub static ref SPEC: pulse::sample::Spec = pulse::sample::Spec {
 		format: pulse::sample::Format::FLOAT32NE,
 		channels: 1,
-		rate: 15,
+		rate: 1024,
 	};
 }

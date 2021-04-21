@@ -23,9 +23,32 @@ use crate::{
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RsMixerConfig {
 	version: Option<String>,
-	pa_retry_time: Option<u64>,
+	pulse_audio: Option<PulseAudio>,
 	bindings: MultiMap<String, String>,
 	colors: LinkedHashMap<String, ConfigColor>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct PulseAudio {
+	disable_live_volume: Option<bool>,
+	retry_time: Option<u64>,
+	rate: Option<u32>,
+	frag_size: Option<u32>,
+}
+
+impl PulseAudio {
+	pub fn disable_live_volume(&self) -> bool {
+		self.disable_live_volume.unwrap_or(false)
+	}
+	pub fn retry_time(&self) -> u64 {
+		self.retry_time.unwrap_or(5)
+	}
+	pub fn rate(&self) -> u32 {
+		self.rate.unwrap_or(20)
+	}
+	pub fn frag_size(&self) -> u32 {
+		self.frag_size.unwrap_or(48)
+	}
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -37,7 +60,7 @@ pub struct ConfigColor {
 
 impl RsMixerConfig {
 	pub fn load() -> Result<Self> {
-		let config: RsMixerConfig = confy::load("rsmixer")?;
+		let config: RsMixerConfig = confy::load("rsmixer2")?;
 		Ok(config)
 	}
 
@@ -91,7 +114,7 @@ impl RsMixerConfig {
 
 		self.version = Some(String::from(VERSION));
 
-		confy::store("rsmixer", self.clone())?;
+		confy::store("rsmixer2", self.clone())?;
 
 		Ok((styles, bindings, Variables::new(self)))
 	}
@@ -263,7 +286,7 @@ impl std::default::Default for RsMixerConfig {
 
 		Self {
 			version: Some(String::from(VERSION)),
-			pa_retry_time: None,
+			pulse_audio: None,
 			bindings,
 			colors: c,
 		}

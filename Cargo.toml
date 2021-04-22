@@ -1,6 +1,6 @@
 [package]
 name = "rsmixer"
-version = "0.5.4"
+version = "0.5.5"
 license = "MIT"
 homepage = "https://github.com/jantap/rsmixer"
 repository = "https://github.com/jantap/rsmixer"
@@ -34,7 +34,7 @@ crossbeam-channel = "0.4.2"
 thiserror = "1.0.20"
 
 # config and cli options
-serde = { version = "1.0.114", features = ["derive"] }
+serde = { version = "=1.0.114", features = ["derive"] }
 toml = "0.5.6"
 confy = "0.4.0"
 gumdrop = "0.8.0"

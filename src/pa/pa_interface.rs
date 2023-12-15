@@ -35,7 +35,7 @@ pub fn start(
 	debug!("[PAInterface] Creating new context");
 	let context = Rc::new(RefCell::new(
 		match PAContext::new_with_proplist(
-			mainloop.borrow_mut().deref().deref(),
+			mainloop.borrow_mut().deref(),
 			"RsMixerContext",
 			&proplist,
 		) {
